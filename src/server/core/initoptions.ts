@@ -15,7 +15,7 @@ export class InitOptions {
 
     /**
      * Absolute or relative path where the compiled client javascript files are located.
-     * @default - /dist/client
+     * @default /dist/client
      */
     jsPath?: string = '/dist/client'
 
