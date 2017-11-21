@@ -1,4 +1,4 @@
-import * as express from 'express'
+import * as express from "express";
 import * as fs from 'fs'
 import * as path from 'path'
 import { Database } from './database'
@@ -101,9 +101,9 @@ export class App {
 
     /**
      * Registers an API for a specific entity type with default behaviour and additional options.
-     * TODO: Hier weiter beschreiben
-     * @param type 
-     * @param options 
+     * @param type Entity type to define an API for. Must be a subclass of `Type`
+     * @param options Optional options extending default behaviour. Can be pre- or post-processing
+     *                steps for the routes.
      */
     registerApi<T extends Type>(type:{new():T}, options?: ApiOptions) {
 
@@ -125,18 +125,22 @@ export class App {
 
         let findEntityById = (id: string) => this.db.findOne(type, id)
 
+        // Default route for GET/ which returns all entities of a given type
         this.router.get(`/${type.name}`, (req: express.Request, res: express.Response) => {
             this.db.findMany(type, {}).then((entities) => {
                 res.send(entities)
             })
         })
 
+        // Default route for GET/:id which returns an entity of a given id
         this.router.get(`/${type.name}/:id`, existingId, (req: express.Request, res: express.Response) => {
             findEntityById(req.params.id).then((entity) => {
                 res.send(entity)
             })
         })
 
+        // Default route for POST/ which insert a new entity into the database.
+        // Uses ApiOptions.beforePost as middlewares
         let postHandlers: express.RequestHandler[] = []
         if (options && options.beforePost) postHandlers.push(options.beforePost)
         postHandlers.push((req: express.Request, res: express.Response) => {
@@ -146,6 +150,7 @@ export class App {
         })
         this.router.post(`/${type.name}`, postHandlers)
 
+        // Default route for PUT/:id which updates an entity of the given id
         this.router.put(`/${type.name}/:id`, existingId, (req: express.Request, res: express.Response) => {
             delete req.body.type
             this.db.updateOne<T>(type, req.params.id, req.body as T).then(() => {
@@ -153,6 +158,8 @@ export class App {
             })
         })
 
+        // Default route for DELETE/:id which deletes an entity from the database
+        // Uses ApiOptions.beforeDelete as middlewares
         let deleteHandlers: express.RequestHandler[] = [ existingId ]
         if (options && options.beforeDelete) deleteHandlers.push(options.beforeDelete)
         deleteHandlers.push((req: express.Request, res: express.Response) => {

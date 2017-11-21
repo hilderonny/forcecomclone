@@ -1,4 +1,6 @@
-import * as core from './core'
+import { App } from "./core/app";
 
-let app = new core.App()
-app.init()
+let app = new App()
+// TODO: Define database to use
+app.init({ modulesPath:'./modules' })
+app.start()
