@@ -57,7 +57,7 @@ export class App {
             self.server.use(express.json())
             self.server.use(express.urlencoded({ extended:true }))
 
-            self.port = options.port || 80
+            self.port = options.port || parseInt(process.env.PORT + '') || 80
             
             // Initialize modules
             if (options.modulesPath) fs.readdir(path.join(__dirname, '..', options.modulesPath), (error, files) => {
@@ -89,7 +89,7 @@ export class App {
         return new Promise((resolve, reject) => {
 
             let runningApp = self.server.listen(this.port, () => {
-                console.debug(`Server listening on HTTP port ${self.port}`);
+                console.log(`Server listening on HTTP port ${self.port}`);
                 resolve(runningApp)
             })
     
