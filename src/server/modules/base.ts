@@ -23,9 +23,18 @@ export default Module.create((app) => {
                 // Proceed with the default API behaviour
                 next()
             }
-        }
+        },
 
-        // TODO beforePut - Check for username uniqueness on change
+        // Check the user's name for uniqueness before changing it
+        beforePut: async(req, res, next) => {
+            let user = req.body as User
+            let existingUser = await app.db.findOne(User, { name : user.name } as User)
+            // When there is ANOTHER user with the same name, abort the request with an error code
+            if (existingUser && (existingUser._id !== req.params.id))
+                res.sendStatus(409) // Conflict
+            else
+                next()
+        }
             
     })
 

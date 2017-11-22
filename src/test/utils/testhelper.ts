@@ -1,4 +1,5 @@
 import * as supertest from 'supertest'
+import * as path from 'path'
 import { DatabaseMock } from './databasemock'
 import { App } from '../../server/core/app';
 

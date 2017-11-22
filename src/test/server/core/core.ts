@@ -100,6 +100,9 @@ describe('Core tests', () => {
                     },
                     beforePost: (req, res, next) => {
                         res.sendStatus(901)
+                    },
+                    beforePut: (req, res, next) => {
+                        res.sendStatus(902)
                     }
                 })
 
@@ -186,15 +189,22 @@ describe('Core tests', () => {
 
         // Middlewares
 
-        it('POST/ calls beforePost middleware', async() => {
-            await TestHelper.post('/api/TestMiddleware').send({}).expect(901)
-        })
-
         it('DELETE/:id calls beforeDelete middleware', async() => {
             let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
             let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
             entitiesFromDatabase['id1'] = entityFromDatabase
             await TestHelper.del('/api/TestMiddleware/id1').expect(900)
+        })
+
+        it('POST/ calls beforePost middleware', async() => {
+            await TestHelper.post('/api/TestMiddleware').send({}).expect(901)
+        })
+
+        it('PUT/:id calls beforePut middleware', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase['id1'] = entityFromDatabase
+            await TestHelper.put('/api/TestMiddleware/id1').send({}).expect(902)
         })
                                             
         // Special use cases

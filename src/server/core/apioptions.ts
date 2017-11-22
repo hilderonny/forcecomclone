@@ -17,5 +17,11 @@ export class ApiOptions {
      */
     beforePost?: express.RequestHandler
 
+    /**
+     * Express request handler which is called before
+     * performing a PUT action
+     */
+    beforePut?: express.RequestHandler
+    
 }
     

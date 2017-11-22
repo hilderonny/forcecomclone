@@ -12,7 +12,7 @@ export class DatabaseMock extends Database {
     entities: { [key: string]: Type } = {}
     
     count<T extends Type>(type: new () => T, filter: Object): Promise<number> {
-        throw new Error("Method not implemented.");
+        throw new Error("Method not implemented.")
     }
 
     deleteOne<T extends Type>(id: string): Promise<void> {
@@ -20,10 +20,27 @@ export class DatabaseMock extends Database {
         return Promise.resolve()
     }
 
-    /** Works only with IDs as parameters which is the default use case for this method */
+    /** Finds one entity with either the given id as filter or which has the given attribtes and their values */
     findOne<T extends Type>(type: new () => T, filter: string | Object): Promise<T | null> {
-        if (typeof filter !== 'string') throw new Error("Method not implemented.")
-        return Promise.resolve(this.entities[filter] as T)
+        if (typeof filter === 'string') return Promise.resolve(this.entities[filter] as T)
+        else {
+            let entitiyKeys = Object.keys(this.entities)
+            for (let i = 0; i < entitiyKeys.length; i++) {
+                let entity = this.entities[entitiyKeys[i]]
+                let areEqual = true
+                Object.keys(filter).forEach((filterKey) => {
+                    if (Object.keys(entity).indexOf(filterKey) < 0) {
+                        areEqual = false
+                        return
+                    }
+                    if ((entity as any)[filterKey] !== (filter as any)[filterKey])
+                        areEqual = false
+                })
+                if (areEqual) 
+                    return Promise.resolve(entity as T)
+            }
+            return Promise.resolve(null)
+        }
     }
 
     /** Ignores the filter and always returns all entities of the given type */

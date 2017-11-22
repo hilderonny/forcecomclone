@@ -149,12 +149,16 @@ export class App {
         this.router.post(`/${type.name}`, postHandlers)
 
         // Default route for PUT/:id which updates an entity of the given id
-        this.router.put(`/${type.name}/:id`, existingId, (req: express.Request, res: express.Response) => {
+        // Uses ApiOptions.beforePut as middlewares
+        let putHandlers: express.RequestHandler[] = [ existingId ]
+        if (options && options.beforePut) putHandlers.push(options.beforePut)
+        putHandlers.push((req: express.Request, res: express.Response) => {
             delete req.body.type
             this.db.updateOne<T>(type, req.params.id, req.body as T).then(() => {
                 res.sendStatus(200)
             })
         })
+        this.router.put(`/${type.name}/:id`, putHandlers)
 
         // Default route for DELETE/:id which deletes an entity from the database
         // Uses ApiOptions.beforeDelete as middlewares
