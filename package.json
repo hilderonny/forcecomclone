@@ -9,10 +9,10 @@
     "pretest": "tsc --inlineSourceMap",
     "pretestagent": "tsc --inlineSourceMap",
     "start": "node dist/server/index.js",
-    "test": "nyc npm run test.mocha",
-    "testagent": "nyc npm run testagent.mocha",
-    "test.mocha": "mocha --async-only --slow 500 --timeout 10000 --require ts-node/register --require source-map-support/register --recursive -R spec ./src/test/**/*.ts",
-    "testagent.mocha": "mocha --async-only --slow 500 --timeout 10000 --require ts-node/register --require source-map-support/register --recursive -R mocha-teamcity-reporter ./src/test/**/*.ts"
+    "test": "nyc mocha --async-only --slow 500 --timeout 10000 --require ts-node/register --require source-map-support/register --recursive -R spec ./src/test/**/*.ts",
+    "testagent": "nyc --reporter teamcity mocha --async-only --slow 500 --timeout 10000 --require ts-node/register --require source-map-support/register --recursive -R mocha-teamcity-reporter ./src/test/**/*.ts",
+    "test.mocha": "",
+    "testagent.mocha": ""
   },
   "repository": {
     "type": "git",
