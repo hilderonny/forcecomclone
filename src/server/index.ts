@@ -1,6 +1,7 @@
 import { App } from "./core/app";
+import { DatabaseMock } from "../test/utils/databasemock";
 
 let app = new App()
-// TODO: Define database to use
+app.db = new DatabaseMock()
 app.init({ modulesPath:'./modules' })
 app.start()
