@@ -11,7 +11,7 @@ import { ApiOptions } from './ApiOptions'
  * Main point for creating an app. First create an instance of this with "let app = new App()."
  * Next define the database layer to use with "app.db = ...".
  * Then initialize the application with app.init(...).
- * Optionally you can now define your APIs with app.registerApi(...) but this is normally done
+ * Optionally you can now define your APIs with app.registerDefaultApi(...) but this is normally done
  * in additional modules.
  * Finally start the server with app.start().
  */
@@ -21,20 +21,20 @@ export class App {
     private router = express.Router()
     /** Reference to the database layer to be used. Must be defined before calling init() */
     public db: Database
-    /** Reference to the express framework instance */
-    private server: express.Express
+    /** Reference to the express framework instance. Must be public because tests need to access this instance */
+    public server: express.Express
     /** Port to listen on. By default this is port 80. */
     private port: number
 
     /**
      * Creates an instance of the application.
-     * Next define app.db and call app.init(), app.registerApi() and app.start().
+     * Next define app.db and call app.init(), app.registerDefaultApi() and app.start().
      */
     public constructor() { }
 
     /**
      * Checks whether the database layer was set and whether init() was called correctly.
-     * Is called before start() and before registerApi()
+     * Is called before start() and before registerDefaultApi()
      */
     private checkInit() {
         if (!this.server) throw Error('App not initialized! Please call App.instance.init()!')
@@ -45,32 +45,30 @@ export class App {
      * Initialize the application with default settings or with predefined ones.
      * @param options Options to define for the application. Optional.
      */
-    init(options?: InitOptions): Promise<void> {
+    init(options: InitOptions = new InitOptions()): Promise<void> {
 
         let self = this
-
-        if (!options) options = new InitOptions();
 
         return new Promise((resolve, reject) => {
 
             self.server = express()
-            self.server.use(express.static(options.publicPath || './public'));
-            self.server.use(options.jsUrl, express.static(options.jsPath));
+            self.server.use(express.static(options.publicPath || '/public'));
+            self.server.use(options.jsUrl || '/js', express.static(options.jsPath || '/dist/client'));
             self.server.use(express.json())
             self.server.use(express.urlencoded({ extended:true }))
 
-            self.port = options.port
+            self.port = options.port || 80
             
             // Initialize modules
             if (options.modulesPath) fs.readdir(path.join(__dirname, '..', options.modulesPath), (error, files) => {
                 if (files) files.forEach((file) => {
                     require(`../${options.modulesPath}/${file.substr(0, file.indexOf('.'))}`).default(self)
                 })
-                self.server.use(options.apiUrl, self.router)
+                self.server.use(options.apiUrl || '/api', self.router)
                 resolve()
             })
             else {
-                self.server.use(options.apiUrl, self.router)
+                self.server.use(options.apiUrl || '/api', self.router)
                 resolve()
             }
 
@@ -105,7 +103,7 @@ export class App {
      * @param options Optional options extending default behaviour. Can be pre- or post-processing
      *                steps for the routes.
      */
-    registerApi<T extends Type>(type:{new():T}, options?: ApiOptions) {
+    registerDefaultApi<T extends Type>(type:{new():T}, options?: ApiOptions) {
 
         this.checkInit()
         

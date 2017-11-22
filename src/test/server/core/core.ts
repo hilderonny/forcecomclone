@@ -1,9 +1,9 @@
 import { expect } from 'chai'
-import { App } from '../app'
-import { TestHelper } from './utils/testhelper'
-import { DatabaseMock } from './utils/databasemock'
-import { Type } from '../type'
-import { Module } from '../module'
+import { App } from '../../../server/core/app';
+import { TestHelper } from '../../utils/testhelper';
+import { DatabaseMock } from '../../utils/databasemock';
+import { Type } from '../../../server/core/type';
+import { Module } from '../../../server/core/module';
 
 describe('Core tests', () => {
 
@@ -23,7 +23,7 @@ describe('Core tests', () => {
         it('Initializes all modules in the given module path', async() => {
             let app = new App()
             app.db = new DatabaseMock()
-            await app.init({ modulesPath: './dist/test/testmodules' })
+            await app.init({ modulesPath: '../../dist/test/server/core/testmodules' })
             TestHelper.app = app
             await TestHelper.get('/api/TestModule1').expect(200)
             await TestHelper.get('/api/TestModule2').expect(200)
@@ -61,7 +61,7 @@ describe('Core tests', () => {
 
         it('Throws an error when no database was defined', async() => {
             let app = new App()
-            await app.init({ modulesPath: null })
+            await app.init()
             expect(() => { app.start() }).to.throw('Database not set! Please define App.instance.db!')
         })
 
@@ -69,7 +69,7 @@ describe('Core tests', () => {
             let app = new App()
             let port = 28888
             app.db = new DatabaseMock()
-            await app.init({ modulesPath: null, port: port })
+            await app.init({ port: port })
             let server = await app.start()
             expect(server.address().port).equal(port)
             return new Promise((resolve, reject) => {
@@ -79,7 +79,7 @@ describe('Core tests', () => {
         
     })
 
-    describe('App.registerApi()', () => {
+    describe('App.registerDefaultApi()', () => {
 
         class TestEntityType extends Type { 
             name?: string
@@ -92,9 +92,9 @@ describe('Core tests', () => {
 
             Module.create((app) => {
 
-                app.registerApi(TestEntityType)
+                app.registerDefaultApi(TestEntityType)
 
-                app.registerApi(TestMiddleware, {
+                app.registerDefaultApi(TestMiddleware, {
                     beforeDelete: (req, res, next) => {
                         res.sendStatus(900)
                     },
@@ -111,13 +111,13 @@ describe('Core tests', () => {
 
         it('Throws an error when the app is not initialized', async() => {
             let app = new App()
-            expect(() => { app.registerApi(TestEntityType) }).to.throw('App not initialized! Please call App.instance.init()!')
+            expect(() => { app.registerDefaultApi(TestEntityType) }).to.throw('App not initialized! Please call App.instance.init()!')
         })
 
         it('Throws an error when no database was defined', async() => {
             let app = new App()
-            await app.init({ modulesPath: null })
-            expect(() => { app.registerApi(TestEntityType) }).to.throw('Database not set! Please define App.instance.db!')
+            await app.init()
+            expect(() => { app.registerDefaultApi(TestEntityType) }).to.throw('Database not set! Please define App.instance.db!')
         })
     
         // API Tests

@@ -11,11 +11,11 @@ export default Module.create((app) => {
 })
 ```
 
-The `app` parameter is a reference to the application itself and can be used to define APIs with `app.registerApi()`.
+The `app` parameter is a reference to the application itself and can be used to define APIs with `app.registerDefaultApi()`.
 
 # Defining APIs
 
-By default you have an entity type (like "user" or "document") and want to have some default actions like creating, editing and deleting them. For such easy use cases simply call `app.registerApi(EntityClassName)` in your module instanziation code block and the framework will create these default API actions for you.
+By default you have an entity type (like "user" or "document") and want to have some default actions like creating, editing and deleting them. For such easy use cases simply call `app.registerDefaultApi(EntityClassName)` in your module instanziation code block and the framework will create these default API actions for you.
 
 | API Method | Description |
 |-|-|
@@ -34,7 +34,7 @@ Sometimes you need to do special checks before an API function is performed. For
 Assume that you want to create an API for users and want to make sure, that the user's names are unique. For this purpose you would define a `beforePost` check for the users API:
 
 ```typescript
-app.registerApi(User, {
+app.registerDefaultApi(User, {
 
     beforePost: async (req, res, next) => {
         // Extract the posted user from the request
@@ -54,7 +54,7 @@ app.registerApi(User, {
 ```
 
 ```typescript
-app.registerApi(UserGroup, {
+app.registerDefaultApi(UserGroup, {
 
     beforeDelete: async (req, res, next) => {
         let id = req.params.id

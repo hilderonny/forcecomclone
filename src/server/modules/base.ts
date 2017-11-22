@@ -8,7 +8,7 @@ import { User } from "../../common/types/user";
 export default Module.create((app) => {
 
     // API for users
-    app.registerApi(User, {
+    app.registerDefaultApi(User, {
 
         // Check the user's name for uniqueness before creating it
         beforePost: async (req, res, next) => {

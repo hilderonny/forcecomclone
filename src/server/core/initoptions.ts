@@ -11,13 +11,13 @@ export class InitOptions {
      * because these URLs are reserved by the application.
      * @default /public
      */
-    publicPath?: string = '/public'
+    publicPath?: string
 
     /**
      * Absolute or relative path where the compiled client javascript files are located.
      * @default /dist/client
      */
-    jsPath?: string = '/dist/client'
+    jsPath?: string
 
     /**
      * Path relative to the app entry point, where additional modules are stored.
@@ -31,18 +31,18 @@ export class InitOptions {
      * Port where the application should listen on
      * @default 80
      */
-    port?: number = 80
+    port?: number
 
     /**
      * URL part, where the APIs are accessible.
      * @default /api
      */
-    apiUrl?: string = '/api'
+    apiUrl?: string
 
     /**
      * URL part where the compiled javascript files can be accessed.
      * @default /js
      */
-    jsUrl?: string = '/js'
+    jsUrl?: string
 
 }

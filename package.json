@@ -4,7 +4,10 @@
   "description": "Eierlegende Wollmilchsau",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/server/index.js",
+    "pretest": "tsc --inlineSourceMap",
+    "test": "nyc npm run test.mocha",
+    "test.mocha": "mocha --async-only --slow 500 --timeout 10000 --require ts-node/register --require source-map-support/register --recursive -R spec ./src/test/**/*.ts"
   },
   "repository": {
     "type": "git",
@@ -16,14 +19,43 @@
     "url": "https://gitlab.com/avorium/arrange/issues"
   },
   "homepage": "https://gitlab.com/avorium/arrange#README",
+  "nyc": {
+    "check-coverage": true,
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "src/test/",
+      "dist/",
+      "coverage/"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true
+  },
   "dependencies": {
+    "@types/uuid": "^3.4.3",
     "express": "^4.16.2",
     "fs": "0.0.1-security",
     "http": "0.0.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "uuid": "^3.1.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.5",
     "@types/express": "^4.0.39",
-    "@types/node": "^8.0.53"
+    "@types/mocha": "^2.2.44",
+    "@types/node": "^8.0.53",
+    "@types/supertest": "^2.0.4",
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "nyc": "^11.3.0",
+    "source-map-support": "^0.5.0",
+    "supertest": "^3.0.0",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.6.1"
   }
 }
