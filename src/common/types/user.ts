@@ -18,8 +18,17 @@ export class User extends Type {
 
 }
 
+/**
+ * Express Request handler which contains additional user information about the logged in user
+ * in the "user" property.
+ * Can be accessed in each middleware or requesthandler by casting the req type:
+ * (req: UserRequest, res, next) => { let user = req.user }
+ */
 export interface UserRequest extends Request {
 
+    /**
+     * Detailed information about the logged in user
+     */
     user?: User
 
 }

@@ -87,3 +87,21 @@ app.registerDefaultApi(User, {
 
 }
 ```
+
+## Accessing login information
+
+The server automatically extracts information about the logged in user from the access token. This ist a JSON Web Token, which is created and returned after successfully registering (`/api/register`) or logging in (`/api/login`).
+
+This token can be send to the server either via the `x-access-token` header or via the `token` query parameter. The server ananylzes the token, extracts the data about the logged in user from the database and provides it in the `req.user`property of the request.
+
+To access this information, the request must be casted like in this example.
+
+```typescript
+app.registerDefaultApi(MyType, {
+
+    beforePost: async (req: UserRequest, res, next) => {
+        let loggedInUser = req.user
+    }
+
+}
+```
