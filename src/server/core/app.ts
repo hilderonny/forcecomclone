@@ -5,7 +5,7 @@ import { Database } from './database'
 import { InitOptions } from './initoptions'
 import { Server } from 'http'
 import { Type } from './type'
-import { ApiOptions } from './ApiOptions'
+import { ApiOptions } from './apioptions'
 import { verify } from "jsonwebtoken";
 import { TokenContent } from "../../common/types/token";
 import { User, UserRequest } from "../../common/types/user";
