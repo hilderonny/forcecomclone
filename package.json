@@ -41,7 +41,9 @@
     "all": true
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.1",
     "@types/uuid": "^3.4.3",
+    "bcryptjs": "^2.4.3",
     "express": "^4.16.2",
     "fs": "0.0.1-security",
     "http": "0.0.0",

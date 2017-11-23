@@ -34,6 +34,20 @@ export default Module.create((app) => {
                 res.sendStatus(409) // Conflict
             else
                 next()
+        },
+
+        // Removes the passwords from the returned users
+        filterGet: (users: User[]) => {
+            users.forEach((user) => {
+                delete user.password
+            })
+            return users
+        },
+
+        // Removes the passwords from the returned user
+        filterGetId: (user: User) => {
+            delete user.password
+            return user
         }
             
     })

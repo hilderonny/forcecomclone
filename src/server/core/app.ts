@@ -124,16 +124,25 @@ export class App {
         let findEntityById = (id: string) => this.db.findOne(type, id)
 
         // Default route for GET/ which returns all entities of a given type
+        // Uses ApiOptions.filterGet to filter the results before sending them to the client
         this.router.get(`/${type.name}`, (req: express.Request, res: express.Response) => {
             this.db.findMany(type, {}).then((entities) => {
-                res.send(entities)
+                if (options && options.filterGet) {
+                    let filteredEntities = options.filterGet(entities)
+                    res.send(filteredEntities)
+                } else
+                    res.send(entities)
             })
         })
 
         // Default route for GET/:id which returns an entity of a given id
         this.router.get(`/${type.name}/:id`, existingId, (req: express.Request, res: express.Response) => {
             findEntityById(req.params.id).then((entity) => {
-                res.send(entity)
+                if (options && options.filterGetId) {
+                    let filteredEntity = options.filterGetId(entity)
+                    res.send(filteredEntity)
+                } else
+                    res.send(entity)
             })
         })
 
