@@ -6,6 +6,9 @@ import { InitOptions } from './initoptions'
 import { Server } from 'http'
 import { Type } from './type'
 import { ApiOptions } from './ApiOptions'
+import { verify } from "jsonwebtoken";
+import { TokenContent } from "../../common/types/token";
+import { User, UserRequest } from "../../common/types/user";
 
 /**
  * Main point for creating an app. First create an instance of this with "let app = new App()."
@@ -62,21 +65,38 @@ export class App {
             self.server = express()
             self.server.use(express.static(options.publicPath || '/public'));
             self.server.use(options.jsUrl || '/js', express.static(options.jsPath || '/dist/client'));
-            self.server.use(express.json())
-            self.server.use(express.urlencoded({ extended:true }))
+            // Middleware for extracting the token from the request and adding user information to the request
+            self.server.use(async (req: UserRequest, res, next) => {
+                // When a token is given, try to find the user for it
+                // Token must be sent with "x-access-token" - HTTP-Header or as "token" request parameter (for downloads)
+                let requestToken = req.query.token || req.headers['x-access-token'];
+                if (!requestToken) {
+                    next()
+                    return
+                }
+                verify(requestToken as string, self.initOptions.tokenSecret as string, async (err, decoded) => {
+                    if (!err) {
+                        let user = await self.db.findOne(User, (decoded as TokenContent)._id)
+                        if (user) req.user = user // Append the user to the request
+                    }
+                    next()
+                })
+            })
             
             // Initialize modules
-            if (options.modulesPath) fs.readdir(path.join(__dirname, '..', options.modulesPath), (error, files) => {
-                if (files) files.forEach((file) => {
-                    require(`../${options.modulesPath}/${file.substr(0, file.indexOf('.'))}`).default(self)
-                })
-                self.server.use(options.apiUrl || '/api', self.router)
-                resolve()
-            })
-            else {
-                self.server.use(options.apiUrl || '/api', self.router)
-                resolve()
+            if (options.modulesPath) {
+                let fullPath = path.join(__dirname, '..', options.modulesPath)
+                if (fs.existsSync(fullPath)) {
+                    let files = fs.readdirSync(fullPath)
+                    files.forEach((file) => {
+                        require(`../${options.modulesPath}/${file.substr(0, file.indexOf('.'))}`).default(self)
+                    })
+                }
             }
+            self.server.use(express.json())
+            self.server.use(express.urlencoded({ extended:true }))
+            self.server.use(options.apiUrl || '/api', self.router)
+            resolve()
 
         })
 
@@ -155,7 +175,7 @@ export class App {
         // Default route for POST/ which insert a new entity into the database.
         // Uses ApiOptions.beforePost as middlewares
         let postHandlers: express.RequestHandler[] = []
-        if (options && options.beforePost) postHandlers.push(options.beforePost)
+        if (options && options.beforePost) postHandlers = options.beforePost
         postHandlers.push((req: express.Request, res: express.Response) => {
             this.db.insertOne<T>(type, req.body as T).then((insertedEntity) => {
                 if (options && options.filterPost) {
@@ -203,4 +223,5 @@ export class App {
         this.checkInit()
         registerFunction(this.router)
     }
+
 }

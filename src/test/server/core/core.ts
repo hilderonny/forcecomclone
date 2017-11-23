@@ -5,6 +5,9 @@ import { DatabaseMock } from '../../utils/databasemock';
 import { Type } from '../../../server/core/type';
 import { Module } from '../../../server/core/module';
 import { Request, Response } from "express"
+import { UserRequest, User } from '../../../common/types/user';
+import { sign, verify } from "jsonwebtoken"
+import { TokenContent } from '../../../common/types/token';
 
 describe('Core tests', () => {
 
@@ -113,24 +116,50 @@ describe('Core tests', () => {
             surname?: string
         }
 
-        class TestMiddleware extends Type { }
+        class TestBeforeMiddleware extends Type { }
 
+        class TestFilterMiddleware extends Type { }
+
+        class TestServerMiddleware extends Type { }
+        
         beforeEach(async () => {
 
             Module.create((app) => {
 
                 app.registerDefaultApi(TestEntityType)
 
-                app.registerDefaultApi(TestMiddleware, {
+                app.registerDefaultApi(TestBeforeMiddleware, {
                     beforeDelete: (req, res, next) => {
                         res.sendStatus(900)
                     },
-                    beforePost: (req, res, next) => {
-                        res.sendStatus(901)
-                    },
+                    beforePost: [
+                        (req, res, next) => {
+                            res.sendStatus(901)
+                        }
+                    ],
                     beforePut: (req, res, next) => {
                         res.sendStatus(902)
                     }
+                })
+
+                app.registerDefaultApi(TestFilterMiddleware, {
+                    filterGet: (entities: TestEntityType[]) => {
+                        return [ { name: 'filterGet' } ]
+                    },
+                    filterGetId: (entity: TestEntityType) => {
+                        return { name: 'filterGetId' }
+                    },
+                    filterPost: (entity: TestEntityType) => {
+                        return { name: 'filterPost' }
+                    }
+                })
+
+                app.registerDefaultApi(TestServerMiddleware, {
+                    beforePost: [
+                        (req: UserRequest, res, next) => {
+                            res.send(req.user)
+                        }
+                    ]
                 })
 
             })(TestHelper.app)
@@ -234,18 +263,40 @@ describe('Core tests', () => {
             let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
             let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
             entitiesFromDatabase['id1'] = entityFromDatabase
-            await TestHelper.del('/api/TestMiddleware/id1').expect(900)
+            await TestHelper.del('/api/TestBeforeMiddleware/id1').expect(900)
         })
 
         it('POST/ calls beforePost middleware', async() => {
-            await TestHelper.post('/api/TestMiddleware').send({}).expect(901)
+            await TestHelper.post('/api/TestBeforeMiddleware').send({}).expect(901)
         })
 
         it('PUT/:id calls beforePut middleware', async() => {
             let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
             let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
             entitiesFromDatabase['id1'] = entityFromDatabase
-            await TestHelper.put('/api/TestMiddleware/id1').send({}).expect(902)
+            await TestHelper.put('/api/TestBeforeMiddleware/id1').send({}).expect(902)
+        })
+
+        it('GET/ calls filterGet middleware', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase['id1'] = entityFromDatabase
+            let returnedEntities = (await TestHelper.get('/api/TestFilterMiddleware')).body as TestEntityType[]
+            expect(returnedEntities).length(1)
+            expect(returnedEntities[0].name).equals('filterGet')
+        })
+
+        it('GET/:id calls filterGetId middleware', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase['id1'] = entityFromDatabase
+            let returnedEntity = (await TestHelper.get('/api/TestFilterMiddleware/id1')).body as TestEntityType
+            expect(returnedEntity.name).equals('filterGetId')
+        })
+
+        it('POST/ calls filterPost middleware', async() => {
+            let returnedEntity = (await TestHelper.post('/api/TestFilterMiddleware').send({})).body as TestEntityType
+            expect(returnedEntity.name).equals('filterPost')
         })
                                             
         // Special use cases
@@ -257,6 +308,35 @@ describe('Core tests', () => {
 
         it('existingId middleware returns 404 on not existing id', async() => {
             await TestHelper.del('/api/TestEntityType/notExistingId').expect(404)
+        })
+
+        it('Server middlewares adds user information to request', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase[entityFromDatabase._id] = entityFromDatabase
+            // Fake token
+            let jwt = sign({_id: entityFromDatabase._id} as TokenContent, appInstance.initOptions.tokenSecret as string, { expiresIn: '24h' })
+            let returnedUser = (await TestHelper.post('/api/TestServerMiddleware?token=' + jwt).send({})).body as User
+            expect(returnedUser).not.to.be.null
+            expect(returnedUser._id).to.equal(entityFromDatabase._id)
+        })
+
+        it('Server middlewares does not add user information to request when the token is invalid', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase[entityFromDatabase._id] = entityFromDatabase
+            let returnedUser = (await TestHelper.post('/api/TestServerMiddleware?token=invalid').send({})).body as User
+            expect(returnedUser).to.deep.equal({})
+        })
+
+        it('Server middlewares does not add user information to request when the token contains invalid user id', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase[entityFromDatabase._id] = entityFromDatabase
+            // Fake token
+            let jwt = sign({_id: 'invalidId' } as TokenContent, appInstance.initOptions.tokenSecret as string, { expiresIn: '24h' })
+            let returnedUser = (await TestHelper.post('/api/TestServerMiddleware?token=' + jwt).send({})).body as User
+            expect(returnedUser).to.deep.equal({})
         })
 
     })

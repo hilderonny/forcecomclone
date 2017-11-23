@@ -9,3 +9,15 @@ export class Token {
     token: string
     
 }
+
+/**
+ * Describes the content (payload) of the authentication token
+ */
+export class TokenContent {
+
+    /**
+     * Id of the logged in user
+     */
+    _id: string
+
+}

@@ -13,10 +13,10 @@ export class ApiOptions {
     beforeDelete?: express.RequestHandler
 
     /**
-     * Express request handler which is called before
-     * performing a POST action
+     * Express request handlers which are called before
+     * performing a POST action in the order they are defined
      */
-    beforePost?: express.RequestHandler
+    beforePost?: express.RequestHandler[]
 
     /**
      * Express request handler which is called before

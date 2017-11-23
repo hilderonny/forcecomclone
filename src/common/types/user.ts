@@ -1,4 +1,5 @@
 import { Type } from "../../server/core/type";
+import { Request } from "express"
 
 /**
  * Defines an user which can login into the application
@@ -16,3 +17,10 @@ export class User extends Type {
     password: string
 
 }
+
+export interface UserRequest extends Request {
+
+    user?: User
+
+}
+    

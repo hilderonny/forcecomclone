@@ -1,9 +1,9 @@
 import { Module } from "../core/module";
-import { User } from "../../common/types/user";
-import { Request, Response} from "express"
+import { User, UserRequest } from "../../common/types/user";
+import { Request, Response, RequestHandler, NextFunction} from "express"
 import { hashSync, compareSync } from "bcryptjs"
-import { sign } from "jsonwebtoken"
-import { Token } from "../../common/types/token";
+import { sign, verify } from "jsonwebtoken"
+import { Token, TokenContent } from "../../common/types/token";
 import { Type } from "../core/type";
 import { isNullOrUndefined } from "util";
 
@@ -17,26 +17,28 @@ export default Module.create((app) => {
     app.registerDefaultApi(User, {
 
         // Check the user's name for uniqueness before creating it
-        beforePost: async (req, res, next) => {
-            // Extract the posted user from the request
-            let user = req.body as User
-            // Check the sent password
-            if (isNullOrUndefined(user.password)) {
-                res.sendStatus(400)
-                return
+        beforePost: [
+            async (req, res, next) => {
+                // Extract the posted user from the request
+                let user = req.body as User
+                // Check the sent password
+                if (isNullOrUndefined(user.password)) {
+                    res.sendStatus(400)
+                    return
+                }
+                // Find an user with the same name in the database
+                let existingUser = await app.db.findOne(User, { name : user.name } as User)
+                // When there is an user with the same name, abort the request with an error code
+                if (existingUser) {
+                    res.sendStatus(409) // Conflict
+                    return
+                }
+                // Encrypt the password
+                user.password = hashSync(user.password)
+                // Proceed with the default API behaviour
+                next()
             }
-            // Find an user with the same name in the database
-            let existingUser = await app.db.findOne(User, { name : user.name } as User)
-            // When there is an user with the same name, abort the request with an error code
-            if (existingUser) {
-                res.sendStatus(409) // Conflict
-                return
-            }
-            // Encrypt the password
-            user.password = hashSync(user.password)
-            // Proceed with the default API behaviour
-            next()
-        },
+        ],
 
         // Check the user's name for uniqueness before changing it
         beforePut: async(req, res, next) => {
@@ -80,7 +82,7 @@ export default Module.create((app) => {
 
         // Create a JSON Web Token containing the _id of the logged in user
         let createToken = (userId: string): Token => {
-            let jwt = sign({_id: userId} as Type, app.initOptions.tokenSecret as string, { expiresIn: '24h' })
+            let jwt = sign({_id: userId} as TokenContent, app.initOptions.tokenSecret as string, { expiresIn: '24h' })
             return { token: jwt } as Token
         }
 
