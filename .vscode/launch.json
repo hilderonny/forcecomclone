@@ -31,6 +31,9 @@
                 "--recursive",
                 "${workspaceFolder}/src/test/**/*.ts"
             ],
+            "env": {
+                "TOKENSECRET": "hampfpampe"
+            },
             "internalConsoleOptions": "openOnSessionStart"
         }
     ]

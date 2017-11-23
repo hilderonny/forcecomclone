@@ -20,17 +20,17 @@ export class App {
     /** Single express API router used for defining routes */
     private router = express.Router()
     /** Reference to the database layer to be used. Must be defined before calling init() */
-    public db: Database
+    db: Database
     /** Reference to the express framework instance. Must be public because tests need to access this instance */
-    public server: express.Express
-    /** Port to listen on. By default this is port 80. */
-    private port: number
+    server: express.Express
+    /** Options given at initialization or via environment variables. */
+    initOptions: InitOptions
 
     /**
      * Creates an instance of the application.
      * Next define app.db and call app.init(), app.registerDefaultApi() and app.start().
      */
-    public constructor() { }
+    constructor() { }
 
     /**
      * Checks whether the database layer was set and whether init() was called correctly.
@@ -49,6 +49,14 @@ export class App {
 
         let self = this
 
+        self.initOptions = options
+
+        if (!options.tokenSecret) options.tokenSecret = process.env.TOKENSECRET
+        if (!options.port) options.port = parseInt(process.env.PORT + '') || 80
+        
+        // Authentication token must be set before starting the application
+        if (!options.tokenSecret) throw(new Error('Environment variable TOKENSECRET was not set. Application cannot start without it!'))
+
         return new Promise((resolve, reject) => {
 
             self.server = express()
@@ -56,8 +64,6 @@ export class App {
             self.server.use(options.jsUrl || '/js', express.static(options.jsPath || '/dist/client'));
             self.server.use(express.json())
             self.server.use(express.urlencoded({ extended:true }))
-
-            self.port = options.port || parseInt(process.env.PORT + '') || 80
             
             // Initialize modules
             if (options.modulesPath) fs.readdir(path.join(__dirname, '..', options.modulesPath), (error, files) => {
@@ -88,8 +94,8 @@ export class App {
 
         return new Promise((resolve, reject) => {
 
-            let runningApp = self.server.listen(this.port, () => {
-                console.log(`Server listening on HTTP port ${self.port}`);
+            let runningApp = self.server.listen(this.initOptions.port, () => {
+                console.log(`Server listening on HTTP port ${self.initOptions.port}`);
                 resolve(runningApp)
             })
     
@@ -152,7 +158,11 @@ export class App {
         if (options && options.beforePost) postHandlers.push(options.beforePost)
         postHandlers.push((req: express.Request, res: express.Response) => {
             this.db.insertOne<T>(type, req.body as T).then((insertedEntity) => {
-                res.send(insertedEntity)
+                if (options && options.filterPost) {
+                    let filteredEntity = options.filterPost(insertedEntity)
+                    res.send(filteredEntity)
+                } else
+                    res.send(insertedEntity)
             })
         })
         this.router.post(`/${type.name}`, postHandlers)

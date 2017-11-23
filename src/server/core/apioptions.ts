@@ -39,5 +39,13 @@ export class ApiOptions {
      * Must be defined in modules like this: filterGetId:(user: User) => { return user }
      */
     filterGetId?: (entity: any) => any
+    
+    /**
+     * Filter function which is called after posting an entity with POST/
+     * but before sending the inserted result to the requester.
+     * Must be defined in modules like this: filterPost:(user: User) => { return user }
+     */
+    filterPost?: (entity: any) => any
+
 }
     

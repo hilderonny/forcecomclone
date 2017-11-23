@@ -28,7 +28,8 @@ export class InitOptions {
     modulesPath?: string
 
     /**
-     * Port where the application should listen on
+     * Port where the application should listen on.
+     * Can be set with environment variable PORT
      * @default 80
      */
     port?: number
@@ -44,5 +45,11 @@ export class InitOptions {
      * @default /js
      */
     jsUrl?: string
+
+    /**
+     * Hash string for encrypting login tokens.
+     * Must be set via environment variable TOKENSECRET
+     */
+    tokenSecret?: string
 
 }

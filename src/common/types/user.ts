@@ -13,6 +13,6 @@ export class User extends Type {
      * When retrieved from the database, the password is encrypted.
      * When sent from the client, the password comes in plain text.
      */
-    password?: string
+    password: string
 
 }

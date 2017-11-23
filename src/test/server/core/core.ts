@@ -9,17 +9,43 @@ import { Request, Response } from "express"
 describe('Core tests', () => {
 
     let appInstance: App
+    let tokenSecret: string | undefined
     
     beforeEach(async () => {
+        tokenSecret = process.env.TOKENSECRET
         await TestHelper.init()
         appInstance = TestHelper.app
     })
 
     afterEach(async () => {
+        process.env.TOKENSECRET = tokenSecret
         TestHelper.app = appInstance
     })
         
     describe('App.init()', () => {
+
+        it('Throws an error when environment variable TOKENSECRET is not set', async() => {
+            let app = new App()
+            app.db = new DatabaseMock()
+            delete process.env.TOKENSECRET
+            expect(() => { app.init({ modulesPath: '../../dist/test/server/core/testmodules' }) }).to.throw('Environment variable TOKENSECRET was not set. Application cannot start without it!')
+        })
+
+        it('Takes the port from the settings when given instead of the environment variable PORT', async() => {
+            let app = new App()
+            app.db = new DatabaseMock()
+            let portToUse = 33333
+            await app.init({ modulesPath: '../../dist/test/server/core/testmodules', port: portToUse })
+            expect(app.initOptions.port).to.equal(portToUse)
+        })
+
+        it('Takes the token sectret from the settings when given instead of the environment variable TOKENSECRET', async() => {
+            let app = new App()
+            app.db = new DatabaseMock()
+            let secretToUse = 'drivinghomeforchristmas'
+            await app.init({ modulesPath: '../../dist/test/server/core/testmodules', tokenSecret: secretToUse })
+            expect(app.initOptions.tokenSecret).to.equal(secretToUse)
+        })
 
         it('Initializes all modules in the given module path', async() => {
             let app = new App()
@@ -159,13 +185,18 @@ describe('Core tests', () => {
             expect(entityFromApi).deep.equal(entityFromDatabase)
         })
 
-        it('POST/ inserts an entity and returns it with an _id', async() => {
+        it('POST/ inserts an entity', async() => {
+            let entityToSend = { name: 'name1' } as TestEntityType
+            let returnedEntity = (await TestHelper.post('/api/TestEntityType').send(entityToSend)).body as TestEntityType
+            let entityFromDatabase = (TestHelper.app.db as DatabaseMock).entities[returnedEntity._id] as TestEntityType
+            expect(entityFromDatabase.name).to.equal(entityToSend.name)
+        })
+
+        it('POST/ returns the inserted entity with an _id', async() => {
             let entityToSend = { name: 'name1' } as TestEntityType
             let returnedEntity = (await TestHelper.post('/api/TestEntityType').send(entityToSend)).body as TestEntityType
             expect(returnedEntity).to.haveOwnProperty('_id')
             expect(returnedEntity.name).to.equal(entityToSend.name)
-            let entityFromDatabase = (TestHelper.app.db as DatabaseMock).entities[returnedEntity._id] as TestEntityType
-            expect(entityFromDatabase.name).to.equal(entityToSend.name)
         })
 
         it('PUT/:id updates given values on an entity', async() => {
@@ -177,6 +208,15 @@ describe('Core tests', () => {
             let entityFromDatabaseAfterUpdate = entitiesFromDatabase['id1'] as TestEntityType
             expect(entityFromDatabaseAfterUpdate.name).equal(updateSet.name)
             expect(entityFromDatabaseAfterUpdate.surname).equal(entityFromDatabase.surname)
+        })
+
+        it('PUT/:id does not return the updated entity', async() => {
+            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
+            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
+            entitiesFromDatabase['id1'] = entityFromDatabase
+            let updateSet = { name:'name2' } as TestEntityType
+            let response = (await TestHelper.put('/api/TestEntityType/id1').send(updateSet)).body
+            expect(response).to.deep.equal({})
         })
 
         it('DELETE/:id deletes an entity with a given id', async() => {

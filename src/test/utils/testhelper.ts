@@ -14,12 +14,10 @@ export class TestHelper {
      * Inititalize an application with default settings and mocked database for API testing
      */
     static async init() {
-        if (!TestHelper.app) {
-            let app = new App()
-            app.db = new DatabaseMock()
-            await app.init() // Do not load any modules automatically
-            TestHelper.app = app
-        }
+        let app = new App()
+        app.db = new DatabaseMock()
+        await app.init() // Do not load any modules automatically
+        TestHelper.app = app
     }
 
     /**

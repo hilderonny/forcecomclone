@@ -9,11 +9,27 @@ import { v4 } from 'uuid';
 export class DatabaseMock extends Database {
     
     /** Dictionary which collects entities depending on their type */
-    entities: { [key: string]: Type } = {}
+    entities: { [key: string]: Type } = { }
     
     count<T extends Type>(type: new () => T, filter: Object): Promise<number> {
-        throw new Error("Method not implemented.")
-    }
+        let entitiesCount = 0
+        let entitiyKeys = Object.keys(this.entities)
+        for (let i = 0; i < entitiyKeys.length; i++) {
+            let entity = this.entities[entitiyKeys[i]]
+            let areEqual = true
+            Object.keys(filter).forEach((filterKey) => {
+                if (Object.keys(entity).indexOf(filterKey) < 0) {
+                    areEqual = false
+                    return
+                }
+                if ((entity as any)[filterKey] !== (filter as any)[filterKey])
+                    areEqual = false
+            })
+            if (areEqual) 
+                entitiesCount += 1
+        }
+        return Promise.resolve(entitiesCount)
+}
 
     deleteOne<T extends Type>(id: string): Promise<void> {
         delete this.entities[id]
@@ -37,7 +53,7 @@ export class DatabaseMock extends Database {
                         areEqual = false
                 })
                 if (areEqual) 
-                    return Promise.resolve(entity as T)
+                    return Promise.resolve({...entity} as T) // Return a clone to prevent updating the database element
             }
             return Promise.resolve(null)
         }
@@ -45,14 +61,16 @@ export class DatabaseMock extends Database {
 
     /** Ignores the filter and always returns all entities of the given type */
     findMany<T extends Type>(type: new () => T, filter: Object): Promise<T[]> {
-        return Promise.resolve(Object.keys(this.entities).map((key) => this.entities[key] as T))
+        return Promise.resolve(Object.keys(this.entities).map((key) => {
+            return {...this.entities[key]} as T
+        }))
     }
 
     /** Creates an UUID V4 as id for the entitiy to create */
     insertOne<T extends Type>(type: new () => T, entity: T): Promise<T> {
         entity._id = v4()
         this.entities[entity._id] = entity
-        return Promise.resolve(entity)
+        return Promise.resolve({...this.entities[entity._id]} as T)
     }
 
     /** Every id is valid until it dows not equal the string 'invalidId' */
