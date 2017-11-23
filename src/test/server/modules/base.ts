@@ -109,5 +109,13 @@ describe.only('Module base', () => {
         })
 
     })
+
+    describe('API login', () => {
+
+        it('POST answers with status 418 until a real user check is implemented', async() => {
+            await TestHelper.post('/api/login').send({}).expect(418)
+        })
+
+    })
     
 })

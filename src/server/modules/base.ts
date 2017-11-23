@@ -1,5 +1,6 @@
 import { Module } from "../core/module";
 import { User } from "../../common/types/user";
+import { Request, Response} from "express"
 
 /**
  * Base module with functionality for handling
@@ -50,6 +51,15 @@ export default Module.create((app) => {
             return user
         }
             
+    })
+
+    // API for login
+    app.registerCustomApi((router) => {
+
+        router.post('/login', (req: Request, res: Response) => {
+            res.sendStatus(418) // I'm a teapot
+        })
+
     })
 
 })

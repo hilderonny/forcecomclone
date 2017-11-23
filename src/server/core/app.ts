@@ -181,4 +181,16 @@ export class App {
         this.router.delete(`/${type.name}/:id`, deleteHandlers)
         
     }
+
+    /**
+     * For special APIs which do not handle default entities (like login or menu)
+     * this method provides the Router object so that a module can create routes
+     * for themselves
+     * @param registerFunction Function which is called with the Router object as parameter
+     *                         and in which the route registration should be done
+     */
+    registerCustomApi(registerFunction: (router: express.Router) => void) {
+        this.checkInit()
+        registerFunction(this.router)
+    }
 }
