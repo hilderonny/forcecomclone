@@ -4,6 +4,7 @@ import { TestHelper } from '../../utils/testhelper';
 import { DatabaseMock } from '../../utils/databasemock';
 import { Type } from '../../../server/core/type';
 import { Module } from '../../../server/core/module';
+import { Request, Response } from "express"
 
 describe('Core tests', () => {
 
@@ -216,6 +217,31 @@ describe('Core tests', () => {
 
         it('existingId middleware returns 404 on not existing id', async() => {
             await TestHelper.del('/api/TestEntityType/notExistingId').expect(404)
+        })
+
+    })
+
+    describe('App.registerCustomApi()', () => {
+
+        // Init tests
+
+        it('Throws an error when the app is not initialized', async() => {
+            let app = new App()
+            expect(() => { app.registerCustomApi((router) => {}) }).to.throw('App not initialized! Please call App.instance.init()!')
+        })
+    
+        // API Tests
+
+        it('Registers custom API routes', async () => {
+            let apiEndPoint = '/customTestApi'
+            let messageToReturn = ['Hello Test!'] // Need to provide an array or an object because the APIs communicate via JSON
+            TestHelper.app.registerCustomApi((router) => {
+                router.get(apiEndPoint, (req: Request, res: Response) => {
+                    res.send(messageToReturn)
+                })
+            })
+            let response = (await TestHelper.get(`/api/${apiEndPoint}`).expect(200)).body
+            expect(response).to.deep.equal(messageToReturn)
         })
 
     })

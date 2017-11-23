@@ -2,7 +2,6 @@ import { TestHelper } from "../../utils/testhelper";
 import { User } from "../../../common/types/user";
 import { default as BaseModule } from "../../../server/modules/base"
 
-
 describe('Module base', () => {
     
     beforeEach(async () => {
@@ -34,6 +33,14 @@ describe('Module base', () => {
             let secondUser = await TestHelper.app.db.insertOne<User>(User, { name: 'name2' } as User)
             let userToSend = { name: firstUser.name } as User
             await TestHelper.put('/api/User/' + secondUser._id).send(userToSend).expect(409)
+        })
+
+    })
+
+    describe('API login', () => {
+
+        it('POST answers with status 418 until a real user check is implemented', async() => {
+            await TestHelper.post('/api/login').send({}).expect(418)
         })
 
     })
