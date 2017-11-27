@@ -22,3 +22,7 @@ The application is separated into the following parts. The development of each p
 - [Server](src/server/README.md)
 - [Database layer](src/server/README.md)
 - [Tests](src/test/README.md)
+
+# Debugging
+
+Open the application root folder in Visual Studio Code, do an `npm install` and then click on `Debug` in the debug panel. This will start the server and watch the client side typescript files for changes so that webpack will recompile them instantly. Doing so you don't need to restart the server to see the client script changes in the browser.
