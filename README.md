@@ -14,3 +14,11 @@ Now you need to install some helper tools globally, which are used for compiling
 npm install -g typescript
 ```
 
+# Application parts
+
+The application is separated into the following parts. The development of each part is described behind the links.
+
+- [User interface](src/client/README.md)
+- [Server](src/server/README.md)
+- [Database layer](src/server/README.md)
+- [Tests](src/test/README.md)
