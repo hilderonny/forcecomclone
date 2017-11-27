@@ -4,8 +4,10 @@
   "description": "Eierlegende Wollmilchsau",
   "main": "index.js",
   "scripts": {
-    "debug": "node --nolazy --inspect-brk=9229 dist/server/index.js",
-    "predebug": "tsc --inlineSourceMap",
+    "debug": "npm-run-all --parallel watch:client debug:server",
+    "watch:client": "webpack --watch",
+    "debug:server": "node --nolazy --inspect-brk=9229 dist/server/index.js",
+    "predebug:server": "tsc --inlineSourceMap",
     "pretest": "tsc --inlineSourceMap",
     "pretestagent": "tsc --inlineSourceMap",
     "start": "node dist/server/index.js",
@@ -62,10 +64,13 @@
     "cross-env": "^5.1.1",
     "mocha": "^4.0.1",
     "mocha-teamcity-reporter": "^1.1.1",
+    "npm-run-all": "^4.1.2",
     "nyc": "^11.3.0",
     "source-map-support": "^0.5.0",
     "supertest": "^3.0.0",
+    "ts-loader": "^3.1.1",
     "ts-node": "^3.3.0",
-    "typescript": "^2.6.1"
+    "typescript": "^2.6.1",
+    "webpack": "^3.8.1"
   }
 }

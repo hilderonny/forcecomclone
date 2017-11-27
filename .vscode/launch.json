@@ -4,12 +4,15 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Debug server",
+            "name": "Debug",
             "runtimeExecutable": "npm",
             "runtimeArgs": [
                 "run-script",
                 "debug"
             ],
+            "env": {
+                "TOKENSECRET": "hampfpampe"
+            },
             "port": 9229
         },
         {

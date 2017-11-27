@@ -63,8 +63,8 @@ export class App {
         return new Promise((resolve, reject) => {
 
             self.server = express()
-            self.server.use(express.static(options.publicPath || '/public'));
-            self.server.use(options.jsUrl || '/js', express.static(options.jsPath || '/dist/client'));
+            self.server.use(express.static(options.publicPath || './public'));
+            self.server.use(options.jsUrl || '/js', express.static(options.jsPath || './dist/client'));
             // Middleware for extracting the token from the request and adding user information to the request
             self.server.use(async (req: UserRequest, res, next) => {
                 // When a token is given, try to find the user for it
