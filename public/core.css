@@ -1,0 +1,41 @@
+* {
+    box-sizing: border-box;
+    margin: 0; 
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+html {
+    height: 100%;
+}
+
+.card {
+    background: #bfb;
+    width: 100px;
+    height: 100px;
+    margin: 4px;
+}
+
+.cardstack {
+    align-content: center;
+    align-items: center;
+    background: #dfd;
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.mainmenu {
+    display: none;
+}
+
+.toolbar {
+    background: #fee;
+    height: 40px;
+}
