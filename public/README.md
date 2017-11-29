@@ -1,3 +1,8 @@
+# TODO
+- Implement client side app with functions for creating cardstacks and cards ( utils.createCardStack(targetTRoAttachTo, ...), utils.createCard(cardStackToAttachTo, ...) )
+- Attach resize handlers to cards in creation functions like in https://jsfiddle.net/ronnyhildebrandt/2rez90co/
+- Update CSS documentation
+
 # CSS Styles and their meanings
 
 ## *

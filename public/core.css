@@ -14,21 +14,40 @@ html {
     height: 100%;
 }
 
-.card {
+.cardstack {
+    background: #dfd;
+    display: flex;
+    flex: 1;
+}
+
+.cardstack > .card {
     background: #bfb;
+}
+
+.cardstack.default {
+    align-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.cardstack.default > .card {
     width: 100px;
     height: 100px;
     margin: 4px;
 }
 
-.cardstack {
-    align-content: center;
-    align-items: center;
-    background: #dfd;
-    display: flex;
+.cardstack.listdetail {
+    overflow-x: auto;
+}
+
+.cardstack.listdetail > .card {
+    border:1px solid #000;
+    min-width: 320px;
+}
+
+.cardstack.listdetail > .card:last-child {
     flex: 1;
-    flex-wrap: wrap;
-    justify-content: center;
 }
 
 .mainmenu {
