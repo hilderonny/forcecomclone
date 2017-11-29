@@ -1,6 +1,5 @@
 # TODO
-- Implement client side app with functions for creating cardstacks and cards ( utils.createCardStack(targetTRoAttachTo, ...), utils.createCard(cardStackToAttachTo, ...) )
-- Attach resize handlers to cards in creation functions like in https://jsfiddle.net/ronnyhildebrandt/2rez90co/
+
 - Update CSS documentation
 
 # CSS Styles and their meanings
@@ -43,3 +42,25 @@ The cardstack is the area below the toolbar where all cards are placed in. It us
 |flex:1|Defines that the cardstack uses all available space within the body|
 |flex-wrap:wrap|Forces to wrap cards into multiple lines instead of shrinking their width|
 |justify-content:center|Responsible for centering the cards vertically|
+
+## .cardstack > .card
+
+## .cardstack.default
+
+## .cardstack.default > .card
+
+## .cardstack.listdetail
+
+## .cardstack.listdetail > .card
+
+## .cardstack.listdetail > .card:after
+
+## .cardstack.listdetail > .card:hover:after
+
+## .cardstack.listdetail > .card:last-child
+
+## .cardstack.listdetail > .card:last-child:after
+
+## .mainmenu
+
+## .toolbar

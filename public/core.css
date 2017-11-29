@@ -15,13 +15,13 @@ html {
 }
 
 .cardstack {
-    background: #dfd;
+    background: #dfd; /* ONLY FOR DEBUGGING */
     display: flex;
     flex: 1;
 }
 
 .cardstack > .card {
-    background: #bfb;
+    background: #bfb; /* ONLY FOR DEBUGGING */
 }
 
 .cardstack.default {
@@ -42,12 +42,34 @@ html {
 }
 
 .cardstack.listdetail > .card {
-    border:1px solid #000;
     min-width: 320px;
+    pointer-events: none;
+    position: relative;
+}
+
+.cardstack.listdetail > .card:after {
+    pointer-events: all;
+    content: '';
+    background: #ccc;
+    display: block;
+    height: 100%;
+    width: 4px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: col-resize;
+}
+
+.cardstack.listdetail > .card:hover:after {
+    background: #666;
 }
 
 .cardstack.listdetail > .card:last-child {
     flex: 1;
+}
+  
+.cardstack.listdetail > .card:last-child:after {
+    display: none;
 }
 
 .mainmenu {
@@ -55,6 +77,6 @@ html {
 }
 
 .toolbar {
-    background: #fee;
+    background: #fee; /* ONLY FOR DEBUGGING */
     height: 40px;
 }
