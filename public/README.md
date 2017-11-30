@@ -91,19 +91,42 @@ When you have more than two cards, all except the last one have fixed widths and
 
 ## .cardstack.listdetail > .card:after
 
-TODO
+This virtual element is used for resizing a card. right to each card this element is placed which reacts on mouseover events and shows a bar and special cursor. Dragging this element results in resizing the corresponding card horizontally.
+
+|Attribute|Meaning|
+|-|-|
+|border-right:1px solid rgba(0,0,0,0.2)|Shows a small semi transparent line right to the card like a border to visualize where the resize handler can be found. Moving the mouse closer shows the full resize handler region (defined in the next style below)|
+|content:''|The content must be set to make the virtual element visible. It can be empty but must exist|
+|cursor:col-resize|When moving the mouse over this element, the cursor changes into a double sided horizontal arrow, visualizing the resize function|
+|height:100%|The resize handler should be as high as the card, so the height is set relative to the card's height|
+|position:absolute|Defines that the resize handler should be positioned absolute to the card|
+|right:0|The absolute position should be 0 pixels from the right of the card|
+|width:4px|The width of the resize handle is set to 4 pixels to have something to grab|
+|pointer-events:all|Because of that for the parent card all pointer events were disabled to prevent wrong dragging behaviour, they must be reenabled on this child element to activate the resize functionality|
 
 ## .cardstack.listdetail > .card:hover:after
 
-TODO
+This settings is for showing the active resize region in detail when moving the mouse over the resize handler.
+
+|Attribute|Meaning|
+|-|-|
+|background:rgba(0,0,0,0.2)|Slightly darkens the region where the resize handler is placed to show, how big the resize handler space really is|
 
 ## .cardstack.listdetail > .card:last-child
 
-TODO
+Special definitions for the last card in the LISTDETAIL mode. This card uses the full available space instead of beeing shrinked to a minimum width.
+
+|Attribute|Meaning|
+|-|-|
+|flex:1|Define to use the entire available width in the flexbox of the cardstack.|
 
 ## .cardstack.listdetail > .card:last-child:after
 
-TODO
+The last card in LISTDETAIL mode cannot be resized manually.
+
+|Attribute|Meaning|
+|-|-|
+|display:none|Hide the resize handler for the last card so that resizing it is not possible|
 
 ## .mainmenu
 

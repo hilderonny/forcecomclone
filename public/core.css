@@ -48,20 +48,18 @@ html {
 }
 
 .cardstack.listdetail > .card:after {
-    pointer-events: all;
+    border-right: 1px solid rgba(0,0,0,0.2);
     content: '';
-    background: #ccc;
-    display: block;
-    height: 100%;
-    width: 4px;
-    position: absolute;
-    top: 0;
-    right: 0;
     cursor: col-resize;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    width: 4px;
+    pointer-events: all;
 }
 
 .cardstack.listdetail > .card:hover:after {
-    background: #666;
+    background: rgba(0,0,0,0.2);
 }
 
 .cardstack.listdetail > .card:last-child {
