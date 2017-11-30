@@ -32,9 +32,9 @@ html {
 }
 
 .cardstack.default > .card {
-    width: 100px;
     height: 100px;
     margin: 4px;
+    width: 100px;
 }
 
 .cardstack.listdetail {
