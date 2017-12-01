@@ -1,7 +1,7 @@
 import { Card } from "./card";
 import { CardStack, CardStackType } from "./cardstack";
 
-export class App {
+export class WebApp {
 
     private rootElement: Element;
     private cardStack: CardStack;
@@ -16,6 +16,15 @@ export class App {
         this.rootElement = selectorElement;
         this.cardStack = new CardStack();
         selectorElement.appendChild(this.cardStack.DivElement);
+        this.initModules();
+    }
+
+    private initModules() {
+        let modules = require.context('./modules', true, /\.ts$/);
+        let self = this;
+        modules.keys().forEach((key) => {
+            modules(key).default(self);
+        });
     }
 
     /**

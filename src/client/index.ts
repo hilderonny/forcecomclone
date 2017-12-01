@@ -1,14 +1,13 @@
-import { App } from "./app"
+import { WebApp } from "./webapp"
 import {CardStackType} from "./cardstack"
 
 window.addEventListener("load", () => {
     
-    let app = new App("body");
+    let webapp = new WebApp("body");
 
-    app.setCardStackType(CardStackType.LISTDETAIL);
-    app.addCard();
-    app.addCard();
-    app.addCard();
-    app.addCard();
+    
+
+    webapp.setCardStackType(CardStackType.LISTDETAIL);
+    webapp.addCard();
     
 })
