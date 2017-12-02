@@ -67,9 +67,14 @@ export class DatabaseMock extends Database {
     }
 
     /** Creates an UUID V4 as id for the entitiy to create */
-    insertOne<T extends Type>(type: new () => T, entity: T): Promise<T> {
-        entity._id = v4()
-        this.entities[entity._id] = entity
+    saveOne<T extends Type>(type: new () => T, entity: T): Promise<T> {
+        let id = entity._id;
+        if (id && this.entities[id]) {
+            this.entities[id] = Object.assign(this.entities[id], entity)
+        } else {
+            entity._id = v4()
+            this.entities[entity._id] = entity
+        }
         return Promise.resolve({...this.entities[entity._id]} as T)
     }
 

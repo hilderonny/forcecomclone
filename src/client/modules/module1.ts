@@ -10,9 +10,12 @@ export default ClientModule.create((webapp) => {
         return false;
     });
 
-    webapp.api(User).getAll().then((users) => {
-        console.log(users);
+    webapp.api(User).save({ name: "Wurst", password: "Husten" } as User).then((newUser) => {
+        console.log(newUser);
+        webapp.api(User).getAll().then((users) => {
+            console.log(users);
+        });
     });
-    
+
 });
     

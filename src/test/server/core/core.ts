@@ -136,10 +136,7 @@ describe('Core tests', () => {
                         (req, res, next) => {
                             res.sendStatus(901)
                         }
-                    ],
-                    beforePut: (req, res, next) => {
-                        res.sendStatus(902)
-                    }
+                    ]
                 })
 
                 app.registerDefaultApi(TestFilterMiddleware, {

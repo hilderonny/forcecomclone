@@ -21,7 +21,7 @@ import { User, UserRequest } from "../../common/types/user";
 export class App {
 
     /** Single express API router used for defining routes */
-    private router = express.Router()
+    router = express.Router()
     /** Reference to the database layer to be used. Must be defined before calling init() */
     db: Database
     /** Reference to the express framework instance. Must be public because tests need to access this instance */
@@ -39,7 +39,7 @@ export class App {
      * Checks whether the database layer was set and whether init() was called correctly.
      * Is called before start() and before registerDefaultApi()
      */
-    private checkInit() {
+    checkInit() {
         if (!this.server) throw Error('App not initialized! Please call App.instance.init()!')
         if (!this.db) throw Error('Database not set! Please define App.instance.db!')
     }
@@ -172,34 +172,21 @@ export class App {
             })
         })
 
-        // TODO: POST und PUT zusammenführen und prüfen, ob eine ID im body steckt. Nur dann aktualisieren, ansonsten neu erstellen.
-
-        // Default route for POST/ which insert a new entity into the database.
+        // Default route for POST/ which insert a new entity into the database or which updates
+        // an existing entity (when id was sent)
         // Uses ApiOptions.beforePost as middlewares
         let postHandlers: express.RequestHandler[] = []
         if (options && options.beforePost) postHandlers = options.beforePost
         postHandlers.push((req: express.Request, res: express.Response) => {
-            this.db.insertOne<T>(type, req.body as T).then((insertedEntity) => {
+            this.db.saveOne<T>(type, req.body as T).then((savedEntity) => {
                 if (options && options.filterPost) {
-                    let filteredEntity = options.filterPost(insertedEntity)
+                    let filteredEntity = options.filterPost(savedEntity)
                     res.send(filteredEntity)
                 } else
-                    res.send(insertedEntity)
+                    res.send(savedEntity)
             })
         })
         this.router.post(`/${type.name}`, postHandlers)
-
-        // Default route for PUT/:id which updates an entity of the given id
-        // Uses ApiOptions.beforePut as middlewares
-        let putHandlers: express.RequestHandler[] = [ existingId ]
-        if (options && options.beforePut) putHandlers.push(options.beforePut)
-        putHandlers.push((req: express.Request, res: express.Response) => {
-            delete req.body.type
-            this.db.updateOne<T>(type, req.params.id, req.body as T).then(() => {
-                res.sendStatus(200)
-            })
-        })
-        this.router.put(`/${type.name}/:id`, putHandlers)
 
         // Default route for DELETE/:id which deletes an entity from the database
         // Uses ApiOptions.beforeDelete as middlewares

@@ -47,13 +47,16 @@ export abstract class Database {
     abstract findMany<T extends Type>(type: {new():T}, filter: Object): Promise<T[]>;
 
     /**
-     * Inserts an entity into the database. The implementing class must do it without any
-     * checks and must resolve with the inserted entity containing an "_id" attribute with the
-     * created id.
-     * @param type Type of the entity to insert
-     * @param entity Entity to be inserted.
+     * Inserts an entity into the database or updates an existing one. The implementing class must do it without any
+     * checks and must resolve with the saved entity containing an "_id" attribute.
+     * When the given entity contains an _id field, the database must try to find an entity with the given id.
+     * When there is no matching entity, it must be created, but with a newly generated _id.
+     * When there is a matching entity, only the given attributes of the exiting entity must be updated.
+     * The existing entity MUST NOT be replaced with the given one.
+     * @param type Type of the entity to insert or update
+     * @param entity Entity to be inserted or updated.
      */
-    abstract insertOne<T extends Type>(type: {new():T}, entity: T): Promise<T>;
+    abstract saveOne<T extends Type>(type: {new(): T}, entity: T): Promise<T>;
 
     /**
      * Checks whether the given id has a valid structure. Some databases (MongoDB) need
@@ -64,17 +67,6 @@ export abstract class Database {
      * @param id Id to test
      */
     abstract isValidId(id: string): boolean;
-
-    /**
-     * Updates an entity with new attribute values. The implementing class must take the given
-     * entity and update ONLY the provided attributes. It MUST NOT replace the entity in the database
-     * with the given object. The implementing class can assume that the id is valid and that
-     * an entity with the id exists. Otherwise simply resolve the promise and do nothing.
-     * @param type Entity type to update
-     * @param id Id of the entity to update
-     * @param entity Attributes of the entity to update
-     */
-    abstract updateOne<T extends Type>(type: {new():T}, id: string, entity: T): Promise<void>;
     
 }
    

@@ -16,44 +16,45 @@ export default Module.create((app) => {
     // API for users
     app.registerDefaultApi(User, {
 
-        // Check the user's name for uniqueness before creating it
+        // Check the user's name for uniqueness before creating or updating it
         beforePost: [
             async (req, res, next) => {
                 // Extract the posted user from the request
                 let user = req.body as User
-                // Check the sent password
-                if (isNullOrUndefined(user.password)) {
-                    res.sendStatus(400)
-                    return
+                // Distinguish between creation and updating
+                if (user._id && app.db.isValidId(user._id)) {
+                    // Updating
+                    let user = req.body as User
+                    let existingUser = await app.db.findOne(User, { name : user.name } as User)
+                    // When there is ANOTHER user with the same name, abort the request with an error code
+                    if (existingUser && (existingUser._id !== req.params.id)) {
+                        res.sendStatus(409) // Conflict
+                        return
+                    }
+                    // Encrypt password when set
+                    if (!isNullOrUndefined(user.password))
+                        user.password = hashSync(user.password)
+                } else {
+                    // Inserting
+                    // Check the sent password
+                    if (isNullOrUndefined(user.password)) {
+                        res.sendStatus(400)
+                        return
+                    }
+                    // Find an user with the same name in the database
+                    let existingUser = await app.db.findOne(User, { name : user.name } as User)
+                    // When there is an user with the same name, abort the request with an error code
+                    if (existingUser) {
+                        res.sendStatus(409) // Conflict
+                        return
+                    }
+                    // Encrypt the password
+                    user.password = hashSync(user.password)
                 }
-                // Find an user with the same name in the database
-                let existingUser = await app.db.findOne(User, { name : user.name } as User)
-                // When there is an user with the same name, abort the request with an error code
-                if (existingUser) {
-                    res.sendStatus(409) // Conflict
-                    return
-                }
-                // Encrypt the password
-                user.password = hashSync(user.password)
                 // Proceed with the default API behaviour
                 next()
             }
         ],
-
-        // Check the user's name for uniqueness before changing it
-        beforePut: async(req, res, next) => {
-            let user = req.body as User
-            let existingUser = await app.db.findOne(User, { name : user.name } as User)
-            // When there is ANOTHER user with the same name, abort the request with an error code
-            if (existingUser && (existingUser._id !== req.params.id)) {
-                res.sendStatus(409) // Conflict
-                return
-            }
-            // Encrypt password when set
-            if (!isNullOrUndefined(user.password))
-                user.password = hashSync(user.password)
-            next()
-        },
 
         // Removes the passwords from the returned users
         filterGet: (users: User[]) => {
@@ -111,7 +112,7 @@ export default Module.create((app) => {
                 return
             }
             userToRegister.password = hashSync(userToRegister.password)
-            var createdUser = await app.db.insertOne(User, userToRegister)
+            var createdUser = await app.db.saveOne(User, userToRegister)
             res.send(createToken(createdUser._id))
         })
 
