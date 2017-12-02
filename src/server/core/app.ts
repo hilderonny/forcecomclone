@@ -172,6 +172,8 @@ export class App {
             })
         })
 
+        // TODO: POST und PUT zusammenführen und prüfen, ob eine ID im body steckt. Nur dann aktualisieren, ansonsten neu erstellen.
+
         // Default route for POST/ which insert a new entity into the database.
         // Uses ApiOptions.beforePost as middlewares
         let postHandlers: express.RequestHandler[] = []

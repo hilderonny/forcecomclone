@@ -10,12 +10,9 @@ export default ClientModule.create((webapp) => {
         return false;
     });
 
-    webapp.get<User>('/hullulu').then((user) => {
-        console.log('Should not come here');
-    });
-
-    webapp.get<User[]>('/api/User').then((users) => {
+    webapp.api(User).getAll().then((users) => {
         console.log(users);
     });
+    
 });
     
