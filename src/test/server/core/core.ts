@@ -186,8 +186,6 @@ describe('Core tests', () => {
             let entity = (await TestHelper.post('/api/TestEntityType').send({}).expect(200)).body as TestEntityType
             // GET/:id
             entity = (await TestHelper.get(`/api/TestEntityType/${entity._id}`).expect(200)).body as TestEntityType
-            // PUT/:id
-            await TestHelper.put(`/api/TestEntityType/${entity._id}`).send({}).expect(200)
             // DELETE/:id
             await TestHelper.del(`/api/TestEntityType/${entity._id}`).expect(200)
             
@@ -211,38 +209,38 @@ describe('Core tests', () => {
             expect(entityFromApi).deep.equal(entityFromDatabase)
         })
 
-        it('POST/ inserts an entity', async() => {
+        it('POST/ inserts an entity when no _id field is given', async() => {
             let entityToSend = { name: 'name1' } as TestEntityType
             let returnedEntity = (await TestHelper.post('/api/TestEntityType').send(entityToSend)).body as TestEntityType
             let entityFromDatabase = (TestHelper.app.db as DatabaseMock).entities[returnedEntity._id] as TestEntityType
             expect(entityFromDatabase.name).to.equal(entityToSend.name)
         })
 
-        it('POST/ returns the inserted entity with an _id', async() => {
+        it('POST/ returns the inserted entity with an _id when no _id field is given', async() => {
             let entityToSend = { name: 'name1' } as TestEntityType
             let returnedEntity = (await TestHelper.post('/api/TestEntityType').send(entityToSend)).body as TestEntityType
             expect(returnedEntity).to.haveOwnProperty('_id')
             expect(returnedEntity.name).to.equal(entityToSend.name)
         })
 
-        it('PUT/:id updates given values on an entity', async() => {
+        it('POST/ updates given values on an entity when an _id field is given', async() => {
             let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
             let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
             entitiesFromDatabase['id1'] = entityFromDatabase
-            let updateSet = { name:'name2' } as TestEntityType
-            await TestHelper.put('/api/TestEntityType/id1').send(updateSet)
+            let updateSet = { _id:'id1', name:'name2' } as TestEntityType
+            await TestHelper.post('/api/TestEntityType').send(updateSet)
             let entityFromDatabaseAfterUpdate = entitiesFromDatabase['id1'] as TestEntityType
             expect(entityFromDatabaseAfterUpdate.name).equal(updateSet.name)
             expect(entityFromDatabaseAfterUpdate.surname).equal(entityFromDatabase.surname)
         })
 
-        it('PUT/:id does not return the updated entity', async() => {
+        it('POST/ returns the updated entity when _id is given', async() => {
             let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
             let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
             entitiesFromDatabase['id1'] = entityFromDatabase
-            let updateSet = { name:'name2' } as TestEntityType
-            let response = (await TestHelper.put('/api/TestEntityType/id1').send(updateSet)).body
-            expect(response).to.deep.equal({})
+            let updateSet = { _id:'id1', name:'name2' } as TestEntityType
+            let response = (await TestHelper.post('/api/TestEntityType').send(updateSet)).body
+            expect(response).to.deep.equal({ _id:'id1', name:'name2', surname:'surname1' })
         })
 
         it('DELETE/:id deletes an entity with a given id', async() => {
@@ -265,13 +263,6 @@ describe('Core tests', () => {
 
         it('POST/ calls beforePost middleware', async() => {
             await TestHelper.post('/api/TestBeforeMiddleware').send({}).expect(901)
-        })
-
-        it('PUT/:id calls beforePut middleware', async() => {
-            let entitiesFromDatabase = (TestHelper.app.db as DatabaseMock).entities
-            let entityFromDatabase = { _id:'id1', name:'name1', surname:'surname1' } as TestEntityType
-            entitiesFromDatabase['id1'] = entityFromDatabase
-            await TestHelper.put('/api/TestBeforeMiddleware/id1').send({}).expect(902)
         })
 
         it('GET/ calls filterGet middleware', async() => {

@@ -32,10 +32,12 @@
     ],
     "exclude": [
       "**/*.d.ts",
+      "src/client/",
       "src/test/",
       "src/server/index.ts",
       "dist/",
-      "coverage/"
+      "coverage/",
+      "webpack.config.js"
     ],
     "reporter": [
       "html"

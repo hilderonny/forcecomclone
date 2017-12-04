@@ -133,24 +133,24 @@ describe('Module base', () => {
             expect(createdUser.password).to.be.undefined
         })
 
-        it('PUT updates an user', async() => {
+        it('POST updates an user when _id is given', async() => {
             let existingUser = await TestHelper.app.db.saveOne<User>(User, { name: 'username', password: hashSync('password') } as User)
-            let userToSend = { name: 'changedusername' } as User
-            await TestHelper.put('/api/User/' + existingUser._id).send(userToSend).expect(200)
+            let userToSend = { _id: existingUser._id, name: 'changedusername' } as User
+            await TestHelper.post('/api/User').send(userToSend).expect(200)
         })
 
-        it('PUT returns 409 when an user would get a new name which is already taken by another user', async() => {
+        it('POST returns 409 when an user would get a new name which is already taken by another user and _id is given', async() => {
             let firstUser = await TestHelper.app.db.saveOne<User>(User, { name: 'name1' } as User)
             let secondUser = await TestHelper.app.db.saveOne<User>(User, { name: 'name2' } as User)
-            let userToSend = { name: firstUser.name } as User
-            await TestHelper.put('/api/User/' + secondUser._id).send(userToSend).expect(409)
+            let userToSend = { _id: secondUser._id, name: firstUser.name } as User
+            await TestHelper.post('/api/User').send(userToSend).expect(409)
         })
 
-        it('PUT encrypts the password when it was sent', async() => {
+        it('POST encrypts the password when it was sent and _id is given', async() => {
             let existingUser = await TestHelper.app.db.saveOne<User>(User, { name: 'username', password: hashSync('password') } as User)
             let password = 'changedpassword'
-            let userToSend = { password: password } as User
-            await TestHelper.put('/api/User/' + existingUser._id).send(userToSend)
+            let userToSend = { _id: existingUser._id, password: password } as User
+            await TestHelper.post('/api/User').send(userToSend)
             let userFromDatabase = await TestHelper.app.db.findOne(User, existingUser._id)
             expect(userFromDatabase).not.to.be.null
             if (userFromDatabase) {
@@ -162,10 +162,10 @@ describe('Module base', () => {
             }
         })
 
-        it('PUT accepts empty passwords', async() => {
+        it('POST accepts empty passwords when _id is given', async() => {
             let existingUser = await TestHelper.app.db.saveOne<User>(User, { name: 'username', password: hashSync('password') } as User)
-            let userToSend = { password: '' } as User
-            await TestHelper.put('/api/User/' + existingUser._id).send(userToSend).expect(200)
+            let userToSend = { _id: existingUser._id, password: '' } as User
+            await TestHelper.post('/api/User').send(userToSend).expect(200)
         })
 
     })
