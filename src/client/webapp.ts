@@ -4,6 +4,11 @@ import { Rest } from "./rest";
 import { Type } from "../server/core/type";
 import { Api } from "./api";
 
+/**
+ * Main class for an app. Represents the javascript entry point for client
+ * functionality. Each app must initialize this class to communicate
+ * with the server and to handle UI functionality.
+ */
 export class WebApp {
 
     rootElement: Element;
@@ -25,6 +30,14 @@ export class WebApp {
         this.initModules();
     }
 
+    /**
+     * Loads all modules from the typescript files in the ./modules
+     * subfolder. Each of those modules must be created with
+     * ClientModule.create((webapp) => {});
+     * Because we need dynmic loading of client side modules it is the easiest way
+     * to let webpack merge all available client modules dynamically on start and provide
+     * them all as bundle to the client.
+     */
     initModules(): void {
         let modules = require.context('./modules', true, /\.ts$/);
         let self = this;
@@ -49,10 +62,30 @@ export class WebApp {
         this.cardStack.addCard();
     }
 
+    /**
+     * Registers a handler for specific HTTP status codes for the REST feature.
+     * Mainly used for watching for 403 errors which means that the user is not
+     * authenticated and needs a redirection to the login page.
+     * When the handler function returns false, no further handler function is called
+     * and the request is not processed any further.
+     * 
+     * @param statusCode HTTP Status code to watch for
+     * @param handler Handler function which is called when the given status is returned.
+     *                This function gets the request as parameter and needs to return true
+     *                when the request should be processed further or false when not.
+     */
     addStatusHandler(statusCode: number, handler: (req: XMLHttpRequest) => boolean) {
         this.rest.addStatusHandler(statusCode, handler);
     }
 
+    /**
+     * Obtain a reference to the API functions of a specific entity type. These functions
+     * provide an easy way to communicate with the server for reading and writing entities.
+     * For this APIs to work the server (any module on it) must register an API for the given
+     * entity type.
+     * 
+     * @param type Type of the entity of the requested API.
+     */
     api<T extends Type>(type: {new(): T}): Api<T> {
         return new Api(type);
     }

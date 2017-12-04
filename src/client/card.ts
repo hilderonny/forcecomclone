@@ -10,8 +10,17 @@ export class Card {
      */
     DivElement: HTMLDivElement;
 
-    private ResizeStartX: number;
-    private ResizeStartWidth: number;
+    /**
+     * When starting card resizing this variable remembers the starting X
+     * position of the cursor
+     */
+    ResizeStartX: number;
+    
+    /**
+     * When starting card resizing this variable remembers the starting width
+     * of the card
+     */
+    ResizeStartWidth: number;
 
     /**
      * Creates a card and asings it to the given card stack
