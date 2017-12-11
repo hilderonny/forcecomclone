@@ -68,5 +68,11 @@ export abstract class Database {
      */
     abstract isValidId(id: string): boolean;
     
+    abstract createTable(tableName: string): Promise<void>;
+
+    abstract doesTableExist(tableName: string): Promise<boolean>;
+
+    abstract deleteTable(tableName: string): Promise<void>;
+
 }
    

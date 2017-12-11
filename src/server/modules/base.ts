@@ -6,6 +6,7 @@ import { sign, verify } from "jsonwebtoken"
 import { Token, TokenContent } from "../../common/types/token";
 import { Type } from "../core/type";
 import { isNullOrUndefined } from "util";
+import * as RecordTypeApi from "./api/recordtype";
 
 /**
  * Base module with functionality for handling
@@ -117,5 +118,7 @@ export default Module.create((app) => {
         })
 
     })
+
+    app.registerCustomApi(RecordTypeApi.default)
 
 })
