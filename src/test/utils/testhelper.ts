@@ -29,6 +29,7 @@ export class TestHelper {
     }
 
     static async cleanup() {
+        await TestHelper.db.close(true);
     }
 
     /**

@@ -8,6 +8,10 @@ describe.only('API recordtype', () => {
         await TestHelper.init();
     });
 
+    afterEach(async () => {
+        await TestHelper.cleanup();
+    })
+
     describe.only('GET', () => {
 
         it('Returns an empty list when no record types exist', async () => {
