@@ -5,6 +5,7 @@ import { App } from '../../server/core/app';
 import { Database } from '../../server/core/database';
 import { RecordType } from '../../common/types/recordtype';
 import { Db } from 'mongodb';
+import { Field } from '../../common/types/field';
 
 /**
  * Helper class providing several static test helper functions
@@ -19,11 +20,15 @@ export class TestHelper {
      * Inititalize an application with default settings and mocked database for API testing
      */
     static async init() {
-        let app = new App()
+        let app = new App();
+        TestHelper.app = app;
         app.db = new Database('mongodb://localhost:27017');
         await app.init() // Do not load any modules automatically
-        TestHelper.app = app
+        await app.db.dropDb('TestClient');
         TestHelper.db = await app.db.openDb('TestClient');
+    }
+
+    static async cleanup() {
     }
 
     /**
@@ -57,19 +62,33 @@ export class TestHelper {
     static put(url: string): supertest.Test {
         return supertest(TestHelper.app.server).put(url)
     }
-
     
     static async prepareRecordTypes() {
         let recordTypes: RecordType[] = [
             { name: 'Document' } as RecordType,
             { name: 'FM_Object' } as RecordType
         ];
-        await TestHelper.db.collection<RecordType>(RecordType.name).deleteMany({});
-        recordTypes.forEach(async (recordType) => {
-            await TestHelper.db.collection(recordType.name).drop(); // Geht nicht, wenn nicht da
-            await TestHelper.db.collection<RecordType>(RecordType.name).insert(recordType);
-            await TestHelper.db.createCollection(recordType.name);
+        recordTypes.forEach(async (rt) => {
+            await TestHelper.db.collection<RecordType>(RecordType.name).insert(rt);
+            await TestHelper.db.createCollection(rt.name);
         });
+        return recordTypes;
+    }
+    
+    static async prepareFields() {
+        let recordTypes = await TestHelper.db.collection<RecordType>(RecordType.name).find({}).toArray();
+        let allFields: Field[] = [];
+        recordTypes.forEach(async (rt) => {
+            let fields: Field[] = [
+                { name: 'Owner', recordTypeId: rt._id.toString() } as Field,
+                { name: 'Name', recordTypeId: rt._id.toString() } as Field
+            ];
+            fields.forEach(async (f) => {
+                await TestHelper.db.collection<Field>(Field.name).insert(f);
+                allFields.push(f);
+            });
+        });
+        return allFields;
     }
     
 }

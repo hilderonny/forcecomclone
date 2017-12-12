@@ -1,20 +1,29 @@
 import { RecordType } from "../../../common/types/recordtype";
 import { TestHelper } from "../../utils/testhelper";
+import { expect } from "chai";
 
 describe.only('API recordtype', () => {
 
     beforeEach(async () => {
         await TestHelper.init();
-        await TestHelper.prepareRecordTypes();
     });
 
-    describe('GET', () => {
+    describe.only('GET', () => {
 
         it('Returns an empty list when no record types exist', async () => {
-
+            let recordTypesFromApi = (await TestHelper.get('/api/RecordType').expect(200)).body as RecordType[];
+            expect(recordTypesFromApi).to.be.empty;
         });
 
-        xit('Returns the meta information of all existing record types', async () => {});
+        it('Returns the meta information of all existing record types', async () => {
+            let recordTypesFromDatabase = await TestHelper.prepareRecordTypes();
+            let recordTypesFromApi = (await TestHelper.get('/api/RecordType').expect(200)).body as RecordType[];
+            expect(recordTypesFromApi).to.have.lengthOf(recordTypesFromDatabase.length);
+            recordTypesFromDatabase.forEach(rtfd => {
+                let rtfa = recordTypesFromApi.find(rt => rt.name === rtfd.name);
+                expect(rtfa).not.to.be.undefined;
+            });
+        });
         
     })
 

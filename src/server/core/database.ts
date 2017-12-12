@@ -11,13 +11,21 @@ export class Database {
         this.url = url;
     }
 
-    async openDb(dbName: string) : Promise<Db> {
+    async openDb(dbName: string): Promise<Db> {
         let db = this.dbInstances[dbName];
         if (!db) {
             db = await MongoClient.connect(this.url + '/' + dbName);
             this.dbInstances[dbName] = db;
         }
         return db;
+    }
+
+    async dropDb(dbName: string): Promise<void> {
+        let db = this.dbInstances[dbName];
+        if (db) {
+            await db.dropDatabase();
+            delete this.dbInstances[dbName];
+        }
     }
 
 }
