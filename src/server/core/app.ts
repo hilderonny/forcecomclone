@@ -69,20 +69,22 @@ export class App {
             self.server.use(options.jsUrl || '/js', express.static(options.jsPath || './dist/client'));
             // Middleware for extracting the token from the request and adding user information to the request
             self.server.use(async (req: UserRequest, res, next) => {
-                // When a token is given, try to find the user for it
-                // Token must be sent with "x-access-token" - HTTP-Header or as "token" request parameter (for downloads)
-                let requestToken = req.query.token || req.headers['x-access-token'];
-                if (!requestToken) {
-                    next()
-                    return
-                }
-                verify(requestToken as string, self.initOptions.tokenSecret as string, async (err, decoded) => {
-                    if (!err) {
-                        // let user = await self.db.findOne(User, (decoded as TokenContent)._id)
-                        // if (user) req.user = user // Append the user to the request
-                    }
-                    next()
-                })
+                req.user = { db: self.db.dbInstances[Object.keys(self.db.dbInstances)[0]] } as User; // TODO: Zu korrektem Datenbank-Handling umbauen
+                next();
+                // // When a token is given, try to find the user for it
+                // // Token must be sent with "x-access-token" - HTTP-Header or as "token" request parameter (for downloads)
+                // let requestToken = req.query.token || req.headers['x-access-token'];
+                // if (!requestToken) {
+                //     next()
+                //     return
+                // }
+                // verify(requestToken as string, self.initOptions.tokenSecret as string, async (err, decoded) => {
+                //     if (!err) {
+                //         // let user = await self.db.findOne(User, (decoded as TokenContent)._id)
+                //         // if (user) req.user = user // Append the user to the request
+                //     }
+                //     next()
+                // })
             })
             
             // Initialize modules
@@ -203,16 +205,9 @@ export class App {
         
     // }
 
-    /**
-     * For special APIs which do not handle default entities (like login or menu)
-     * this method provides the Router object so that a module can create routes
-     * for themselves
-     * @param registerFunction Function which is called with the Router object as parameter
-     *                         and in which the route registration should be done
-     */
-    registerCustomApi(registerFunction: (router: express.Router) => void) {
+    registerCustomApi(registerFunction: (app: App) => void) {
         this.checkInit()
-        registerFunction(this.router)
+        registerFunction(this)
     }
 
 }

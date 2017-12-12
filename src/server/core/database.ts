@@ -20,12 +20,4 @@ export class Database {
         return db;
     }
 
-    async dropDb(dbName: string): Promise<void> {
-        let db = this.dbInstances[dbName];
-        if (db) {
-            await db.dropDatabase();
-            delete this.dbInstances[dbName];
-        }
-    }
-
 }

@@ -344,8 +344,8 @@ describe('Core tests', () => {
         it('Registers custom API routes', async () => {
             let apiEndPoint = '/customTestApi'
             let messageToReturn = ['Hello Test!'] // Need to provide an array or an object because the APIs communicate via JSON
-            TestHelper.app.registerCustomApi((router) => {
-                router.get(apiEndPoint, (req: Request, res: Response) => {
+            TestHelper.app.registerCustomApi((app) => {
+                app.router.get(apiEndPoint, (req: Request, res: Response) => {
                     res.send(messageToReturn)
                 })
             })

@@ -1,11 +1,13 @@
 import { RecordType } from "../../../common/types/recordtype";
 import { TestHelper } from "../../utils/testhelper";
+import { default as BaseModule } from "../../../server/modules/base";
 import { expect } from "chai";
 
 describe.only('API recordtype', () => {
 
     beforeEach(async () => {
         await TestHelper.init();
+        BaseModule(TestHelper.app);
     });
 
     afterEach(async () => {
@@ -19,7 +21,7 @@ describe.only('API recordtype', () => {
             expect(recordTypesFromApi).to.be.empty;
         });
 
-        it('Returns the meta information of all existing record types', async () => {
+        it.only('Returns the meta information of all existing record types', async () => {
             let recordTypesFromDatabase = await TestHelper.prepareRecordTypes();
             let recordTypesFromApi = (await TestHelper.get('/api/RecordType').expect(200)).body as RecordType[];
             expect(recordTypesFromApi).to.have.lengthOf(recordTypesFromDatabase.length);

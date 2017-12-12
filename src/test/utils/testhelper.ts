@@ -23,9 +23,13 @@ export class TestHelper {
         let app = new App();
         TestHelper.app = app;
         app.db = new Database('mongodb://localhost:27017');
-        await app.init() // Do not load any modules automatically
-        await app.db.dropDb('TestClient');
         TestHelper.db = await app.db.openDb('TestClient');
+        let existingCollections = await TestHelper.db.collections();
+        // TODO: Hier kommt beim zweiten Aufruf der Tests ein MongoError, weil noch Zugriff auf die Collection besteht. Dasselbe mit TestHelper.db.dropDatabase()
+        existingCollections.forEach(async (c) => {
+            await c.drop();
+        });
+        await app.init(); // Do not load any modules automatically
     }
 
     static async cleanup() {
