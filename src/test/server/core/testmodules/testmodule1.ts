@@ -5,6 +5,6 @@ class TestModule1 extends Type {}
 
 export default Module.create((app) => {
 
-    app.registerDefaultApi(TestModule1)
+    // app.registerDefaultApi(TestModule1)
 
 })

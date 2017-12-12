@@ -9,6 +9,7 @@ import { ApiOptions } from './apioptions'
 import { verify } from "jsonwebtoken";
 import { TokenContent } from "../../common/types/token";
 import { User, UserRequest } from "../../common/types/user";
+import { MongoClient } from "mongodb";
 
 /**
  * Main point for creating an app. First create an instance of this with "let app = new App()."
@@ -22,8 +23,9 @@ export class App {
 
     /** Single express API router used for defining routes */
     router = express.Router()
-    /** Reference to the database layer to be used. Must be defined before calling init() */
-    db: Database
+
+    db: Database;
+
     /** Reference to the express framework instance. Must be public because tests need to access this instance */
     server: express.Express
     /** Options given at initialization or via environment variables. */
@@ -60,7 +62,7 @@ export class App {
         // Authentication token must be set before starting the application
         if (!options.tokenSecret) throw(new Error('Environment variable TOKENSECRET was not set. Application cannot start without it!'))
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
             self.server = express()
             self.server.use(express.static(options.publicPath || './public'));
@@ -76,8 +78,8 @@ export class App {
                 }
                 verify(requestToken as string, self.initOptions.tokenSecret as string, async (err, decoded) => {
                     if (!err) {
-                        let user = await self.db.findOne(User, (decoded as TokenContent)._id)
-                        if (user) req.user = user // Append the user to the request
+                        // let user = await self.db.findOne(User, (decoded as TokenContent)._id)
+                        // if (user) req.user = user // Append the user to the request
                     }
                     next()
                 })
@@ -129,77 +131,77 @@ export class App {
      * @param options Optional options extending default behaviour. Can be pre- or post-processing
      *                steps for the routes.
      */
-    registerDefaultApi<T extends Type>(type:{new():T}, options?: ApiOptions) {
+    // registerDefaultApi<T extends Type>(type:{new():T}, options?: ApiOptions) {
 
-        this.checkInit()
+    //     this.checkInit()
         
-        // Middleware to check whether an entity with the given id exists in the database
-        let existingId : express.RequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            let id = req.params.id
-            // Use isValid() of the specific database layer
-            if (!this.db.isValidId(req.params.id)) {
-                res.sendStatus(400)
-                return
-            }
-            findEntityById(id).then((entity) => { 
-                if (!entity) res.sendStatus(404) 
-                else next() 
-            })
-        }
+    //     // Middleware to check whether an entity with the given id exists in the database
+    //     let existingId : express.RequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    //         let id = req.params.id
+    //         // Use isValid() of the specific database layer
+    //         if (!this.db.isValidId(req.params.id)) {
+    //             res.sendStatus(400)
+    //             return
+    //         }
+    //         findEntityById(id).then((entity) => { 
+    //             if (!entity) res.sendStatus(404) 
+    //             else next() 
+    //         })
+    //     }
 
-        let findEntityById = (id: string) => this.db.findOne(type, id)
+    //     let findEntityById = (id: string) => this.db.findOne(type, id)
 
-        // Default route for GET/ which returns all entities of a given type
-        // Uses ApiOptions.filterGet to filter the results before sending them to the client
-        this.router.get(`/${type.name}`, (req: express.Request, res: express.Response) => {
-            this.db.findMany(type, {}).then((entities) => {
-                if (options && options.filterGet) {
-                    let filteredEntities = options.filterGet(entities)
-                    res.send(filteredEntities)
-                } else
-                    res.send(entities)
-            })
-        })
+    //     // Default route for GET/ which returns all entities of a given type
+    //     // Uses ApiOptions.filterGet to filter the results before sending them to the client
+    //     this.router.get(`/${type.name}`, (req: express.Request, res: express.Response) => {
+    //         this.db.findMany(type, {}).then((entities) => {
+    //             if (options && options.filterGet) {
+    //                 let filteredEntities = options.filterGet(entities)
+    //                 res.send(filteredEntities)
+    //             } else
+    //                 res.send(entities)
+    //         })
+    //     })
 
-        // Default route for GET/:id which returns an entity of a given id
-        this.router.get(`/${type.name}/:id`, existingId, (req: express.Request, res: express.Response) => {
-            findEntityById(req.params.id).then((entity) => {
-                if (options && options.filterGetId) {
-                    let filteredEntity = options.filterGetId(entity)
-                    res.send(filteredEntity)
-                } else
-                    res.send(entity)
-            })
-        })
+    //     // Default route for GET/:id which returns an entity of a given id
+    //     this.router.get(`/${type.name}/:id`, existingId, (req: express.Request, res: express.Response) => {
+    //         findEntityById(req.params.id).then((entity) => {
+    //             if (options && options.filterGetId) {
+    //                 let filteredEntity = options.filterGetId(entity)
+    //                 res.send(filteredEntity)
+    //             } else
+    //                 res.send(entity)
+    //         })
+    //     })
 
-        // Default route for POST/ which insert a new entity into the database or which updates
-        // an existing entity (when id was sent)
-        // Uses ApiOptions.beforePost as middlewares
-        let postHandlers: express.RequestHandler[] = []
-        if (options && options.beforePost) postHandlers = options.beforePost
-        postHandlers.push((req: express.Request, res: express.Response) => {
-            this.db.saveOne<T>(type, req.body as T).then((savedEntity) => {
-                if (options && options.filterPost) {
-                    let filteredEntity = options.filterPost(savedEntity)
-                    res.send(filteredEntity)
-                } else
-                    res.send(savedEntity)
-            })
-        })
-        this.router.post(`/${type.name}`, postHandlers)
+    //     // Default route for POST/ which insert a new entity into the database or which updates
+    //     // an existing entity (when id was sent)
+    //     // Uses ApiOptions.beforePost as middlewares
+    //     let postHandlers: express.RequestHandler[] = []
+    //     if (options && options.beforePost) postHandlers = options.beforePost
+    //     postHandlers.push((req: express.Request, res: express.Response) => {
+    //         this.db.saveOne<T>(type, req.body as T).then((savedEntity) => {
+    //             if (options && options.filterPost) {
+    //                 let filteredEntity = options.filterPost(savedEntity)
+    //                 res.send(filteredEntity)
+    //             } else
+    //                 res.send(savedEntity)
+    //         })
+    //     })
+    //     this.router.post(`/${type.name}`, postHandlers)
 
-        // Default route for DELETE/:id which deletes an entity from the database
-        // Uses ApiOptions.beforeDelete as middlewares
-        let deleteHandlers: express.RequestHandler[] = [ existingId ]
-        if (options && options.beforeDelete) deleteHandlers.push(options.beforeDelete)
-        deleteHandlers.push((req: express.Request, res: express.Response) => {
-            this.db.deleteOne(req.params.id).then(() => {
-                res.sendStatus(200)
-            })
-        })
-        this.router.delete(`/${type.name}/:id`, deleteHandlers)
+    //     // Default route for DELETE/:id which deletes an entity from the database
+    //     // Uses ApiOptions.beforeDelete as middlewares
+    //     let deleteHandlers: express.RequestHandler[] = [ existingId ]
+    //     if (options && options.beforeDelete) deleteHandlers.push(options.beforeDelete)
+    //     deleteHandlers.push((req: express.Request, res: express.Response) => {
+    //         this.db.deleteOne(req.params.id).then(() => {
+    //             res.sendStatus(200)
+    //         })
+    //     })
+    //     this.router.delete(`/${type.name}/:id`, deleteHandlers)
         
-    }
+    // }
 
     /**
      * For special APIs which do not handle default entities (like login or menu)
