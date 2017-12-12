@@ -21,7 +21,7 @@ describe.only('API recordtype', () => {
             expect(recordTypesFromApi).to.be.empty;
         });
 
-        it.only('Returns the meta information of all existing record types', async () => {
+        it('Returns the meta information of all existing record types', async () => {
             let recordTypesFromDatabase = await TestHelper.prepareRecordTypes();
             let recordTypesFromApi = (await TestHelper.get('/api/RecordType').expect(200)).body as RecordType[];
             expect(recordTypesFromApi).to.have.lengthOf(recordTypesFromDatabase.length);

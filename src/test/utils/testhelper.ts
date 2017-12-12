@@ -23,12 +23,13 @@ export class TestHelper {
         let app = new App();
         TestHelper.app = app;
         app.db = new Database('mongodb://localhost:27017');
+        // Drop old existing test database
+        let db = await app.db.openDb('TestClient');
+        await db.dropDatabase();
+        await db.close();
+        delete app.db.dbInstances['TestClient'];
+        // Open database connection
         TestHelper.db = await app.db.openDb('TestClient');
-        let existingCollections = await TestHelper.db.collections();
-        // TODO: Hier kommt beim zweiten Aufruf der Tests ein MongoError, weil noch Zugriff auf die Collection besteht. Dasselbe mit TestHelper.db.dropDatabase()
-        existingCollections.forEach(async (c) => {
-            await c.drop();
-        });
         await app.init(); // Do not load any modules automatically
     }
 
@@ -73,10 +74,7 @@ export class TestHelper {
             { name: 'Document' } as RecordType,
             { name: 'FM_Object' } as RecordType
         ];
-        recordTypes.forEach(async (rt) => {
-            await TestHelper.db.collection<RecordType>(RecordType.name).insert(rt);
-            await TestHelper.db.createCollection(rt.name);
-        });
+        await TestHelper.db.collection<RecordType>(RecordType.name).insertMany(recordTypes);
         return recordTypes;
     }
     
