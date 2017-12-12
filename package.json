@@ -42,7 +42,8 @@
     "reporter": [
       "html"
     ],
-    "all": true
+    "all": true,
+    "report-dir": "./coverage/lcov-report"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.1",
