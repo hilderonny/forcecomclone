@@ -7,6 +7,7 @@ import { Token, TokenContent } from "../../common/types/token";
 import { Type } from "../core/type";
 import { isNullOrUndefined } from "util";
 import * as RecordTypeApi from "../api/recordtype";
+import * as FieldApi from "../api/field";
 
 /**
  * Base module with functionality for handling
@@ -120,5 +121,6 @@ export default Module.create((app) => {
     })
 
     app.registerCustomApi(RecordTypeApi.default)
-
+    app.registerCustomApi(FieldApi.default)
+    
 })

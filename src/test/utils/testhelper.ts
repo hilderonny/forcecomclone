@@ -85,16 +85,18 @@ export class TestHelper {
     static async prepareFields() {
         let recordTypes = await TestHelper.db.collection<RecordType>(RecordType.name).find({}).toArray();
         let allFields: Field[] = [];
-        recordTypes.forEach(async (rt) => {
+        for (let i = 0; i < recordTypes.length; i++) {
+            let rt = recordTypes[i];
             let fields: Field[] = [
                 { name: 'Owner', recordTypeId: rt._id.toString() } as Field,
                 { name: 'Name', recordTypeId: rt._id.toString() } as Field
             ];
-            fields.forEach(async (f) => {
+            for (let j = 0; j < fields.length; j++) {
+                let f = fields[j];
                 await TestHelper.db.collection<Field>(Field.name).insert(f);
                 allFields.push(f);
-            });
-        });
+            }
+        }
         return allFields;
     }
     

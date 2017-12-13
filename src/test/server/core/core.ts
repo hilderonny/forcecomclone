@@ -10,7 +10,7 @@ import { sign, verify } from "jsonwebtoken"
 import { TokenContent } from '../../../common/types/token';
 import { Database } from '../../../server/core/database';
 
-describe('Core tests', () => {
+describe.skip('Core tests', () => {
 
     let appInstance: App
     let tokenSecret: string | undefined

@@ -4,7 +4,7 @@ import { default as BaseModule } from "../../../server/modules/base";
 import { expect } from "chai";
 import { ObjectId } from "bson";
 
-describe.only('API recordtype', () => {
+describe('API RecordType', () => {
 
     beforeEach(async () => {
         await TestHelper.init();
