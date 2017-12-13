@@ -192,11 +192,32 @@ describe.only('API recordtype', () => {
 
         xit('Returns 403 when user has no write access', async() => {});
 
-        xit('Returns 404 when no custom recordtype of given id exists', async () => {});
-        
-        xit('Deletes the table(s) of the recordtype', async () => {});
+        it('Returns 400 when given id is invalid', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.del('/api/RecordType/invalidId').expect(400);
+        });
 
-        xit('Deletes the entry in RecordType table', async () => {});
+        it('Returns 404 when no custom recordtype of given id exists', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.del('/api/RecordType/999999999999999999999999').expect(404);
+        });
+        
+        it('Deletes the table(s) of the recordtype', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            // Check whether the table exists before
+            expect((await TestHelper.db.collections()).find(c => c.collectionName === recordTypeFromDatabase.name)).not.to.be.undefined;
+            await TestHelper.del('/api/RecordType/' + recordTypeFromDatabase._id.toString()).expect(200);
+            expect((await TestHelper.db.collections()).find(c => c.collectionName === recordTypeFromDatabase.name)).to.be.undefined;
+        });
+
+        it('Deletes the entry in RecordType table', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabaseBeforeDeletion = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            await TestHelper.del('/api/RecordType/' + recordTypeFromDatabaseBeforeDeletion._id.toString()).expect(200);
+            let recordTypeFromDatabaseAfterDeletion = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' });
+            expect(recordTypeFromDatabaseAfterDeletion).to.be.null;
+        });
 
         xit('Deletes the corresponding entries in Field table', async () => {});
 

@@ -74,7 +74,11 @@ export class TestHelper {
             { name: 'Document' } as RecordType,
             { name: 'FM_Object' } as RecordType
         ];
-        await TestHelper.db.collection<RecordType>(RecordType.name).insertMany(recordTypes);
+        for (let i = 0; i < recordTypes.length; i++) {
+            let recordType = recordTypes[i];
+            await TestHelper.db.collection<RecordType>(RecordType.name).insertOne(recordType);
+            await TestHelper.db.createCollection(recordType.name);
+        }
         return recordTypes;
     }
     

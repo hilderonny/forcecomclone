@@ -60,4 +60,15 @@ export default (app: App): void => {
         res.sendStatus(200);
     })
 
+    app.router.delete('/RecordType/:id', async (req: UserRequest, res) => {
+        if (!ObjectId.isValid(req.params.id)) { res.sendStatus(400); return; }
+        let recordTypeFromDatabase = await getCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
+        // Delete table
+        await req.user!.db.dropCollection(recordTypeFromDatabase.name);
+        // Delete entry in database
+        await getCollection(req).deleteOne({ _id: recordTypeFromDatabase._id });
+        res.sendStatus(200);
+    })
+
 }
