@@ -31,7 +31,7 @@ export default (app: App): void => {
 
     app.router.post('/RecordType', async (req: UserRequest, res) => {
         let recordType = req.body as RecordType;
-        if (!recordType) { res.sendStatus(400); return; }
+        if (Object.keys(recordType).length < 1) { res.sendStatus(400); return; }
         if (recordType._id) { res.sendStatus(400); return; }
         if (!recordType.name) { res.sendStatus(400); return; } // Attribute name not given
         if (recordType.name.includes('__')) { res.sendStatus(400); return; } // name contains "__"
@@ -45,6 +45,19 @@ export default (app: App): void => {
         // Create table
         await req.user!.db.createCollection(recordType.name);
         res.send(recordType);
+    })
+
+    app.router.put('/RecordType/:id', async (req: UserRequest, res) => {
+        let recordType = req.body as RecordType;
+        if (Object.keys(recordType).length < 1) { res.sendStatus(400); return; }
+        if (recordType._id) { res.sendStatus(400); return; }
+        if (recordType.name) { res.sendStatus(400); return; } // Attribute name cannot be changed
+        if (!ObjectId.isValid(req.params.id)) { res.sendStatus(400); return; }
+        let recordTypeFromDatabase = await getCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
+        // Update entry in database
+        await getCollection(req).updateOne({ _id: recordTypeFromDatabase._id }, { $set: recordType });
+        res.sendStatus(200);
     })
 
 }

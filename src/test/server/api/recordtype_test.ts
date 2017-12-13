@@ -68,8 +68,13 @@ describe.only('API recordtype', () => {
 
         xit('Returns 403 when user has no write access', async() => {});
 
-        it('Returns 400 when attribute name is missing', async () => {
+        it('Returns 400 when no content is sent', async () => {
             let recordType = { } as RecordType;
+            await TestHelper.post('/api/RecordType').send(recordType).expect(400);
+        });
+
+        it('Returns 400 when attribute name is missing', async () => {
+            let recordType = { label: 'Label' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
@@ -135,11 +140,49 @@ describe.only('API recordtype', () => {
 
         xit('Returns 403 when user has no write access', async() => {});
 
-        xit('Returns 400 when request contains property "name" (name is not changeable afterwards)', async () => {});
+        it('Returns 400 when no content is sent', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let updateSet = {  } as RecordType;
+            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabase._id.toString()).send(updateSet).expect(400);
+        });
 
-        xit('Returns 404 when no custom recordtype of given id exists', async () => {});
+        it('Returns 400 when attribute _id is given in body', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let updateSet = { _id: '999999999999999999999999' } as RecordType;
+            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabase._id.toString()).send(updateSet).expect(400);
+        });
+
+        it('Returns 400 when request contains property "name" (name is not changeable afterwards)', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let updateSet = { name: 'UpdatedName' } as RecordType;
+            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabase._id.toString()).send(updateSet).expect(400);
+        });
+
+        it('Returns 400 when given id is invalid', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let updateSet = { label: 'NewLabel' } as RecordType;
+            await TestHelper.put('/api/RecordType/invalidId').send(updateSet).expect(400);
+        });
+
+        it('Returns 404 when no custom recordtype of given id exists', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let updateSet = { label: 'NewLabel' } as RecordType;
+            await TestHelper.put('/api/RecordType/999999999999999999999999').send(updateSet).expect(404);
+        });
         
-        xit('Updates the meta information of the record type', async () => {});
+        it('Updates the meta information of the record type', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabaseBeforeUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let updateSet = { label: 'NewLabel' } as RecordType;
+            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabaseBeforeUpdate._id.toString()).send(updateSet).expect(200);
+            let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            expect(recordTypeFromDatabaseAfterUpdate.label).to.equal(updateSet.label);
+        });
         
     })
 
