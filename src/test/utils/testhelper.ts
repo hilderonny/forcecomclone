@@ -100,4 +100,13 @@ export class TestHelper {
         return allFields;
     }
     
+    static async prepareRecords() {
+        let records = [
+            { Owner: 'Me', Name: 'first one', UnknownField: 'Some value' },
+            { Owner: 'Me', Name: 'second one', UnknownField: 'Some other value' }
+        ];
+        await TestHelper.db.collection('Document').insertMany(records);
+        await TestHelper.db.collection('FM_Object').insertMany(records);
+    }
+    
 }
