@@ -5,7 +5,7 @@ import { RecordType } from "../../../common/types/recordtype";
 import { Field } from "../../../common/types/field";
 import { Type } from "../../../server/core/type";
 
-describe.only('Custom object APIs', () => {
+describe('Custom object APIs', () => {
 
     beforeEach(async () => {
         await TestHelper.init();
@@ -92,22 +92,32 @@ describe.only('Custom object APIs', () => {
         xit('Returns 403 when user has no write access', async() => {
         });
 
-        xit('Returns 404 when no record type with recordTypeName exists', async() => {
+        it('Returns 404 when no record type with recordTypeName exists', async() => {
+            await TestHelper.get('/api/UnknownRecordType').expect(404);
         });
 
-        xit('Returns 400 when no content is sent', async () => {
+        it('Returns 400 when no content is sent', async () => {
+            let record = { };
+            await TestHelper.post('/api/Document').send(record).expect(400);
         });
 
-        xit('Returns 400 when a field is sent which is not configured', async() => {
+        it('Returns 400 when a field is sent which is not configured', async() => {
+            let record = { Owner: 'Me', Name: 'My new document', UnconfiguredField: 'Some content' };
+            await TestHelper.post('/api/Document').send(record).expect(400);
         });
 
-        xit('Returns 400 when _id is sent in body', async() => {
+        it('Returns 400 when _id is sent in body', async() => {
+            let record = { Owner: 'Me', Name: 'My new document', _id: '999999999999999999999999' };
+            await TestHelper.post('/api/Document').send(record).expect(400);
         });
 
         xit('Returns 400 when the value of a field is incompatible to the field type', async() => {
         });
 
-        xit('Inserts the record and returns it with a generated _id', async() => {
+        it('Inserts the record and returns it with a generated _id', async() => {
+            let record = { Owner: 'Me', Name: 'My new document' };
+            let insertedRecord = (await TestHelper.post('/api/Document').send(record).expect(200)).body as Type;
+            expect(insertedRecord._id).not.to.be.undefined;
         });
 
     });
@@ -120,22 +130,49 @@ describe.only('Custom object APIs', () => {
         xit('Returns 403 when user has no write access', async() => {
         });
 
-        xit('Returns 404 when no record type with recordTypeName exists', async() => {
+        it('Returns 404 when no record type with recordTypeName exists', async() => {
+            let recordFromDatabase = await TestHelper.db.collection('Document').findOne({});
+            let updateSet = { Name: 'New name' };
+            await TestHelper.put('/api/UnknownRecordType/' + recordFromDatabase._id.toString()).send(updateSet).expect(404);
         });
 
-        xit('Returns 400 when no content is sent', async () => {
+        it('Returns 400 when id is invalid', async () => {
+            let updateSet = { Name: 'New name' };
+            await TestHelper.put('/api/Document/invalidId').send(updateSet).expect(400);
+        });
+        
+        it('Returns 404 when no record of given id exists', async () => {
+            let updateSet = { Name: 'New name' };
+            await TestHelper.put('/api/Document/999999999999999999999999').send(updateSet).expect(404);
         });
 
-        xit('Returns 400 when a field is sent which is not configured', async() => {
+        it('Returns 400 when no content is sent', async () => {
+            let recordFromDatabase = await TestHelper.db.collection('Document').findOne({});
+            let updateSet = {  };
+            await TestHelper.put('/api/Document/' + recordFromDatabase._id.toString()).send(updateSet).expect(400);
         });
 
-        xit('Returns 400 when _id is sent in body', async() => {
+        it('Returns 400 when a field is sent which is not configured', async() => {
+            let recordFromDatabase = await TestHelper.db.collection('Document').findOne({});
+            let updateSet = { Name: 'New name', UnconfiguredField: 'Some content' };
+            await TestHelper.put('/api/Document/' + recordFromDatabase._id.toString()).send(updateSet).expect(400);
+        });
+
+        it('Returns 400 when _id is sent in body', async() => {
+            let recordFromDatabase = await TestHelper.db.collection('Document').findOne({});
+            let updateSet = { Name: 'New name', _id: '999999999999999999999999' };
+            await TestHelper.put('/api/Document/' + recordFromDatabase._id.toString()).send(updateSet).expect(400);
         });
 
         xit('Returns 400 when the value of a field is incompatible to the field type', async() => {
         });
 
-        xit('Updates only the sent fields of the record', async() => {
+        it('Updates only the sent fields of the record', async() => {
+            let recordFromDatabaseBeforeUpdate = await TestHelper.db.collection('Document').findOne({});
+            let updateSet = { Name: 'New updated name' };
+            await TestHelper.put('/api/Document/' + recordFromDatabaseBeforeUpdate._id.toString()).send(updateSet).expect(200);
+            let recordFromDatabaseAfterUpdate = await TestHelper.db.collection('Document').findOne({});
+            expect(recordFromDatabaseAfterUpdate.Name).equals(updateSet.Name);
         });
 
     });
@@ -148,10 +185,25 @@ describe.only('Custom object APIs', () => {
         xit('Returns 403 when user has no write access', async() => {
         });
 
-        xit('Returns 404 when no record type with recordTypeName exists', async() => {
+        it('Returns 404 when no record type with recordTypeName exists', async() => {
+            let recordFromDatabase = await TestHelper.db.collection('Document').findOne({});
+            let updateSet = { Name: 'New name' };
+            await TestHelper.put('/api/UnknownRecordType/' + recordFromDatabase._id.toString()).send(updateSet).expect(404);
         });
 
-        xit('Deletes the record from the database', async() => {
+        it('Returns 400 when id is invalid', async () => {
+            await TestHelper.del('/api/Document/invalidId').expect(400);
+        });
+        
+        it('Returns 404 when no record of given id exists', async () => {
+            await TestHelper.del('/api/Document/999999999999999999999999').expect(404);
+        });
+
+        it('Deletes the record from the database', async() => {
+            let recordFromDatabaseBeforeDelete = await TestHelper.db.collection('Document').findOne({});
+            await TestHelper.del('/api/Document/' + recordFromDatabaseBeforeDelete._id.toString()).expect(200);
+            let recordFromDatabaseAfterDelete = await TestHelper.db.collection('Document').findOne({ _id: recordFromDatabaseBeforeDelete._id });
+            expect(recordFromDatabaseAfterDelete).to.be.null;
         });
 
     });
