@@ -57,7 +57,8 @@ describe('Custom object APIs', () => {
         });
 
         it('Returns 404 when no record type with recordTypeName exists', async() => {
-            await TestHelper.get('/api/UnknownRecordType').expect(404);
+            let recordFromDatabase = await TestHelper.db.collection('Document').findOne({}) as Type;
+            await TestHelper.get('/api/UnknownRecordType/' + recordFromDatabase._id.toString()).expect(404);
         });
 
         it('Returns 400 when id is invalid', async () => {
@@ -93,7 +94,8 @@ describe('Custom object APIs', () => {
         });
 
         it('Returns 404 when no record type with recordTypeName exists', async() => {
-            await TestHelper.get('/api/UnknownRecordType').expect(404);
+            let record = { Owner: 'Me', Name: 'My new document' };
+            await TestHelper.post('/api/UnknownRecordType').send(record).expect(404);
         });
 
         it('Returns 400 when no content is sent', async () => {
@@ -187,8 +189,7 @@ describe('Custom object APIs', () => {
 
         it('Returns 404 when no record type with recordTypeName exists', async() => {
             let recordFromDatabase = await TestHelper.db.collection('Document').findOne({});
-            let updateSet = { Name: 'New name' };
-            await TestHelper.put('/api/UnknownRecordType/' + recordFromDatabase._id.toString()).send(updateSet).expect(404);
+            await TestHelper.del('/api/UnknownRecordType/' + recordFromDatabase._id.toString()).expect(404);
         });
 
         it('Returns 400 when id is invalid', async () => {

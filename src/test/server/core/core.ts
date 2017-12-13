@@ -10,7 +10,7 @@ import { sign, verify } from "jsonwebtoken"
 import { TokenContent } from '../../../common/types/token';
 import { Database } from '../../../server/core/database';
 
-describe.skip('Core tests', () => {
+describe('Core tests', () => {
 
     let appInstance: App
     let tokenSecret: string | undefined
@@ -24,6 +24,7 @@ describe.skip('Core tests', () => {
     afterEach(async () => {
         process.env.TOKENSECRET = tokenSecret
         TestHelper.app = appInstance
+        await TestHelper.cleanup()
     })
         
     describe('App.init()', () => {
@@ -43,7 +44,7 @@ describe.skip('Core tests', () => {
             expect(app.initOptions.port).to.equal(portToUse)
         })
 
-        it('Takes the token sectret from the settings when given instead of the environment variable TOKENSECRET', async() => {
+        it('Takes the token secret from the settings when given instead of the environment variable TOKENSECRET', async() => {
             let app = new App()
             app.db = new Database('mongodb://localhost:27017');
             let secretToUse = 'drivinghomeforchristmas'
@@ -51,7 +52,7 @@ describe.skip('Core tests', () => {
             expect(app.initOptions.tokenSecret).to.equal(secretToUse)
         })
 
-        it('Initializes all modules in the given module path', async() => {
+        xit('Initializes all modules in the given module path', async() => {
             let app = new App()
             app.db = new Database('mongodb://localhost:27017');
             await app.init({ modulesPath: '../../dist/test/server/core/testmodules' })

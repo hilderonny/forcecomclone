@@ -43,7 +43,6 @@ export default (app: App): void => {
         if (field.name.includes('__')) { res.sendStatus(400); return; } // name contains "__"
         if (field.name.match(/[\W]/)) { res.sendStatus(400); return; } // name contains special characters
         if (!field.name.match(/^[A-Za-z]/)) { res.sendStatus(400); return; } // name does not start with letter
-        if ([ "_id" ].includes(field.name)) { res.sendStatus(400); return; } // Reserved types are not allowed
         if (!field.recordTypeId) { res.sendStatus(400); return; } // Attribute recordTypeId not given
         if (!ObjectId.isValid(field.recordTypeId)) { res.sendStatus(400); return; }
         let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(field.recordTypeId) });

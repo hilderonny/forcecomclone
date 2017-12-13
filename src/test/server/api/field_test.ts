@@ -95,6 +95,13 @@ describe('API Field', () => {
             await TestHelper.post('/api/Field').send(field).expect(400);
         });
 
+        it('Returns 400 when attribute _id is given in body', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({})) as RecordType;
+            let field = { _id: '999999999999999999999999', name: 'NewFieldName', recordTypeId: recordType._id.toString(), type: FieldType.Text } as Field;
+            await TestHelper.post('/api/Field').send(field).expect(400);
+        });
+
         it('Returns 400 when attribute name is missing', async () => {
             await TestHelper.prepareRecordTypes();
             let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({})) as RecordType;
