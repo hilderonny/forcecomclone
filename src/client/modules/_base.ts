@@ -28,13 +28,15 @@ export default ClientModule.create((webapp) => {
 
     let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
     customObjectsButton.HtmlElement.addEventListener("click", () => {
-        let customObjectListCard = new Card();
+        let customObjectListCard = new Card("Benutzerdefinierte Objekte");
         webapp.cardStack.closeAllCards();
         webapp.cardStack.addCard(customObjectListCard);
         
     });
     settingsMenuSection.HtmlElement.appendChild(customObjectsButton.HtmlElement);
     
-    webapp.cardStack.addCard(new Card()); // TODO: Remove, dummy stuff
+    webapp.cardStack.addCard(new Card("this .HtmlElement. appendChild( self. CloseButton. HtmlElement);")); // TODO: Remove, dummy stuff
+    webapp.cardStack.addCard(new Card("2")); // TODO: Remove, dummy stuff
+    webapp.cardStack.addCard(new Card("3")); // TODO: Remove, dummy stuff
 });
     

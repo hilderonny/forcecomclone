@@ -44,8 +44,20 @@ export class CardStack extends AbstractElement {
      * Creates a card and adds it to the cardstack
      */
     addCard(card: Card) {
-        this.HtmlElement.appendChild(card.HtmlElement);
-        this.cards.push(card);
+        let self = this;
+        let beforeCloseHandler = (card: Card): void => {
+            // Close cards to the right of the card to be closed
+            let index = self.cards.findIndex(c => c === card);
+            if (index < 0) return;
+            let lastCard: Card | undefined;
+            do {
+                lastCard = this.cards.pop();
+                if (lastCard && lastCard != card) lastCard.close();
+            } while(lastCard && lastCard !== card);
+        };
+        card.BeforeClose = beforeCloseHandler;
+        self.HtmlElement.appendChild(card.HtmlElement);
+        self.cards.push(card);
     }
 
     closeAllCards() {

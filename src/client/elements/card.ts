@@ -1,61 +1,53 @@
 import { CardStack } from "./cardstack";
 import { AbstractElement } from "./abstractelement";
+import { Title } from "./title";
+import { Button } from "./button";
+import { ResizeHandle } from "./resizehandle";
 
 /**
  * This is a card contained in a cardstack.
  */
 export class Card extends AbstractElement {
 
-    /**
-     * When starting card resizing this variable remembers the starting X
-     * position of the cursor
-     */
-    ResizeStartX: number;
+    ResizeHandle: ResizeHandle;
+
+    Title: Title;
+
+    CloseButton: Button;
+
+    BeforeClose: (card: Card) => void;
     
-    /**
-     * When starting card resizing this variable remembers the starting width
-     * of the card
-     */
-    ResizeStartWidth: number;
-
-    handleResizeDrag: (resizeDragEvent: MouseEvent) => void;
-
-    handleResizeEnd: (resizeEndEvent: MouseEvent) => void;
-
-    handleMouseDown: (mouseDownEvent: MouseEvent) => void;
+    handleCloseClick: (mouseClickEvent: MouseEvent) => void;
     
     /**
      * Creates a card and asings it to the given card stack
      */
-    constructor() {
+    constructor(title?: string) {
         super("div", "card");
         let self = this;
-        // Initialize resize behaviour of card in list-detail-mode
-        // See https://jsfiddle.net/ronnyhildebrandt/2rez90co/ for detailed example
-        self.handleMouseDown = (mouseDownEvent: MouseEvent) => {
-            self.handleResizeDrag = (resizeDragEvent: MouseEvent) => {
-                // Dragging the resize handle
-                let delta = resizeDragEvent.pageX - self.ResizeStartX;
-                let width = (self.ResizeStartWidth + delta) + 'px';
-                self.HtmlElement.style.minWidth = width;
-                resizeDragEvent.preventDefault();
-                return false;
-            }
-            self.handleResizeEnd = (resizeEndEvent: MouseEvent) => {
-                document.removeEventListener("mousemove", self.handleResizeDrag);
-                document.removeEventListener("mouseup", self.handleResizeEnd);
-            }
-            document.addEventListener("mousemove", self.handleResizeDrag);
-            document.addEventListener("mouseup", self.handleResizeEnd);
-            self.ResizeStartX = mouseDownEvent.pageX;
-            self.ResizeStartWidth = self.HtmlElement.offsetWidth;
+
+        self.ResizeHandle = new ResizeHandle();
+        this.HtmlElement.appendChild(self.ResizeHandle.HtmlElement);
+
+        self.CloseButton = new Button(undefined, "delete.png");
+        self.handleCloseClick = (mouseClickEvent: MouseEvent) => {
+            self.close();
         };
-        this.HtmlElement.addEventListener("mousedown", self.handleMouseDown);
+        self.CloseButton.HtmlElement.classList.add("closebutton");
+        self.CloseButton.HtmlElement.addEventListener("click", self.handleCloseClick);
+        this.HtmlElement.appendChild(self.CloseButton.HtmlElement);
+        
+        if (title) {
+            this.Title = new Title(title);
+            this.HtmlElement.appendChild(this.Title.HtmlElement);
+        }
+
     }
 
     close() {
-        this.HtmlElement.removeEventListener("mousedown", this.handleMouseDown);
+        if (this.BeforeClose) this.BeforeClose(this);
         if (this.HtmlElement.parentElement) this.HtmlElement.parentElement.removeChild(this.HtmlElement);
+        this.HtmlElement.innerHTML = ""; // Force garbage collection
     }
 
 }

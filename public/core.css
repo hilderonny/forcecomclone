@@ -15,15 +15,29 @@ html {
     height: 100%;
 }
 
+.card {
+    overflow: hidden;
+}
+
+.card > .closebutton {
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.card > .title {
+    font-size: 18px;
+    padding: 8px 40px 8px 8px;
+}
+
 .cardstack {
-    background: #dfd; /* ONLY FOR DEBUGGING */
     display: flex;
     flex: 1;
     margin-left: 240px;
-}
-
-.cardstack > .card {
-    background: #bfb; /* ONLY FOR DEBUGGING */
 }
 
 .cardstack.default {
@@ -45,11 +59,10 @@ html {
 
 .cardstack.listdetail > .card {
     min-width: 320px;
-    pointer-events: none;
     position: relative;
 }
 
-.cardstack.listdetail > .card:after {
+.cardstack.listdetail > .card > .resizehandle {
     border-right: 1px solid rgba(0,0,0,0.2);
     content: '';
     cursor: col-resize;
@@ -57,10 +70,9 @@ html {
     position: absolute;
     right: 0;
     width: 4px;
-    pointer-events: all;
 }
 
-.cardstack.listdetail > .card:hover:after {
+.cardstack.listdetail > .card > .resizehandle:hover {
     background: rgba(0,0,0,0.2);
 }
 
@@ -86,6 +98,7 @@ html {
 
 .mainmenu > .logo {
     padding: 10px;
+    width: 100%;
 }
 
 .mainmenu > .section {
@@ -112,6 +125,10 @@ html {
     display: flex;
     padding: 4px 6px;
     width: 100%;
+}
+    
+.mainmenu > .section > .button:focus {
+    outline: none;
 }
     
 .mainmenu > .section > .button:hover {
