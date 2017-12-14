@@ -20,7 +20,6 @@ export class ResizeHandle extends AbstractElement {
         // Initialize resize behaviour of card in list-detail-mode
         // See https://jsfiddle.net/ronnyhildebrandt/2rez90co/ for detailed example
         let handleMouseDown = (mouseDownEvent: MouseEvent) => {
-            console.log(mouseDownEvent)
             let handleResizeDrag = (resizeDragEvent: MouseEvent) => {
                 // Dragging the resize handle
                 let delta = resizeDragEvent.pageX - self.ResizeStartX;
@@ -38,7 +37,9 @@ export class ResizeHandle extends AbstractElement {
             document.addEventListener("mouseup", handleResizeEnd);
             self.ResizeStartX = mouseDownEvent.pageX;
             self.ResizeStartWidth = self.HtmlElement.parentElement!.offsetWidth;
-        };
+            mouseDownEvent.preventDefault();
+            return false;
+    };
         this.HtmlElement.addEventListener("mousedown", handleMouseDown);
     }
 
