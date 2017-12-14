@@ -1,8 +1,10 @@
-import { Card } from "./card";
-import { CardStack, CardStackType } from "./cardstack";
+import { Card } from "./elements/card";
+import { CardStack, CardStackType } from "./elements/cardstack";
 import { Rest } from "./rest";
 import { Type } from "../server/core/type";
 import { Api } from "./api";
+import { ToolBar } from "./elements/toolbar";
+import { MainMenu } from "./elements/mainmenu";
 
 /**
  * Main class for an app. Represents the javascript entry point for client
@@ -11,10 +13,12 @@ import { Api } from "./api";
  */
 export class WebApp {
 
-    rootElement: Element;
     cardStack: CardStack;
+    mainMenu: MainMenu;
+    toolBar: ToolBar;
     rest: Rest;
-
+    rootElement: Element;
+    
     /**
      * Initialize the application within the DOM element with the given selector
      * @param selector Selector to use with document.querySelector(). Normally this is "body".
@@ -23,11 +27,22 @@ export class WebApp {
         let selectorElement = document.querySelector(selector);
         if (!selectorElement) throw new Error("There is no element for the selector'" + selector + "'!");
 
-        this.rest = new Rest();
-        this.rootElement = selectorElement;
-        this.cardStack = new CardStack();
-        selectorElement.appendChild(this.cardStack.DivElement);
-        this.initModules();
+        let self = this;
+
+        self.rest = new Rest();
+
+        self.rootElement = selectorElement;
+
+        self.mainMenu = new MainMenu();
+        selectorElement.appendChild(self.mainMenu.HtmlElement);
+
+        self.toolBar = new ToolBar();
+        selectorElement.appendChild(self.toolBar.HtmlElement);
+        
+        self.cardStack = new CardStack();
+        selectorElement.appendChild(self.cardStack.HtmlElement);
+
+        self.initModules();
     }
 
     /**
@@ -44,38 +59,6 @@ export class WebApp {
         modules.keys().forEach((key) => {
             modules(key).default(self);
         });
-    }
-
-    /**
-     * Toggles the type of the cardstack. Does not influence the cards itself, only their
-     * presentation.
-     * @param cardStackType Type to set for the cardstack. Can be DEFAULT or LISTDETAIL
-     */
-    setCardStackType(cardStackType: CardStackType): void {
-        this.cardStack.setType(cardStackType);
-    }
-
-    /**
-     * Adds a card to the card stack.
-     */
-    addCard(): void {
-        this.cardStack.addCard();
-    }
-
-    /**
-     * Registers a handler for specific HTTP status codes for the REST feature.
-     * Mainly used for watching for 403 errors which means that the user is not
-     * authenticated and needs a redirection to the login page.
-     * When the handler function returns false, no further handler function is called
-     * and the request is not processed any further.
-     * 
-     * @param statusCode HTTP Status code to watch for
-     * @param handler Handler function which is called when the given status is returned.
-     *                This function gets the request as parameter and needs to return true
-     *                when the request should be processed further or false when not.
-     */
-    addStatusHandler(statusCode: number, handler: (req: XMLHttpRequest) => boolean) {
-        this.rest.addStatusHandler(statusCode, handler);
     }
 
     /**

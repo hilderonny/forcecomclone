@@ -1,4 +1,5 @@
 import { Card } from "./card";
+import { AbstractElement } from "./abstractelement";
 
 /**
  * Different modes the cardstack can have.
@@ -22,35 +23,35 @@ export enum CardStackType {
  * Represents a card stack and extends the default underlying DIV
  * with further functionality.
  */
-export class CardStack {
+export class CardStack extends AbstractElement {
 
     /**
      * Current type of the card stack
      */
     Type: CardStackType;
 
-    /**
-     * Reference to the corresponding HTML DIV element for DOM
-     * insertion within the app.
-     */
-    DivElement: HTMLDivElement;
+    cards: Card[] = [];
 
     /**
      * Initializes the card stack and gives it the type DEFAULT
      */
     constructor() {
-        this.DivElement = document.createElement("div");
-        this.DivElement.classList.add("cardstack");
+        super("div", "cardstack");
         this.setType(CardStackType.DEFAULT);
-        let self = this;
     }
 
     /**
      * Creates a card and adds it to the cardstack
      */
-    addCard() {
-        let card = new Card();
-        this.DivElement.appendChild(card.DivElement);
+    addCard(card: Card) {
+        this.HtmlElement.appendChild(card.HtmlElement);
+        this.cards.push(card);
+    }
+
+    closeAllCards() {
+        for (let i = this.cards.length - 1; i >= 0; i--) {
+            this.cards.pop()!.close();
+        }
     }
 
     /**
@@ -58,8 +59,8 @@ export class CardStack {
      * @param newType New type to set
      */
     setType(newType: CardStackType) {
-        if (this.Type) this.DivElement.classList.remove(this.Type);
-        this.DivElement.classList.add(newType);
+        if (this.Type) this.HtmlElement.classList.remove(this.Type);
+        this.HtmlElement.classList.add(newType);
         this.Type = newType;
     }
 }
