@@ -15,6 +15,42 @@ html {
     height: 100%;
 }
 
+.actionbutton {
+    background-color: rgb(250,250,250);
+    border: none;
+    border-radius: 3px;
+    box-shadow: 0 1px 8px 0 rgba(0,0,0,.26);
+    color: rgb(33,33,33);
+    font-size: 12px;
+    line-height: 22px;
+    padding: 0 8px;
+    margin: 0 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.button {
+    cursor: pointer;
+}
+
+.button:focus {
+    outline: none;
+}
+    
+.button:hover {
+    background-color: rgba(158, 158, 158, 0.2);
+}
+    
+.button > .icon {
+    margin-right: 6px;
+    opacity: 0.6;
+}
+
+.buttonrow {
+    padding: 8px 0;
+    text-align: center;
+}
+
 .card {
     overflow: hidden;
 }
@@ -84,6 +120,28 @@ html {
     display: none;
 }
 
+.list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.list > .button {
+    align-items: center;
+    background: none;
+    border: none;
+    display: flex;
+    min-height: 32px;
+    padding: 4px 6px;
+    width: 100%;
+}
+
+.listcard {
+    display: flex;
+    flex-direction: column;
+}
+
 .mainmenu {
     bottom: 0px;
     display: flex;
@@ -121,21 +179,20 @@ html {
     align-items: center;
     background: none;
     border: none;
-    cursor: pointer;
     display: flex;
     padding: 4px 6px;
     width: 100%;
 }
     
-.mainmenu > .section > .button:focus {
+.button:focus {
     outline: none;
 }
     
-.mainmenu > .section > .button:hover {
+.button:hover {
     background-color: rgba(158, 158, 158, 0.2);
 }
     
-.mainmenu > .section > .button > .icon {
+.button > .icon {
     margin-right: 6px;
     opacity: 0.6;
 }

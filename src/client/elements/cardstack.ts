@@ -46,14 +46,7 @@ export class CardStack extends AbstractElement {
     addCard(card: Card) {
         let self = this;
         let beforeCloseHandler = (card: Card): void => {
-            // Close cards to the right of the card to be closed
-            let index = self.cards.findIndex(c => c === card);
-            if (index < 0) return;
-            let lastCard: Card | undefined;
-            do {
-                lastCard = this.cards.pop();
-                if (lastCard && lastCard != card) lastCard.close();
-            } while(lastCard && lastCard !== card);
+            self.closeCardsRightTo(card);
         };
         card.BeforeClose = beforeCloseHandler;
         self.HtmlElement.appendChild(card.HtmlElement);
@@ -64,6 +57,21 @@ export class CardStack extends AbstractElement {
         for (let i = this.cards.length - 1; i >= 0; i--) {
             this.cards.pop()!.close();
         }
+    }
+
+    closeCardsRightTo(card: Card) {
+        let self = this;
+        // Close cards to the right of the card to be closed
+        let index = self.cards.findIndex(c => c === card);
+        if (index < 0) return;
+        let lastCard: Card | undefined;
+        do {
+            lastCard = this.cards[this.cards.length - 1];
+            if (lastCard && lastCard !== card) {
+                this.cards.pop();
+                lastCard.close();
+            }
+        } while(lastCard && lastCard !== card);
     }
 
     /**
