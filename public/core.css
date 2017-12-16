@@ -140,6 +140,8 @@ html {
 .listcard {
     display: flex;
     flex-direction: column;
+    width: 320px;
+    flex: unset !important;
 }
 
 .mainmenu {
