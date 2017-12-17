@@ -120,6 +120,42 @@ html {
     display: none;
 }
 
+.checkboxproperty {
+    cursor: pointer;
+}
+
+.detailscard > .content {
+    padding: 0 8px 8px 8px;
+}
+
+.detailscard > .content > .textproperty > input {
+    border-color: rgba(0,0,0,0.12);
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    display: block;
+    font-size: 100%;
+    line-height: 26px;
+    padding: 2px;
+    width: 100%;
+}
+
+.detailscard > .content > .textproperty > input:focus {
+    border-color: rgb(63,81,181);
+    border-bottom-width: 2px;
+    padding-bottom: 1px;
+}
+
+.detailscard > .content > .textproperty > label {
+    color: rgba(0,0,0,0.54);
+    display: block;
+    font-size: 12px;
+    visibility: hidden;
+}
+
+.detailscard > .content > .property {
+    margin: 18px 0 8px 0;
+}
+
 .list {
     display: flex;
     flex-direction: column;
@@ -197,6 +233,10 @@ html {
 .button > .icon {
     margin-right: 6px;
     opacity: 0.6;
+}
+    
+.textproperty > input:focus {
+    outline: none;
 }
 
 .toolbar {
