@@ -2,6 +2,7 @@ import { Card } from "./card";
 import { Button } from "./button";
 import { List } from "./list";
 import { ButtonRow } from "./buttonrow";
+import { ActionButton } from "./actionbutton";
 
 export class ListCardElementViewModel {
 
@@ -26,9 +27,7 @@ export class ListCard extends Card {
         let buttonrow = new ButtonRow();
         self.HtmlElement.appendChild(buttonrow.HtmlElement);
         
-        let newElementButton = new Button("Neues Element");
-        newElementButton.HtmlElement.classList.add("actionbutton");
-        newElementButton.HtmlElement.classList.add("newelementbutton");
+        let newElementButton = new ActionButton("Neues Element");
         newElementButton.HtmlElement.addEventListener("click", (evt) => {
             if (self.NewElementClickHandler) self.NewElementClickHandler(evt);
         });

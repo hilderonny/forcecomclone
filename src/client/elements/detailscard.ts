@@ -3,6 +3,9 @@ import { FieldType } from "../../common/types/field";
 import { TextProperty } from "./textproperty";
 import { EventEmitter } from "events";
 import { CheckBoxProperty } from "./checkboxproperty";
+import { ButtonRow } from "./buttonrow";
+import { ActionButton } from "./actionbutton";
+import { RedActionButton } from "./redactionbutton";
 
 
 export class DetailsCardProperty {
@@ -20,9 +23,6 @@ export class DetailsCardViewModel {
 
 }
 
-/**
- * This is a card contained in a cardstack.
- */
 export class DetailsCard extends Card {
 
     ViewModel: DetailsCardViewModel;
@@ -37,6 +37,15 @@ export class DetailsCard extends Card {
         this.Content = document.createElement("div");
         this.Content.classList.add("content");
         this.HtmlElement.appendChild(this.Content);
+
+        let buttonRow = new ButtonRow();
+        this.HtmlElement.appendChild(buttonRow.HtmlElement);
+
+        let saveButton = new ActionButton("Speichern");
+        buttonRow.HtmlElement.appendChild(saveButton.HtmlElement);
+
+        let deleteButton = new RedActionButton("Löschen");
+        buttonRow.HtmlElement.appendChild(deleteButton.HtmlElement);
         
         if(this.ViewModel && this.ViewModel.Properties) this.renderProperties();
         

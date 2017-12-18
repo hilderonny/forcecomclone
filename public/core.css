@@ -29,6 +29,15 @@ html {
     white-space: nowrap;
 }
 
+.actionbutton.red {
+    background-color: #c00;
+    color: #fff;
+}
+
+.actionbutton.red:hover {
+    background-color: #f00;
+}
+
 .button {
     cursor: pointer;
 }
