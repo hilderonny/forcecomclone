@@ -37,7 +37,7 @@ export class Card extends AbstractElement {
         self.CloseButton.HtmlElement.addEventListener("click", self.handleCloseClick);
         this.HtmlElement.appendChild(self.CloseButton.HtmlElement);
         
-        if (title) {
+        if (title !== undefined) {
             this.Title = new Title(title);
             this.HtmlElement.appendChild(this.Title.HtmlElement);
         }
