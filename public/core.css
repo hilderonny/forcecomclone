@@ -30,12 +30,16 @@ html {
 }
 
 .actionbutton.red {
-    background-color: #c00;
+    background-color: #f00;
     color: #fff;
 }
 
 .actionbutton.red:hover {
-    background-color: #f00;
+    background-color: #d00;
+}
+
+.actionbutton.red:hover:active {
+    background-color: #800;
 }
 
 .button {
@@ -48,6 +52,10 @@ html {
     
 .button:hover {
     background-color: rgba(158, 158, 158, 0.2);
+}
+
+.button:hover:active {
+    background-color: rgba(158, 158, 158, 0.8);
 }
     
 .button > .icon {
@@ -129,8 +137,22 @@ html {
     display: none;
 }
 
-.checkboxproperty {
+.checkboxproperty > label {
+    align-items: center;
     cursor: pointer;
+    display: flex;
+}
+
+.checkboxproperty > label > input {
+    border: 2px solid rgba(0, 0, 0, 0.54);
+    border-radius: 4px;
+    height: 16px;
+    padding: 2px;
+    width: 16px;
+}
+
+.checkboxproperty > label > span {
+    margin-left: 4px;
 }
 
 .detailscard > .buttonrow {

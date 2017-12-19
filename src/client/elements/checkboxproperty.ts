@@ -12,25 +12,23 @@ export class CheckBoxProperty extends Property {
         
         let self = this;
         self.HtmlElement.classList.add("checkboxproperty");
+
+        let label = document.createElement("label") as HTMLLabelElement;
+        self.HtmlElement.appendChild(label);
         
         let input = document.createElement("input") as HTMLInputElement;
         input.setAttribute("type", "checkbox");
-        self.HtmlElement.appendChild(input);
+        label.appendChild(input);
         input.checked = property.Value;
 
-        let label = document.createElement("label") as HTMLLabelElement;
-        label.innerHTML = property.Label;
-        self.HtmlElement.appendChild(label);
+        let span = document.createElement("span") as HTMLSpanElement;
+        span.innerHTML = property.Label;
+        label.appendChild(span);
 
         let changeHandler = () => {
             self.Property.Value = input.checked;
         };
         input.addEventListener("change", changeHandler);
-
-        self.HtmlElement.addEventListener("click", () => {
-            input.checked = !input.checked;
-            changeHandler();
-        });
 
     }
 
