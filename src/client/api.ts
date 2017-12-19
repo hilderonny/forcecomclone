@@ -28,6 +28,11 @@ export class Api<T extends Type> {
         this.rest = new Rest();
     }
 
+    delete(id: string): Promise<void> {
+        let url = `/api/${this.type.name}/${id}`;
+        return this.rest.delete<T>(url);
+    }
+
     /**
      * Retrieve all entities of the given type from the server
      */

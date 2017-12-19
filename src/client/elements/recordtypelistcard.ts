@@ -19,7 +19,7 @@ export class RecordTypeListCard extends ListCard<RecordType> {
         return Promise.resolve({
             IconUrl: "categorize.png",
             Entity: entity,
-            Label: entity.name
+            Label: entity.label
         } as ListCardElementViewModel<RecordType>);
     }
 

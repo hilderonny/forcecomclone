@@ -4,6 +4,7 @@ import { UserRequest } from "../../common/types/user";
 import { Collection } from "mongodb";
 import { ObjectId } from "bson";
 import Utils from "../core/utils";
+import { Response } from "express-serve-static-core";
 
 export default (app: App): void => {
 
@@ -25,10 +26,9 @@ export default (app: App): void => {
         res.send(recordType);
     })
 
-    app.router.post('/RecordType', async (req: UserRequest, res) => {
+    async function handleInsert(req: UserRequest, res: Response) {
         let recordType = req.body as RecordType;
         if (Object.keys(recordType).length < 1) { res.sendStatus(400); return; }
-        if (recordType._id) { res.sendStatus(400); return; }
         if (!recordType.name) { res.sendStatus(400); return; } // Attribute name not given
         if (recordType.name.includes('__')) { res.sendStatus(400); return; } // name contains "__"
         if (recordType.name.match(/[\W]/)) { res.sendStatus(400); return; } // name contains special characters
@@ -41,19 +41,29 @@ export default (app: App): void => {
         // Create table
         await req.user!.db.createCollection(recordType.name);
         res.send(recordType);
-    })
+    }
 
-    app.router.put('/RecordType/:id', async (req: UserRequest, res) => {
+    async function handleUpdate(req: UserRequest, res: Response) {
         let recordType = req.body as RecordType;
         if (Object.keys(recordType).length < 1) { res.sendStatus(400); return; }
-        if (recordType._id) { res.sendStatus(400); return; }
         if (recordType.name) { res.sendStatus(400); return; } // Attribute name cannot be changed
-        if (!ObjectId.isValid(req.params.id)) { res.sendStatus(400); return; }
-        let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        if (!ObjectId.isValid(recordType._id)) { res.sendStatus(400); return; }
+        let id = new ObjectId(recordType._id);
+        delete recordType._id;
+        let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: id });
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
         // Update entry in database
         await Utils.getRecordTypeCollection(req).updateOne({ _id: recordTypeFromDatabase._id }, { $set: recordType });
-        res.sendStatus(200);
+        let recordTypeFromDatabaseAfterUpdate = await Utils.getRecordTypeCollection(req).findOne({ _id: id });
+        res.send(recordTypeFromDatabaseAfterUpdate);
+    }
+
+    app.router.post('/RecordType', async (req: UserRequest, res) => {
+        if ((req.body as RecordType)._id) { 
+            await handleUpdate(req, res);
+        } else {
+            await handleInsert(req, res);
+        }
     })
 
     app.router.delete('/RecordType/:id', async (req: UserRequest, res) => {

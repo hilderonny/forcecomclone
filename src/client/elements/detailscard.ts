@@ -1,13 +1,13 @@
-import { Card } from "./card";
 import { FieldType } from "../../common/types/field";
-import { TextProperty } from "./textproperty";
-import { CheckBoxProperty } from "./checkboxproperty";
+import { Type } from "../../server/core/type";
+import { Card } from "./card";
 import { ButtonRow } from "./buttonrow";
+import { WebApp } from "../webapp";
 import { ActionButton } from "./actionbutton";
 import { RedActionButton } from "./redactionbutton";
-import { AbstractElement } from "./abstractelement";
-import { Type } from "../../server/core/type";
-import { WebApp } from "../webapp";
+import { TextProperty } from "./textproperty";
+import { CheckBoxProperty } from "./checkboxproperty";
+
 
 
 export class DetailsCardProperty {

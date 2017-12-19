@@ -8,17 +8,17 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
 
     protected createEntity(viewModelToCreate: DetailsCardViewModel<RecordType>): Promise<RecordType> {
         let recordType = {
-            name: viewModelToCreate.Properties[0].Value
+            name: viewModelToCreate.Properties[0].Value,
+            label: viewModelToCreate.Properties[1].Value,
         } as RecordType;
         return this.webApp.api(RecordType).save(recordType);
     }
 
     protected deleteEntity(id: string) {
-        console.log("TODO: deleteEntity()");
-        return Promise.resolve();
+        return this.webApp.api(RecordType).delete(id);
     }
 
-    private prepareViewModel(): DetailsCardViewModel<RecordType> {
+    private prepareViewModels(): DetailsCardViewModel<RecordType> {
         return {
             Title: "",
             Properties: [
@@ -31,24 +31,30 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
 
     protected loadEntityViewModel(id: string): Promise<DetailsCardViewModel<RecordType>> {
         return this.webApp.api(RecordType).getOne(id).then((recordType) => {
-            let viewModel = this.prepareViewModel();
-            viewModel.Title = recordType.name;
-            viewModel.Properties[0].Value = recordType.name;
-            viewModel.Entity = recordType;
-            return Promise.resolve(viewModel);
+            return Promise.resolve({
+                Title: recordType.label,
+                Properties: [
+                    { Label: "Bezeichnung", Type: FieldType.Text, Value: recordType.label },
+                ],
+                Entity: recordType
+            } as DetailsCardViewModel<RecordType>);
         });
     }
 
     protected prepareNewEntityViewModel(): Promise<DetailsCardViewModel<RecordType>> {
-        let viewModel = this.prepareViewModel();
-        viewModel.Title = "Neues benutzerdefiniertes Objekt";
-        return Promise.resolve(viewModel);
+        return Promise.resolve({
+            Title: "Neues benutzerdefiniertes Objekt",
+            Properties: [
+                { Label: "Name", Type: FieldType.Text, Value: "" },
+                { Label: "Bezeichnung", Type: FieldType.Text, Value: "" },
+            ]
+        } as DetailsCardViewModel<RecordType>);
     }
 
     protected saveEntity(viewModelToSave: DetailsCardViewModel<RecordType>): Promise<RecordType> {
         let recordType = {
             _id: viewModelToSave.Entity!._id,
-            name: viewModelToSave.Properties[0].Value
+            label: viewModelToSave.Properties[0].Value
         } as RecordType;
         return this.webApp.api(RecordType).save(recordType);
     }

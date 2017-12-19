@@ -3,23 +3,31 @@ import { Image } from "./image";
 
 export class Button extends AbstractElement {
 
-    IconImage?: Image;
-    LabelSpan?: HTMLSpanElement;
+    private iconImage?: Image;
+    private labelSpan?: HTMLSpanElement;
 
     constructor(label?: string, iconFileName?: string) {
         super("button", "button");
         let self = this;
         if (iconFileName !== undefined) {
-            self.IconImage = new Image("icons/material/" + iconFileName);
-            self.IconImage.HtmlElement.classList.add("icon");
-            this.HtmlElement.appendChild(self.IconImage.HtmlElement);
+            self.iconImage = new Image("icons/material/" + iconFileName);
+            self.iconImage.HtmlElement.classList.add("icon");
+            this.HtmlElement.appendChild(self.iconImage.HtmlElement);
         }
         if (label !== undefined) {
-            self.LabelSpan = document.createElement("span") as HTMLSpanElement;
-            self.LabelSpan.classList.add("label");
-            self.LabelSpan.innerHTML = label;
-            this.HtmlElement.appendChild(self.LabelSpan);
+            self.labelSpan = document.createElement("span") as HTMLSpanElement;
+            self.labelSpan.classList.add("label");
+            self.labelSpan.innerHTML = label;
+            this.HtmlElement.appendChild(self.labelSpan);
         }
+    }
+
+    setLabel(label: string) {
+        if (this.labelSpan) this.labelSpan.innerHTML = label;
+    }
+
+    setIcon(iconFileName: string) {
+        if (this.iconImage) (this.iconImage.HtmlElement as HTMLImageElement).src = "icons/material/" + iconFileName;
     }
 
 }

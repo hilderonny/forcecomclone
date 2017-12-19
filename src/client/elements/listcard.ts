@@ -23,8 +23,6 @@ export abstract class ListCard<T extends Type> extends Card {
     protected abstract getViewModelForEntity(entity: T): Promise<ListCardElementViewModel<T>>;
     protected abstract loadEntities(): Promise<T[]>;
     
-    // ViewModelFetcher: () => Promise<ListCardElementViewModel[]>;
-    // NewElementClickHandler: (clickEvent: MouseEvent) => void;
     private list: List;
     protected webApp: WebApp;
     
@@ -75,8 +73,8 @@ export abstract class ListCard<T extends Type> extends Card {
                 for (let i = 0; i < self.list.Buttons.length; i++) {
                     let button = self.list.Buttons[i];
                     if ((button as any as EntityElement<T>).Entity._id === savedEntity._id) {
-                        if (viewModel.Label) button.LabelSpan!.innerHTML = viewModel.Label;
-                        if (viewModel.IconUrl) (button.IconImage!.HtmlElement as HTMLImageElement).src = viewModel.IconUrl;
+                        if (viewModel.Label) button.setLabel(viewModel.Label);
+                        if (viewModel.IconUrl) button.setIcon(viewModel.IconUrl);
                         break;
                     }
                 }

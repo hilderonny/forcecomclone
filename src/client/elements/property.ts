@@ -11,8 +11,6 @@ export class Property extends AbstractElement {
 
         let self = this;
         self.Property = property;
-
-        property.Element = self;
         
     }
 
