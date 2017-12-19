@@ -8,11 +8,11 @@ import { WebApp } from "../webapp";
 export class RecordTypeListCard extends ListCard<RecordType> {
 
     protected getCreateDetailsCard(): Promise<DetailsCard<RecordType>> {
-        return Promise.resolve(new RecordTypeDetailsCard());
+        return Promise.resolve(new RecordTypeDetailsCard(this.webApp));
     }
 
     protected getEditDetailsCard(id: string): Promise<DetailsCard<RecordType>> {
-        return Promise.resolve(new RecordTypeDetailsCard(id));
+        return Promise.resolve(new RecordTypeDetailsCard(this.webApp, id));
     }
 
     protected getViewModelForEntity(entity: RecordType): Promise<ListCardElementViewModel<RecordType>> {
@@ -24,18 +24,12 @@ export class RecordTypeListCard extends ListCard<RecordType> {
     }
 
     protected loadEntities(): Promise<RecordType[]> {
-        console.log("TODO: loadEntities()");
-        return Promise.resolve([
-            { _id: "id1", name: "Dokumente" } as RecordType,
-            { _id: "id2", name: "Notizen" } as RecordType,
-            { _id: "id3", name: "FM-Objekte" } as RecordType,
-        ]);
+        return this.webApp.api(RecordType).getAll();
     }
     
     constructor(webapp: WebApp) {
-
-        super(webapp.cardStack, "Benutzerdefinierte Objekte");
-
+        
+        super(webapp, "Benutzerdefinierte Objekte");
     }
 
 }

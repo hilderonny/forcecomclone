@@ -12,6 +12,5 @@ window.addEventListener("load", () => {
     let webapp = new WebApp("body");
 
     webapp.cardStack.setType(CardStackType.LISTDETAIL);
-    webapp.cardStack.addCard(new Card()); // TODO: Remove dummy stuff
     
-})
+});

@@ -2,12 +2,15 @@ import { TextProperty } from "./textproperty";
 import { DetailsCard, DetailsCardViewModel } from "./detailscard";
 import { FieldType } from "../../common/types/field";
 import { RecordType } from "../../common/types/recordtype";
+import { WebApp } from "../webapp";
 
 export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
 
     protected createEntity(viewModelToCreate: DetailsCardViewModel<RecordType>): Promise<RecordType> {
-        console.log("TODO: createEntity()");
-        return Promise.resolve({ _id: "newid", name: viewModelToCreate.Properties[0].Value } as RecordType);
+        let recordType = {
+            name: viewModelToCreate.Properties[0].Value
+        } as RecordType;
+        return this.webApp.api(RecordType).save(recordType);
     }
 
     protected deleteEntity(id: string) {
@@ -27,11 +30,13 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
     }
 
     protected loadEntityViewModel(id: string): Promise<DetailsCardViewModel<RecordType>> {
-        let viewModel = this.prepareViewModel();
-        viewModel.Title = "Dokument";
-        viewModel.Properties[0].Value = "Dokument";
-        viewModel.Properties[2].Value = true;
-        return Promise.resolve(viewModel);
+        return this.webApp.api(RecordType).getOne(id).then((recordType) => {
+            let viewModel = this.prepareViewModel();
+            viewModel.Title = recordType.name;
+            viewModel.Properties[0].Value = recordType.name;
+            viewModel.Entity = recordType;
+            return Promise.resolve(viewModel);
+        });
     }
 
     protected prepareNewEntityViewModel(): Promise<DetailsCardViewModel<RecordType>> {
@@ -41,13 +46,16 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
     }
 
     protected saveEntity(viewModelToSave: DetailsCardViewModel<RecordType>): Promise<RecordType> {
-        console.log("TODO: saveEntity()");
-        return Promise.resolve(viewModelToSave.Entity!);
+        let recordType = {
+            _id: viewModelToSave.Entity!._id,
+            name: viewModelToSave.Properties[0].Value
+        } as RecordType;
+        return this.webApp.api(RecordType).save(recordType);
     }
 
-    constructor(id?: string) {
+    constructor(webApp: WebApp, id?: string) {
 
-        super(id);
+        super(webApp, id);
 
     }
 

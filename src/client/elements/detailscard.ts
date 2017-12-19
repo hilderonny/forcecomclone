@@ -7,6 +7,7 @@ import { ActionButton } from "./actionbutton";
 import { RedActionButton } from "./redactionbutton";
 import { AbstractElement } from "./abstractelement";
 import { Type } from "../../server/core/type";
+import { WebApp } from "../webapp";
 
 
 export class DetailsCardProperty {
@@ -25,7 +26,7 @@ export class DetailsCardViewModel<T extends Type> {
 }
 
 export abstract class DetailsCard<T extends Type> extends Card {
-
+    
     private viewModel: DetailsCardViewModel<T>;
     private content: HTMLDivElement;
     private buttonRow: ButtonRow;
@@ -40,9 +41,9 @@ export abstract class DetailsCard<T extends Type> extends Card {
     protected abstract prepareNewEntityViewModel(): Promise<DetailsCardViewModel<T>>;
     protected abstract saveEntity(viewModelToSave: DetailsCardViewModel<T>): Promise<T>;
     
-    constructor(id?: string) {
+    constructor(webApp: WebApp, id?: string) {
 
-        super(""); // Force creation of title tag
+        super(webApp, ""); // Force creation of title tag
 
         let self = this;
         self.HtmlElement.classList.add("detailscard");
@@ -55,15 +56,13 @@ export abstract class DetailsCard<T extends Type> extends Card {
         self.HtmlElement.appendChild(self.buttonRow.HtmlElement);
 
         (id ? self.loadEntityViewModel(id) : self.prepareNewEntityViewModel()).then((viewModel) => {
-            self.load(viewModel);
+            self.load(self, viewModel);
         });
 
     }
 
-    private load(viewModel: DetailsCardViewModel<T>) {
+    private load(self: DetailsCard<T>, viewModel: DetailsCardViewModel<T>) {
 
-        let self = this;
-        
         self.viewModel = viewModel;
 
         if (viewModel.Title) self.Title.HtmlElement.innerHTML = viewModel.Title;
@@ -75,7 +74,9 @@ export abstract class DetailsCard<T extends Type> extends Card {
             saveButton.HtmlElement.addEventListener("click", () => {
                 self.saveEntity(self.viewModel).then((savedEntity) => {
                     if (self.onEntitySaved) self.onEntitySaved(savedEntity);
-                    self.loadEntityViewModel(savedEntity._id).then(self.load);
+                    self.loadEntityViewModel(savedEntity._id).then((viewModel) => {
+                        self.load(self, viewModel);
+                    });
                 });
             });
             self.buttonRow.HtmlElement.appendChild(saveButton.HtmlElement);
@@ -95,7 +96,9 @@ export abstract class DetailsCard<T extends Type> extends Card {
             createButton.HtmlElement.addEventListener("click", () => {
                 self.createEntity(self.viewModel).then((createdEntity) => {
                     if (self.onEntityCreated) self.onEntityCreated(createdEntity);
-                    self.loadEntityViewModel(createdEntity._id).then(self.load);
+                    self.loadEntityViewModel(createdEntity._id).then((viewModel) => {
+                        self.load(self, viewModel);
+                    });
                 });
             });
             self.buttonRow.HtmlElement.appendChild(createButton.HtmlElement);

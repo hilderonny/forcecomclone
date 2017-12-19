@@ -4,9 +4,9 @@ import { List } from "./list";
 import { ButtonRow } from "./buttonrow";
 import { ActionButton } from "./actionbutton";
 import { DetailsCard } from "./detailscard";
-import { CardStack } from "./cardstack";
 import { Type } from "../../server/core/type";
 import { EntityElement } from "./entityelement";
+import { WebApp } from "../webapp";
 
 export class ListCardElementViewModel<T extends Type> {
 
@@ -26,15 +26,14 @@ export abstract class ListCard<T extends Type> extends Card {
     // ViewModelFetcher: () => Promise<ListCardElementViewModel[]>;
     // NewElementClickHandler: (clickEvent: MouseEvent) => void;
     private list: List;
-    private cardStack: CardStack;
+    protected webApp: WebApp;
     
-    constructor(cardStack: CardStack, title?: string) {
+    constructor(webApp: WebApp, title?: string) {
 
-        super(title);
+        super(webApp, title);
 
         let self = this;
         self.HtmlElement.classList.add("listcard");
-        self.cardStack = cardStack;
 
         let buttonrow = new ButtonRow();
         self.HtmlElement.appendChild(buttonrow.HtmlElement);
@@ -92,8 +91,8 @@ export abstract class ListCard<T extends Type> extends Card {
                 }
             }
         };
-        this.cardStack.closeCardsRightTo(this);
-        this.cardStack.addCard(detailsCard);
+        this.webApp.cardStack.closeCardsRightTo(this);
+        this.webApp.cardStack.addCard(detailsCard);
     }
 
     private load() {

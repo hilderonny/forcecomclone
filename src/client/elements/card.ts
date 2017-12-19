@@ -3,12 +3,15 @@ import { AbstractElement } from "./abstractelement";
 import { Title } from "./title";
 import { Button } from "./button";
 import { ResizeHandle } from "./resizehandle";
+import { WebApp } from "../webapp";
 
 /**
  * This is a card contained in a cardstack.
  */
 export class Card extends AbstractElement {
 
+    protected webApp: WebApp;
+    
     ResizeHandle: ResizeHandle;
 
     Title: Title;
@@ -20,11 +23,13 @@ export class Card extends AbstractElement {
     handleCloseClick: (mouseClickEvent: MouseEvent) => void;
     
     /**
-     * Creates a card and asings it to the given card stack
+     * Creates a card and assigns it to the given card stack
      */
-    constructor(title?: string) {
+    constructor(webApp: WebApp, title?: string) {
         super("div", "card");
         let self = this;
+
+        self.webApp = webApp;
 
         self.ResizeHandle = new ResizeHandle();
         this.HtmlElement.appendChild(self.ResizeHandle.HtmlElement);

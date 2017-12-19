@@ -2,7 +2,7 @@ import { ClientModule } from "../clientmodule";
 import { User } from "../../common/types/user";
 
 export default ClientModule.create((webapp) => {
-    console.log("Module 1");
+    // console.log("Module 1");
     // webapp.cardStack.addCard();
 
     // webapp.rest.addStatusHandler(404, (req) => {
