@@ -11,6 +11,7 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
         let recordType = {
             name: viewModelToCreate.Properties[0].Value,
             label: viewModelToCreate.Properties[1].Value,
+            showInMenu: viewModelToCreate.Properties[2].Value,
         } as RecordType;
         return this.webApp.api(RecordType).save(recordType);
     }
@@ -26,6 +27,7 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
                 Properties: [
                     { Label: "Name", Type: FieldType.Label, Value: recordType.name },
                     { Label: "Bezeichnung", Type: FieldType.Text, Value: recordType.label },
+                    { Label: "In Menü zeigen", Type: FieldType.Checkbox, Value: recordType.showInMenu },
                 ],
                 Entity: recordType
             } as DetailsCardViewModel<RecordType>);
@@ -47,6 +49,7 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
                     return null;
                 } },
                 { Label: "Bezeichnung", Type: FieldType.Text, Value: "" },
+                { Label: "In Menü zeigen", Type: FieldType.Checkbox, Value: false },
             ]
         } as DetailsCardViewModel<RecordType>);
     }
@@ -54,7 +57,8 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
     protected saveEntity(viewModelToSave: DetailsCardViewModel<RecordType>): Promise<RecordType> {
         let recordType = {
             _id: viewModelToSave.Entity!._id,
-            label: viewModelToSave.Properties[1].Value
+            label: viewModelToSave.Properties[1].Value,
+            showInMenu: viewModelToSave.Properties[2].Value,
         } as RecordType;
         return this.webApp.api(RecordType).save(recordType);
     }
