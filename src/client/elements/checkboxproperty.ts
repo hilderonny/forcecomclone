@@ -1,5 +1,3 @@
-import { AbstractElement } from "./abstractelement";
-import { Image } from "./image";
 import { DetailsCardProperty } from "./detailscard";
 import { Property } from "./property";
 

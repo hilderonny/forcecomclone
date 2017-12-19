@@ -13,7 +13,17 @@ export class Field extends Type {
 
 export enum FieldType {
 
+    /**
+     * Readonly display of text line
+     */
+    Label = "Label",
+    /**
+     * Editable textfield
+     */
     Text = "Text",
+    /**
+     * Checkbox true / false
+     */
     Checkbox = "Checkbox"
 
 }

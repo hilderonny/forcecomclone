@@ -7,8 +7,7 @@ import { ActionButton } from "./actionbutton";
 import { RedActionButton } from "./redactionbutton";
 import { TextProperty } from "./textproperty";
 import { CheckBoxProperty } from "./checkboxproperty";
-
-
+import { LabelProperty } from "./labelproperty";
 
 export class DetailsCardProperty {
 
@@ -113,6 +112,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
         self.content.innerHTML = "";
         this.viewModel.Properties.forEach((p) => {
             switch (p.Type) {
+                case FieldType.Label: self.content.appendChild(new LabelProperty(p).HtmlElement); break;
                 case FieldType.Text: self.content.appendChild(new TextProperty(p).HtmlElement); break;
                 case FieldType.Checkbox: self.content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
                 default: break;

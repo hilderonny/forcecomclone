@@ -180,6 +180,21 @@ html {
     padding-bottom: 1px;
 }
 
+.detailscard > .content > .labelproperty > label {
+    color: rgba(0,0,0,0.54);
+    display: block;
+    font-size: 12px;
+}
+
+.detailscard > .content > .labelproperty > span {
+    color: rgba(0,0,0,0.54);
+    display: block;
+    font-size: 100%;
+    line-height: 26px;
+    padding: 2px;
+    width: 100%;
+}
+
 .detailscard > .content > .textproperty > label {
     color: rgba(0,0,0,0.54);
     display: block;

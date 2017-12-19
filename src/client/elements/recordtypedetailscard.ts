@@ -18,22 +18,12 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
         return this.webApp.api(RecordType).delete(id);
     }
 
-    private prepareViewModels(): DetailsCardViewModel<RecordType> {
-        return {
-            Title: "",
-            Properties: [
-                { Label: "Name", Type: FieldType.Text, Value: "" },
-                { Label: "Checkbox 0", Type: FieldType.Checkbox, Value: false },
-                { Label: "Checkbox 1", Type: FieldType.Checkbox, Value: false },
-            ]
-        } as DetailsCardViewModel<RecordType>;
-    }
-
     protected loadEntityViewModel(id: string): Promise<DetailsCardViewModel<RecordType>> {
         return this.webApp.api(RecordType).getOne(id).then((recordType) => {
             return Promise.resolve({
                 Title: recordType.label,
                 Properties: [
+                    { Label: "Name", Type: FieldType.Label, Value: recordType.name },
                     { Label: "Bezeichnung", Type: FieldType.Text, Value: recordType.label },
                 ],
                 Entity: recordType
@@ -54,7 +44,7 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
     protected saveEntity(viewModelToSave: DetailsCardViewModel<RecordType>): Promise<RecordType> {
         let recordType = {
             _id: viewModelToSave.Entity!._id,
-            label: viewModelToSave.Properties[0].Value
+            label: viewModelToSave.Properties[1].Value
         } as RecordType;
         return this.webApp.api(RecordType).save(recordType);
     }
