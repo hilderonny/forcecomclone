@@ -5,6 +5,7 @@ import { CheckBoxProperty } from "./checkboxproperty";
 import { ButtonRow } from "./buttonrow";
 import { ActionButton } from "./actionbutton";
 import { RedActionButton } from "./redactionbutton";
+import { AbstractElement } from "./abstractelement";
 
 
 export class DetailsCardProperty {
@@ -12,6 +13,7 @@ export class DetailsCardProperty {
     Label: string;
     Type: FieldType;
     Value: any;
+    Element?: AbstractElement;
             
 }
 

@@ -9,6 +9,7 @@ export class ListCardElementViewModel {
     Label: string;
     IconUrl: string;
     ClickHandler: (clickEvent: MouseEvent, element: ListCardElementViewModel) => void;
+    Button?: Button;
 
 }
 
@@ -16,7 +17,7 @@ export class ListCard extends Card {
 
     ViewModelFetcher: () => Promise<ListCardElementViewModel[]>;
     NewElementClickHandler: (clickEvent: MouseEvent) => void;
-    list: List;
+    List: List;
     
     constructor(title?: string) {
         super(title);
@@ -33,23 +34,34 @@ export class ListCard extends Card {
         });
         buttonrow.HtmlElement.appendChild(newElementButton.HtmlElement);
 
-        self.list = new List();
-        self.HtmlElement.appendChild(self.list.HtmlElement);
+        self.List = new List();
+        self.HtmlElement.appendChild(self.List.HtmlElement);
     }
 
     load() {
         if (!this.ViewModelFetcher) return; // Do nothing when not initialized
         let self = this;
         this.ViewModelFetcher().then((elements) => {
-            self.list.HtmlElement.innerHTML = "";
+            self.List.HtmlElement.innerHTML = "";
             elements.forEach(el => {
                 let button = new Button(el.Label, el.IconUrl);
                 if (el.ClickHandler) button.HtmlElement.addEventListener("click", (clickEvent) => {
                     el.ClickHandler(clickEvent, el);
                 });
-                self.list.HtmlElement.appendChild(button.HtmlElement);
+                el.Button = button;
+                self.List.HtmlElement.appendChild(button.HtmlElement);
             });
         });
+    }
+
+    removeListElement(el: ListCardElementViewModel) {
+        if (el.Button && el.Button.HtmlElement.parentNode) {
+            el.Button.HtmlElement.parentNode.removeChild(el.Button.HtmlElement);
+        }
+    }
+
+    updateListElement(el: ListCardElementViewModel) {
+        if (el.Button && el.Button.LabelSpan) el.Button.LabelSpan.innerHTML = el.Label;
     }
 
 }
