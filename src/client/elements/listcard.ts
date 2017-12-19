@@ -12,6 +12,7 @@ export class ListCardElementViewModel<T extends Type> {
 
     Label: string;
     IconUrl: string;
+    SecondLine: string;
     Entity: T;
 
 }
@@ -52,7 +53,7 @@ export abstract class ListCard<T extends Type> extends Card {
     }
 
     private addListElement(self: ListCard<T>, el: ListCardElementViewModel<T>) {
-        let button = new Button(el.Label, el.IconUrl);
+        let button = new Button(el.Label, el.IconUrl, el.SecondLine);
         (button as any as EntityElement<T>).Entity = el.Entity;
         button.HtmlElement.addEventListener("click", (clickEvent) => {
             self.getEditDetailsCard(el.Entity._id).then((detailsCard) => {
@@ -75,6 +76,7 @@ export abstract class ListCard<T extends Type> extends Card {
                     if ((button as any as EntityElement<T>).Entity._id === savedEntity._id) {
                         if (viewModel.Label) button.setLabel(viewModel.Label);
                         if (viewModel.IconUrl) button.setIcon(viewModel.IconUrl);
+                        if (viewModel.SecondLine) button.setSecondLine(viewModel.SecondLine);
                         break;
                     }
                 }

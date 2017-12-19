@@ -73,10 +73,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
             if (p.validate) {
                 let error = p.validate(p.Value);
                 p.Property.setErrorMessage(error);
-                if (error) {
-                    allValid = false;
-                    console.log(error);
-                }
+                if (error) allValid = false;
             }
         });
         return allValid;
