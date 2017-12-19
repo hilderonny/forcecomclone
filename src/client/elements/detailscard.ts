@@ -25,14 +25,23 @@ export class DetailsCardViewModel {
 
 }
 
-export class DetailsCard extends Card {
+export abstract class DetailsCard extends Card {
 
-    ViewModel: DetailsCardViewModel;
-    Content: HTMLDivElement;
-    ButtonRow: ButtonRow;
-    SaveButtonClickHandler: () => void;
-    DeleteButtonClickHandler: () => void;
-    CreateButtonClickHandler: () => void;
+    private viewModel: DetailsCardViewModel;
+    private content: HTMLDivElement;
+    private buttonRow: ButtonRow;
+    // SaveButtonClickHandler: () => void;
+    // DeleteButtonClickHandler: () => void;
+    // CreateButtonClickHandler: () => void;
+
+    public onEntityCreated: (vm: DetailsCardViewModel) => void;
+    public onEntityUpdated: (vm: DetailsCardViewModel) => void;
+    public onEntityDeleted: (vm: DetailsCardViewModel) => void;
+
+    protected abstract createEntity: (vm: DetailsCardViewModel) => Promise<DetailsCardViewModel>;
+    protected abstract deleteEntity: (id: string) => Promise<void>;
+    protected abstract loadEntity: (id: string) => Promise<DetailsCardViewModel>;
+    protected abstract saveEntity: (vm: DetailsCardViewModel) => Promise<DetailsCardViewModel>;
     
     constructor(title?: string) {
 
@@ -41,12 +50,12 @@ export class DetailsCard extends Card {
         let self = this;
         self.HtmlElement.classList.add("detailscard");
         
-        self.Content = document.createElement("div");
-        self.Content.classList.add("content");
-        self.HtmlElement.appendChild(self.Content);
+        self.content = document.createElement("div");
+        self.content.classList.add("content");
+        self.HtmlElement.appendChild(self.content);
 
-        self.ButtonRow = new ButtonRow();
-        self.HtmlElement.appendChild(self.ButtonRow.HtmlElement);
+        self.buttonRow = new ButtonRow();
+        self.HtmlElement.appendChild(self.buttonRow.HtmlElement);
 
     }
 
@@ -54,15 +63,18 @@ export class DetailsCard extends Card {
 
         let self = this;
         
-        self.ViewModel = viewModel;
+        self.viewModel = viewModel;
 
         if (viewModel.Title) self.Title.HtmlElement.innerHTML = viewModel.Title;
 
-        self.ButtonRow.HtmlElement.innerHTML = "";
+        self.buttonRow.HtmlElement.innerHTML = "";
 
         if (viewModel.Id) {
             let saveButton = new ActionButton("Speichern");
             saveButton.HtmlElement.addEventListener("click", () => {
+                self.saveEntity(self.viewModel).then((savedViewModel) => {
+                    self.viewModel = savedViewModel;
+                })
                 if (self.SaveButtonClickHandler) self.SaveButtonClickHandler();
             });
             self.ButtonRow.HtmlElement.appendChild(saveButton.HtmlElement);
