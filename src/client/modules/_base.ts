@@ -35,7 +35,6 @@ export default ClientModule.create((webapp) => {
     customObjectsButton.HtmlElement.addEventListener("click", () => {
         // TODO: In eigene Klasse auslagern, damit diese ListCard auch von woanders her aus aufgerufen werden kann
         let customObjectListCard = new RecordTypeListCard(webapp);
-        customObjectListCard.load();
         webapp.cardStack.closeAllCards();
         webapp.cardStack.addCard(customObjectListCard);
         

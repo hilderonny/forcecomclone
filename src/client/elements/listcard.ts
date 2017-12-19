@@ -3,65 +3,109 @@ import { Button } from "./button";
 import { List } from "./list";
 import { ButtonRow } from "./buttonrow";
 import { ActionButton } from "./actionbutton";
+import { DetailsCard } from "./detailscard";
+import { CardStack } from "./cardstack";
+import { Type } from "../../server/core/type";
+import { EntityElement } from "./entityelement";
 
-export class ListCardElementViewModel {
+export class ListCardElementViewModel<T extends Type> {
 
     Label: string;
     IconUrl: string;
-    ClickHandler: (clickEvent: MouseEvent, element: ListCardElementViewModel) => void;
-    Button?: Button;
+    Entity: T;
 
 }
 
-export class ListCard extends Card {
+export abstract class ListCard<T extends Type> extends Card {
 
-    ViewModelFetcher: () => Promise<ListCardElementViewModel[]>;
-    NewElementClickHandler: (clickEvent: MouseEvent) => void;
-    List: List;
+    protected abstract getCreateDetailsCard(): Promise<DetailsCard<T>>;
+    protected abstract getEditDetailsCard(id: string): Promise<DetailsCard<T>>;
+    protected abstract getViewModelForEntity(entity: T): Promise<ListCardElementViewModel<T>>;
+    protected abstract loadEntities(): Promise<T[]>;
     
-    constructor(title?: string) {
+    // ViewModelFetcher: () => Promise<ListCardElementViewModel[]>;
+    // NewElementClickHandler: (clickEvent: MouseEvent) => void;
+    private list: List;
+    private cardStack: CardStack;
+    
+    constructor(cardStack: CardStack, title?: string) {
+
         super(title);
 
         let self = this;
         self.HtmlElement.classList.add("listcard");
+        self.cardStack = cardStack;
 
         let buttonrow = new ButtonRow();
         self.HtmlElement.appendChild(buttonrow.HtmlElement);
         
-        let newElementButton = new ActionButton("Neues Element");
+        let newElementButton = new ActionButton("Neu");
         newElementButton.HtmlElement.addEventListener("click", (evt) => {
-            if (self.NewElementClickHandler) self.NewElementClickHandler(evt);
+            self.getCreateDetailsCard().then((detailsCard) => {
+                self.showDetailsCard(self, detailsCard)
+            });
         });
         buttonrow.HtmlElement.appendChild(newElementButton.HtmlElement);
 
-        self.List = new List();
-        self.HtmlElement.appendChild(self.List.HtmlElement);
+        self.list = new List();
+        self.HtmlElement.appendChild(self.list.HtmlElement);
+
+        self.load();
+
     }
 
-    load() {
-        if (!this.ViewModelFetcher) return; // Do nothing when not initialized
-        let self = this;
-        this.ViewModelFetcher().then((elements) => {
-            self.List.HtmlElement.innerHTML = "";
-            elements.forEach(el => {
-                let button = new Button(el.Label, el.IconUrl);
-                if (el.ClickHandler) button.HtmlElement.addEventListener("click", (clickEvent) => {
-                    el.ClickHandler(clickEvent, el);
-                });
-                el.Button = button;
-                self.List.HtmlElement.appendChild(button.HtmlElement);
+    private addListElement(self: ListCard<T>, el: ListCardElementViewModel<T>) {
+        let button = new Button(el.Label, el.IconUrl);
+        (button as any as EntityElement<T>).Entity = el.Entity;
+        button.HtmlElement.addEventListener("click", (clickEvent) => {
+            self.getEditDetailsCard(el.Entity._id).then((detailsCard) => {
+                self.showDetailsCard(self, detailsCard)
             });
         });
+        self.list.add(button);
     }
 
-    removeListElement(el: ListCardElementViewModel) {
-        if (el.Button && el.Button.HtmlElement.parentNode) {
-            el.Button.HtmlElement.parentNode.removeChild(el.Button.HtmlElement);
-        }
+    private showDetailsCard(self: ListCard<T>, detailsCard: DetailsCard<T>) {
+        detailsCard.onEntityCreated = (createdEntity) => {
+            self.getViewModelForEntity(createdEntity).then((el) => {
+                self.addListElement(self, el);
+            });
+        };
+        detailsCard.onEntitySaved = (savedEntity) => {
+            self.getViewModelForEntity(savedEntity).then((viewModel) => {
+                for (let i = 0; i < self.list.Buttons.length; i++) {
+                    let button = self.list.Buttons[i];
+                    if ((button as any as EntityElement<T>).Entity._id === savedEntity._id) {
+                        if (viewModel.Label) button.LabelSpan!.innerHTML = viewModel.Label;
+                        if (viewModel.IconUrl) (button.IconImage!.HtmlElement as HTMLImageElement).src = viewModel.IconUrl;
+                        break;
+                    }
+                }
+            });
+        };
+        detailsCard.onEntityDeleted = (deletedEntity) => {
+            for (let i = 0; i < self.list.Buttons.length; i++) {
+                let button = self.list.Buttons[i];
+                if ((button as any as EntityElement<T>).Entity._id === deletedEntity._id) {
+                    self.list.remove(button);
+                    break;
+                }
+            }
+        };
+        this.cardStack.closeCardsRightTo(this);
+        this.cardStack.addCard(detailsCard);
     }
 
-    updateListElement(el: ListCardElementViewModel) {
-        if (el.Button && el.Button.LabelSpan) el.Button.LabelSpan.innerHTML = el.Label;
+    private load() {
+        let self = this;
+        this.loadEntities().then((entities) => {
+            self.list.HtmlElement.innerHTML = "";
+            entities.forEach((entity) => {
+                self.getViewModelForEntity(entity).then((el) => {
+                    self.addListElement(self, el);
+                });
+            });
+        });
     }
 
 }

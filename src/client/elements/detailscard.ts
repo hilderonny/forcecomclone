@@ -6,6 +6,7 @@ import { ButtonRow } from "./buttonrow";
 import { ActionButton } from "./actionbutton";
 import { RedActionButton } from "./redactionbutton";
 import { AbstractElement } from "./abstractelement";
+import { Type } from "../../server/core/type";
 
 
 export class DetailsCardProperty {
@@ -13,39 +14,35 @@ export class DetailsCardProperty {
     Label: string;
     Type: FieldType;
     Value: any;
-    Element?: AbstractElement;
             
 }
 
-export class DetailsCardViewModel {
+export class DetailsCardViewModel<T extends Type> {
 
-    Id?: string;
     Properties: DetailsCardProperty[] = [];
     Title: string;
-
+    Entity?: T;
 }
 
-export abstract class DetailsCard extends Card {
+export abstract class DetailsCard<T extends Type> extends Card {
 
-    private viewModel: DetailsCardViewModel;
+    private viewModel: DetailsCardViewModel<T>;
     private content: HTMLDivElement;
     private buttonRow: ButtonRow;
-    // SaveButtonClickHandler: () => void;
-    // DeleteButtonClickHandler: () => void;
-    // CreateButtonClickHandler: () => void;
 
-    public onEntityCreated: (vm: DetailsCardViewModel) => void;
-    public onEntityUpdated: (vm: DetailsCardViewModel) => void;
-    public onEntityDeleted: (vm: DetailsCardViewModel) => void;
+    public onEntityCreated: (createdEntity: T) => void;
+    public onEntitySaved: (savedEntity: T) => void;
+    public onEntityDeleted: (deletedEntity: T) => void;
 
-    protected abstract createEntity: (vm: DetailsCardViewModel) => Promise<DetailsCardViewModel>;
-    protected abstract deleteEntity: (id: string) => Promise<void>;
-    protected abstract loadEntity: (id: string) => Promise<DetailsCardViewModel>;
-    protected abstract saveEntity: (vm: DetailsCardViewModel) => Promise<DetailsCardViewModel>;
+    protected abstract createEntity(viewModelToCreate: DetailsCardViewModel<T>): Promise<T>;
+    protected abstract deleteEntity(id: string): Promise<void>;
+    protected abstract loadEntityViewModel(id: string): Promise<DetailsCardViewModel<T>>;
+    protected abstract prepareNewEntityViewModel(): Promise<DetailsCardViewModel<T>>;
+    protected abstract saveEntity(viewModelToSave: DetailsCardViewModel<T>): Promise<T>;
     
-    constructor(title?: string) {
+    constructor(id?: string) {
 
-        super(title);
+        super(""); // Force creation of title tag
 
         let self = this;
         self.HtmlElement.classList.add("detailscard");
@@ -57,9 +54,13 @@ export abstract class DetailsCard extends Card {
         self.buttonRow = new ButtonRow();
         self.HtmlElement.appendChild(self.buttonRow.HtmlElement);
 
+        (id ? self.loadEntityViewModel(id) : self.prepareNewEntityViewModel()).then((viewModel) => {
+            self.load(viewModel);
+        });
+
     }
 
-    load(viewModel: DetailsCardViewModel) {
+    private load(viewModel: DetailsCardViewModel<T>) {
 
         let self = this;
         
@@ -69,40 +70,48 @@ export abstract class DetailsCard extends Card {
 
         self.buttonRow.HtmlElement.innerHTML = "";
 
-        if (viewModel.Id) {
+        if (self.viewModel.Entity) {
             let saveButton = new ActionButton("Speichern");
             saveButton.HtmlElement.addEventListener("click", () => {
-                self.saveEntity(self.viewModel).then((savedViewModel) => {
-                    self.viewModel = savedViewModel;
-                })
-                if (self.SaveButtonClickHandler) self.SaveButtonClickHandler();
+                self.saveEntity(self.viewModel).then((savedEntity) => {
+                    if (self.onEntitySaved) self.onEntitySaved(savedEntity);
+                    self.loadEntityViewModel(savedEntity._id).then(self.load);
+                });
             });
-            self.ButtonRow.HtmlElement.appendChild(saveButton.HtmlElement);
+            self.buttonRow.HtmlElement.appendChild(saveButton.HtmlElement);
 
             let deleteButton = new RedActionButton("Löschen");
             deleteButton.HtmlElement.addEventListener("click", () => {
-                if (self.DeleteButtonClickHandler) self.DeleteButtonClickHandler();
+                if (confirm('Soll "' + self.viewModel.Title + '" wirklich gelöscht werden?')) {
+                    self.deleteEntity(self.viewModel.Entity!._id).then(() => {
+                        if (self.onEntityDeleted) self.onEntityDeleted(self.viewModel.Entity!);
+                        self.close();
+                    });
+                }
             });
-            self.ButtonRow.HtmlElement.appendChild(deleteButton.HtmlElement);
+            self.buttonRow.HtmlElement.appendChild(deleteButton.HtmlElement);
         } else {
             let createButton = new ActionButton("Erstellen");
             createButton.HtmlElement.addEventListener("click", () => {
-                if (self.CreateButtonClickHandler) self.CreateButtonClickHandler();
+                self.createEntity(self.viewModel).then((createdEntity) => {
+                    if (self.onEntityCreated) self.onEntityCreated(createdEntity);
+                    self.loadEntityViewModel(createdEntity._id).then(self.load);
+                });
             });
-            self.ButtonRow.HtmlElement.appendChild(createButton.HtmlElement);
+            self.buttonRow.HtmlElement.appendChild(createButton.HtmlElement);
         }
         
         if(viewModel.Properties) self.renderProperties();
 
     }
 
-    renderProperties() {
+    private renderProperties() {
         let self = this;
-        self.Content.innerHTML = "";
-        this.ViewModel.Properties.forEach((p) => {
+        self.content.innerHTML = "";
+        this.viewModel.Properties.forEach((p) => {
             switch (p.Type) {
-                case FieldType.Text: self.Content.appendChild(new TextProperty(p).HtmlElement); break;
-                case FieldType.Checkbox: self.Content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
+                case FieldType.Text: self.content.appendChild(new TextProperty(p).HtmlElement); break;
+                case FieldType.Checkbox: self.content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
                 default: break;
             }
         });

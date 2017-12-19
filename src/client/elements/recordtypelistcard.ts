@@ -1,48 +1,40 @@
-import { Button } from "./button";import { List } from "./list";
 import { ListCard, ListCardElementViewModel } from "./listcard";
-import { WebApp } from "../webapp";
-import { FieldType } from "../../common/types/field";
+import { RecordType } from "../../common/types/recordtype";
+import { DetailsCard } from "./detailscard";
 import { RecordTypeDetailsCard } from "./recordtypedetailscard";
-import { DetailsCardViewModel } from "./detailscard";
+import { WebApp } from "../webapp";
 
-export class RecordTypeListCard extends ListCard {
+
+export class RecordTypeListCard extends ListCard<RecordType> {
+
+    protected getCreateDetailsCard(): Promise<DetailsCard<RecordType>> {
+        return Promise.resolve(new RecordTypeDetailsCard());
+    }
+
+    protected getEditDetailsCard(id: string): Promise<DetailsCard<RecordType>> {
+        return Promise.resolve(new RecordTypeDetailsCard(id));
+    }
+
+    protected getViewModelForEntity(entity: RecordType): Promise<ListCardElementViewModel<RecordType>> {
+        return Promise.resolve({
+            IconUrl: "categorize.png",
+            Entity: entity,
+            Label: entity.name
+        } as ListCardElementViewModel<RecordType>);
+    }
+
+    protected loadEntities(): Promise<RecordType[]> {
+        console.log("TODO: loadEntities()");
+        return Promise.resolve([
+            { _id: "id1", name: "Dokumente" } as RecordType,
+            { _id: "id2", name: "Notizen" } as RecordType,
+            { _id: "id3", name: "FM-Objekte" } as RecordType,
+        ]);
+    }
     
     constructor(webapp: WebApp) {
-        super("Benutzerdefinierte Objekte");
 
-        let self = this;
-
-        self.NewElementClickHandler = (evt) => {
-            webapp.cardStack.closeCardsRightTo(self);
-            let detailsCard = new RecordTypeDetailsCard();
-            detailsCard.ViewModelCreatedHandler = (viewModel: DetailsCardViewModel) => {
-                // TODO: Einfügen und Edit handler dran pappen. Evtl. Erstellen einzelner Listenelemente aus der FUnktion unten rausziehen
-            }
-            webapp.cardStack.addCard(detailsCard);
-        };
-
-        self.ViewModelFetcher = () => {
-            let clickHandler = (evt: MouseEvent, el: ListCardElementViewModel) => {
-                // TODO: Vom Server holen
-                webapp.cardStack.closeCardsRightTo(self);
-                let detailsCard = new RecordTypeDetailsCard("id1");
-                // TODO: Change handler für Titel bzw. Label dran pappen
-                detailsCard.ViewModelSavedHandler = (viewModel: DetailsCardViewModel) => {
-                    el.Label = viewModel.Properties[0].Value;
-                    self.updateListElement(el);
-                }
-                detailsCard.ViewModelDeletedHandler = () => {
-                    self.removeListElement(el);
-                };
-                webapp.cardStack.addCard(detailsCard);
-            };
-            // TODO: Vom Server holen
-            return Promise.resolve([
-                { IconUrl: "categorize.png", Label: "Dokumente", ClickHandler: clickHandler } as ListCardElementViewModel,
-                { IconUrl: "categorize.png", Label: "Notizen", ClickHandler: clickHandler } as ListCardElementViewModel,
-                { IconUrl: "categorize.png", Label: "FM-Objekte", ClickHandler: clickHandler } as ListCardElementViewModel,
-            ]);
-        };
+        super(webapp.cardStack, "Benutzerdefinierte Objekte");
 
     }
 

@@ -1,56 +1,54 @@
 import { TextProperty } from "./textproperty";
 import { DetailsCard, DetailsCardViewModel } from "./detailscard";
 import { FieldType } from "../../common/types/field";
+import { RecordType } from "../../common/types/recordtype";
 
-export class RecordTypeDetailsCard extends DetailsCard {
-    
-    ViewModelCreatedHandler: (viewModel: DetailsCardViewModel) => void;
-    ViewModelSavedHandler: (viewModel: DetailsCardViewModel) => void;
-    ViewModelDeletedHandler: () => void;
+export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
+
+    protected createEntity(viewModelToCreate: DetailsCardViewModel<RecordType>): Promise<RecordType> {
+        console.log("TODO: createEntity()");
+        return Promise.resolve({ _id: "newid", name: viewModelToCreate.Properties[0].Value } as RecordType);
+    }
+
+    protected deleteEntity(id: string) {
+        console.log("TODO: deleteEntity()");
+        return Promise.resolve();
+    }
+
+    private prepareViewModel(): DetailsCardViewModel<RecordType> {
+        return {
+            Title: "",
+            Properties: [
+                { Label: "Name", Type: FieldType.Text, Value: "" },
+                { Label: "Checkbox 0", Type: FieldType.Checkbox, Value: false },
+                { Label: "Checkbox 1", Type: FieldType.Checkbox, Value: false },
+            ]
+        } as DetailsCardViewModel<RecordType>;
+    }
+
+    protected loadEntityViewModel(id: string): Promise<DetailsCardViewModel<RecordType>> {
+        let viewModel = this.prepareViewModel();
+        viewModel.Title = "Dokument";
+        viewModel.Properties[0].Value = "Dokument";
+        viewModel.Properties[2].Value = true;
+        return Promise.resolve(viewModel);
+    }
+
+    protected prepareNewEntityViewModel(): Promise<DetailsCardViewModel<RecordType>> {
+        let viewModel = this.prepareViewModel();
+        viewModel.Title = "Neues benutzerdefiniertes Objekt";
+        return Promise.resolve(viewModel);
+    }
+
+    protected saveEntity(viewModelToSave: DetailsCardViewModel<RecordType>): Promise<RecordType> {
+        console.log("TODO: saveEntity()");
+        return Promise.resolve(viewModelToSave.Entity!);
+    }
 
     constructor(id?: string) {
-        super(""); // Force creation of title tag
 
-        let self = this;
-        
-        self.HtmlElement.classList.add("recordtypedetailscard");
+        super(id);
 
-        self.CreateButtonClickHandler = () => {
-            // TODO: Save to server
-            self.ViewModel.Id = "newId";
-            self.ViewModel.Title = self.ViewModel.Properties[0].Value;
-            self.Title.HtmlElement.innerHTML = self.ViewModel.Title;
-            self.load(self.ViewModel);
-            if (self.ViewModelCreatedHandler) self.ViewModelCreatedHandler(self.ViewModel);
-        }
-
-        self.SaveButtonClickHandler = () => {
-            // TODO: Save to server
-            self.ViewModel.Title = self.ViewModel.Properties[0].Value;
-            self.Title.HtmlElement.innerHTML = self.ViewModel.Title;
-            if (self.ViewModelSavedHandler) self.ViewModelSavedHandler(self.ViewModel);
-        }
-
-        self.DeleteButtonClickHandler = () => {
-            if (confirm('Soll das benutzerdefinierte Objekt "' + self.ViewModel.Title + '" wirklich gelöscht werden?')) {
-                // TODO: Delete from server
-                if (self.ViewModelDeletedHandler) self.ViewModelDeletedHandler();
-                self.close();
-            }
-        };
-
-        let detailsCardViewModel = {
-            Title: id ? "Titel" : "Neues benutzerdefiniertes Objekt",
-            Id: id,
-            Properties: [
-                { Label: "Name", Type: FieldType.Text, Value: id ? "Titel" : "" },
-                { Label: "Checkbox 0", Type: FieldType.Checkbox, Value: false },
-                { Label: "Checkbox 1", Type: FieldType.Checkbox, Value: true },
-            ]
-        } as DetailsCardViewModel;
-
-        self.load(detailsCardViewModel);
-        
     }
 
 }
