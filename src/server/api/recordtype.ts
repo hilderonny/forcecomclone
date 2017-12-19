@@ -45,7 +45,7 @@ export default (app: App): void => {
 
     async function handleUpdate(req: UserRequest, res: Response) {
         let recordType = req.body as RecordType;
-        if (Object.keys(recordType).length < 1) { res.sendStatus(400); return; }
+        if (Object.keys(recordType).length < 2) { res.sendStatus(400); return; }
         if (recordType.name) { res.sendStatus(400); return; } // Attribute name cannot be changed
         if (!ObjectId.isValid(recordType._id)) { res.sendStatus(400); return; }
         let id = new ObjectId(recordType._id);

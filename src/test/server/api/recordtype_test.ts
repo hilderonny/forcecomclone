@@ -68,53 +68,50 @@ describe('API RecordType', () => {
 
         xit('Returns 403 when user has no write access', async() => {});
 
-        it('Returns 400 when no content is sent', async () => {
+        // Insert
+
+        it('Returns 400 when _id is not given and no content is sent', async () => {
             let recordType = { } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
-        it('Returns 400 when attribute name is missing', async () => {
+        it('Returns 400 when _id is not given and attribute name is missing', async () => {
             let recordType = { label: 'Label' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
-        it('Returns 400 when attribute _id is given', async () => {
-            let recordType = { _id: '999999999999999999999999', name: 'TestObjectName' } as RecordType;
-            await TestHelper.post('/api/RecordType').send(recordType).expect(400);
-        });
-
-        it('Returns 400 when name is "RecordType"', async () => {
+        it('Returns 400 when _id is not given and name is "RecordType"', async () => {
             let recordType = { name: 'RecordType' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
-        it('Returns 400 when name is "Field"', async () => {
+        it('Returns 400 when _id is not given and name is "Field"', async () => {
             let recordType = { name: 'Field' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
-        it('Returns 400 when name contains "__"', async () => {
+        it('Returns 400 when _id is not given and name contains "__"', async () => {
             let recordType = { name: 'name__with__two__underscores' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
-        it('Returns 400 when name contains invalid characters (only letters, digits and _ allowed)', async () => {
+        it('Returns 400 when _id is not given and name contains invalid characters (only letters, digits and _ allowed)', async () => {
             let recordType = { name: '!"§$%&/()=' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
 
-        it('Returns 400 when name does not start with a letter', async () => {
+        it('Returns 400 when _id is not given and name does not start with a letter', async () => {
             let recordType = { name: '0abcd' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(400);
         });
         
-        it('Returns 409 when record type with given name already exists', async () => {
+        it('Returns 409 when _id is not given and record type with given name already exists', async () => {
             await TestHelper.prepareRecordTypes();
             let recordType = { name: 'Document' } as RecordType;
             await TestHelper.post('/api/RecordType').send(recordType).expect(409);
         });
 
-        it('Returns the record type after creating with the generated _id', async () => {
+        it('Returns the record type after creating with the generated _id when _id is not given', async () => {
             let recordType = { name: 'TestObjectName' } as RecordType;
             let recordTypeFromApi = (await TestHelper.post('/api/RecordType').send(recordType).expect(200)).body as RecordType;
             expect(recordTypeFromApi).not.to.be.undefined;
@@ -124,67 +121,54 @@ describe('API RecordType', () => {
             expect(recordTypeFromApi).to.deep.equal(recordTypeFromDatabase);
         });
 
-        it('Creates a table for the record type', async () => {
+        it('Creates a table for the record type when _id is not given', async () => {
             let recordType = { name: 'TestObjectName' } as RecordType;
             // Check whether the table exists before
             expect((await TestHelper.db.collections()).find(c => c.collectionName === recordType.name)).to.be.undefined;
             await TestHelper.post('/api/RecordType').send(recordType).expect(200);
             expect((await TestHelper.db.collections()).find(c => c.collectionName === recordType.name)).not.to.be.undefined;
         });
-        
-    })
 
-    describe('PUT/:id', () => {
+        // Update
 
-        xit('Returns 401 when user is not authenticated', async() => {});
-
-        xit('Returns 403 when user has no write access', async() => {});
-
-        it('Returns 400 when no content is sent', async () => {
+        it('Returns 400 when _id is given and no content is sent', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = {  } as RecordType;
-            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabase._id.toString()).send(updateSet).expect(400);
+            let updateSet = { _id: recordTypeFromDatabase._id.toString() } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
-        it('Returns 400 when attribute _id is given in body', async () => {
+        it('Returns 400 when _id is given and request contains property "name" (name is not changeable afterwards)', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { _id: '999999999999999999999999' } as RecordType;
-            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabase._id.toString()).send(updateSet).expect(400);
-        });
-
-        it('Returns 400 when request contains property "name" (name is not changeable afterwards)', async () => {
-            await TestHelper.prepareRecordTypes();
-            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { name: 'UpdatedName' } as RecordType;
-            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabase._id.toString()).send(updateSet).expect(400);
+            let updateSet = { _id: recordTypeFromDatabase._id.toString(), name: 'UpdatedName' } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
         it('Returns 400 when given id is invalid', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { label: 'NewLabel' } as RecordType;
-            await TestHelper.put('/api/RecordType/invalidId').send(updateSet).expect(400);
+            let updateSet = { _id: "invalidId", label: 'NewLabel' } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
         it('Returns 404 when no custom recordtype of given id exists', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { label: 'NewLabel' } as RecordType;
-            await TestHelper.put('/api/RecordType/999999999999999999999999').send(updateSet).expect(404);
+            let updateSet = { _id: "999999999999999999999999", label: 'NewLabel' } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(404);
         });
         
-        it('Updates the meta information of the record type', async () => {
+        it('Updates the meta information of the record type when _id is given', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabaseBeforeUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { label: 'NewLabel' } as RecordType;
-            await TestHelper.put('/api/RecordType/' + recordTypeFromDatabaseBeforeUpdate._id.toString()).send(updateSet).expect(200);
+            let updateSet = { _id: recordTypeFromDatabaseBeforeUpdate._id.toString(), label: 'NewLabel' } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(200);
             let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
             expect(recordTypeFromDatabaseAfterUpdate.label).to.equal(updateSet.label);
         });
         
-    })
+    });
 
     describe('DELETE/:id', () => {
 
