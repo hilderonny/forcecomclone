@@ -8,12 +8,19 @@ import { RedActionButton } from "./redactionbutton";
 import { TextProperty } from "./textproperty";
 import { CheckBoxProperty } from "./checkboxproperty";
 import { LabelProperty } from "./labelproperty";
+import { Property } from "./property";
 
 export class DetailsCardProperty {
 
     Label: string;
     Type: FieldType;
     Value: any;
+    /**
+     * Validate the input of the property and return null when all is valid
+     * or an error message, when not.
+     */
+    validate?: (currentValue: any) => string | null;
+    Property: Property;
             
 }
 
@@ -60,7 +67,22 @@ export abstract class DetailsCard<T extends Type> extends Card {
 
     }
 
-    private load(self: DetailsCard<T>, viewModel: DetailsCardViewModel<T>) {
+    private validateProperties(self: DetailsCard<T>): boolean {
+        let allValid = true;
+        self.viewModel.Properties.forEach((p) => {
+            if (p.validate) {
+                let error = p.validate(p.Value);
+                p.Property.setErrorMessage(error);
+                if (error) {
+                    allValid = false;
+                    console.log(error);
+                }
+            }
+        });
+        return allValid;
+    }
+
+    private load(self: DetailsCard<T>, viewModel: DetailsCardViewModel<T>): void {
 
         self.viewModel = viewModel;
 
@@ -71,6 +93,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
         if (self.viewModel.Entity) {
             let saveButton = new ActionButton("Speichern");
             saveButton.HtmlElement.addEventListener("click", () => {
+                if (!self.validateProperties(self)) return;
                 self.saveEntity(self.viewModel).then((savedEntity) => {
                     if (self.onEntitySaved) self.onEntitySaved(savedEntity);
                     self.loadEntityViewModel(savedEntity._id).then((viewModel) => {
@@ -93,6 +116,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
         } else {
             let createButton = new ActionButton("Erstellen");
             createButton.HtmlElement.addEventListener("click", () => {
+                if (!self.validateProperties(self)) return;
                 self.createEntity(self.viewModel).then((createdEntity) => {
                     if (self.onEntityCreated) self.onEntityCreated(createdEntity);
                     self.loadEntityViewModel(createdEntity._id).then((viewModel) => {

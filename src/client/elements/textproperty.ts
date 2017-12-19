@@ -3,7 +3,6 @@ import { Property } from "./property";
 
 export class TextProperty extends Property {
 
-
     constructor(property: DetailsCardProperty) {
         super(property);
 
@@ -12,10 +11,10 @@ export class TextProperty extends Property {
 
         let label = document.createElement("label") as HTMLLabelElement;
         label.innerHTML = property.Label;
-        self.HtmlElement.appendChild(label);
+        self.addChild(label);
 
         let input = document.createElement("input") as HTMLInputElement;
-        self.HtmlElement.appendChild(input);
+        self.addChild(input);
         input.setAttribute("placeholder", property.Label);
 
         let changeHandler = () => {
@@ -26,7 +25,7 @@ export class TextProperty extends Property {
         changeHandler();
         input.addEventListener("change", changeHandler);
         input.addEventListener("keyup", changeHandler);
-
+        
     }
 
 }

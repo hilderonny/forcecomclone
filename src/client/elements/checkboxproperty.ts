@@ -4,7 +4,7 @@ import { Property } from "./property";
 export class CheckBoxProperty extends Property {
 
     Property: DetailsCardProperty;
-
+    
     constructor(property: DetailsCardProperty) {
         super(property);
         
@@ -12,7 +12,7 @@ export class CheckBoxProperty extends Property {
         self.HtmlElement.classList.add("checkboxproperty");
 
         let label = document.createElement("label") as HTMLLabelElement;
-        self.HtmlElement.appendChild(label);
+        self.addChild(label);
         
         let input = document.createElement("input") as HTMLInputElement;
         input.setAttribute("type", "checkbox");

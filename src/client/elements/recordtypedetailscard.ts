@@ -3,6 +3,7 @@ import { DetailsCard, DetailsCardViewModel } from "./detailscard";
 import { FieldType } from "../../common/types/field";
 import { RecordType } from "../../common/types/recordtype";
 import { WebApp } from "../webapp";
+import { currentId } from "async_hooks";
 
 export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
 
@@ -35,7 +36,16 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
         return Promise.resolve({
             Title: "Neues benutzerdefiniertes Objekt",
             Properties: [
-                { Label: "Name", Type: FieldType.Text, Value: "" },
+                { Label: "Name", Type: FieldType.Text, Value: "", validate: (currentValue?: string) => {
+                    if (!currentValue || 
+                        currentValue.length < 1 ||
+                        currentValue.includes('__') ||
+                        currentValue.match(/[\W]/) ||
+                        !currentValue.match(/^[A-Za-z]/) ||
+                        [ "RecordType", "Field" ].includes(currentValue)
+                    ) return "Name muss mit Buchstaben beginnen, darf nur Buchstaben (ohne Umlaute), Ziffern und '_' enthalten, darf nicht '__' enthalten und darf weder 'RecordType' noch 'Field' lauten.";
+                    return null;
+                } },
                 { Label: "Bezeichnung", Type: FieldType.Text, Value: "" },
             ]
         } as DetailsCardViewModel<RecordType>);

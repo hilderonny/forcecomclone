@@ -206,6 +206,19 @@ html {
     margin: 18px 0 8px 0;
 }
 
+.detailscard > .content > .property.haserror > input {
+    border-color: #f00;
+}
+
+.detailscard > .content > .property.haserror > label {
+    color: #f00;
+}
+
+.detailscard > .content > .property > .errormessage {
+    color: #f00;
+    font-size: 12px;
+}
+
 .list {
     display: flex;
     flex-direction: column;

@@ -3,7 +3,6 @@ import { Property } from "./property";
 
 export class LabelProperty extends Property {
 
-
     constructor(property: DetailsCardProperty) {
         super(property);
 
@@ -12,10 +11,10 @@ export class LabelProperty extends Property {
 
         let label = document.createElement("label") as HTMLLabelElement;
         label.innerHTML = property.Label;
-        self.HtmlElement.appendChild(label);
+        self.addChild(label);
 
         let span = document.createElement("span") as HTMLSpanElement;
-        self.HtmlElement.appendChild(span);
+        self.addChild(span);
         span.innerHTML = property.Value;
 
     }
