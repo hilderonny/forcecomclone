@@ -5,6 +5,7 @@ import { Type } from "../server/core/type";
 import { Api } from "./api";
 import { ToolBar } from "./elements/toolbar";
 import { MainMenu } from "./elements/mainmenu";
+import { Toast } from "./elements/toast";
 
 /**
  * Main class for an app. Represents the javascript entry point for client
@@ -18,6 +19,7 @@ export class WebApp {
     toolBar: ToolBar;
     rest: Rest;
     rootElement: Element;
+    toast: Toast;
     
     /**
      * Initialize the application within the DOM element with the given selector
@@ -41,6 +43,9 @@ export class WebApp {
         
         self.cardStack = new CardStack();
         selectorElement.appendChild(self.cardStack.HtmlElement);
+
+        self.toast = new Toast();
+        selectorElement.appendChild(self.toast.HtmlElement);
 
         self.initModules();
     }

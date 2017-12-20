@@ -93,6 +93,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
                 if (!self.validateProperties(self)) return;
                 self.saveEntity(self.viewModel).then((savedEntity) => {
                     if (self.onEntitySaved) self.onEntitySaved(savedEntity);
+                    self.webApp.toast.show("Änderungen gespeichert.");
                     self.loadEntityViewModel(savedEntity._id).then((viewModel) => {
                         self.load(self, viewModel);
                     });
@@ -105,6 +106,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
                 if (confirm('Soll "' + self.viewModel.Title + '" wirklich gelöscht werden?')) {
                     self.deleteEntity(self.viewModel.Entity!._id).then(() => {
                         if (self.onEntityDeleted) self.onEntityDeleted(self.viewModel.Entity!);
+                        self.webApp.toast.show(self.viewModel.Title + " wurde gelöscht.");
                         self.close();
                     });
                 }
@@ -117,6 +119,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
                 self.createEntity(self.viewModel).then((createdEntity) => {
                     if (self.onEntityCreated) self.onEntityCreated(createdEntity);
                     self.loadEntityViewModel(createdEntity._id).then((viewModel) => {
+                        self.webApp.toast.show(viewModel.Title + " wurde erstellt.");
                         self.load(self, viewModel);
                     });
                 });
