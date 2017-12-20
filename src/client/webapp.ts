@@ -48,6 +48,8 @@ export class WebApp {
         selectorElement.appendChild(self.toast.HtmlElement);
 
         self.initModules();
+
+        self.mainMenu.load();
     }
 
     /**

@@ -17,41 +17,44 @@ export default ClientModule.create((webapp) => {
         webapp.rootElement.classList.toggle("mainmenuopen");
     });
 
-    let mainMenuLogo = new Image("images/logo_avorium_komplett.svg");
-    mainMenuLogo.HtmlElement.classList.add("logo");
-    webapp.mainMenu.HtmlElement.appendChild(mainMenuLogo.HtmlElement);
+    webapp.mainMenu.addLoader((mainMenu) => {
 
-    // Custom objects
-
-    let userMenuSection = new Section();
-    webapp.mainMenu.HtmlElement.appendChild(userMenuSection.HtmlElement);
-
-    webapp.api(RecordType).getAll().then((recordTypes) => {
-        recordTypes.forEach((rt) => {
-            if (!rt.showInMenu) return;
-            let button = new Button(rt.label);
-            button.HtmlElement.addEventListener("click", () => {
-                webapp.cardStack.closeAllCards();
-                console.log(rt);
+        let mainMenuLogo = new Image("images/logo_avorium_komplett.svg");
+        mainMenuLogo.HtmlElement.classList.add("logo");
+        mainMenu.HtmlElement.appendChild(mainMenuLogo.HtmlElement);
+    
+        // Custom objects
+    
+        let userMenuSection = new Section();
+        mainMenu.HtmlElement.appendChild(userMenuSection.HtmlElement);
+    
+        webapp.api(RecordType).getAll().then((recordTypes) => {
+            recordTypes.forEach((rt) => {
+                if (!rt.showInMenu) return;
+                let button = new Button(rt.label);
+                button.HtmlElement.addEventListener("click", () => {
+                    webapp.cardStack.closeAllCards();
+                    console.log(rt);
+                });
+                userMenuSection.HtmlElement.appendChild(button.HtmlElement);
             });
-            userMenuSection.HtmlElement.appendChild(button.HtmlElement);
         });
+    
+        // Section SETTINGS
+    
+        let settingsMenuSection = new Section();
+        settingsMenuSection.HtmlElement.appendChild(new Title("Einstellungen").HtmlElement)
+        mainMenu.HtmlElement.appendChild(settingsMenuSection.HtmlElement);
+    
+        let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
+        customObjectsButton.HtmlElement.addEventListener("click", () => {
+            let customObjectListCard = new RecordTypeListCard(webapp);
+            webapp.cardStack.closeAllCards();
+            webapp.cardStack.addCard(customObjectListCard);
+        });
+        settingsMenuSection.HtmlElement.appendChild(customObjectsButton.HtmlElement);
+
     });
-
-    // Section SETTINGS
-
-    let settingsMenuSection = new Section();
-    settingsMenuSection.HtmlElement.appendChild(new Title("Einstellungen").HtmlElement)
-    webapp.mainMenu.HtmlElement.appendChild(settingsMenuSection.HtmlElement);
-
-    let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
-    customObjectsButton.HtmlElement.addEventListener("click", () => {
-        let customObjectListCard = new RecordTypeListCard(webapp);
-        webapp.cardStack.closeAllCards();
-        webapp.cardStack.addCard(customObjectListCard);
-    });
-    settingsMenuSection.HtmlElement.appendChild(customObjectsButton.HtmlElement);
-
     
 });
     

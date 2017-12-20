@@ -8,22 +8,30 @@ import { currentId } from "async_hooks";
 export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
 
     protected createEntity(viewModelToCreate: DetailsCardViewModel<RecordType>): Promise<RecordType> {
+        let self = this;
         let recordType = {
             name: viewModelToCreate.Properties[0].Value,
             label: viewModelToCreate.Properties[1].Value,
             showInMenu: viewModelToCreate.Properties[2].Value,
         } as RecordType;
-        let promise = this.webApp.api(RecordType).save(recordType);
+        let promise = self.webApp.api(RecordType).save(recordType);
         promise.catch((statusCode: number) => {
             if (statusCode === 409) {
                 viewModelToCreate.Properties[0].Property.setErrorMessage("Dieser Name ist bereits vergeben und kann nicht verwendet werden.");
             }
         });
-        return promise;
+        return promise.then((recordType) => {
+            self.webApp.mainMenu.load();
+            return Promise.resolve(recordType);
+        });
     }
 
     protected deleteEntity(id: string) {
-        return this.webApp.api(RecordType).delete(id);
+        let self = this;
+        return self.webApp.api(RecordType).delete(id).then((recordType) => {
+            self.webApp.mainMenu.load();
+            return Promise.resolve(recordType);
+        });
     }
 
     protected loadEntityViewModel(id: string): Promise<DetailsCardViewModel<RecordType>> {
@@ -61,12 +69,16 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
     }
 
     protected saveEntity(viewModelToSave: DetailsCardViewModel<RecordType>): Promise<RecordType> {
+        let self = this;
         let recordType = {
             _id: viewModelToSave.Entity!._id,
             label: viewModelToSave.Properties[1].Value,
             showInMenu: viewModelToSave.Properties[2].Value,
         } as RecordType;
-        return this.webApp.api(RecordType).save(recordType);
+        return self.webApp.api(RecordType).save(recordType).then((recordType) => {
+            self.webApp.mainMenu.load();
+            return Promise.resolve(recordType);
+        });
     }
 
     constructor(webApp: WebApp, id?: string) {
