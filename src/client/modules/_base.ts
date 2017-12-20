@@ -26,7 +26,7 @@ export default ClientModule.create((webapp) => {
         // Custom objects
     
         let userMenuSection = new Section();
-        mainMenu.HtmlElement.appendChild(userMenuSection.HtmlElement);
+        mainMenu.addSection(userMenuSection);
     
         webapp.api(RecordType).getAll().then((recordTypes) => {
             recordTypes.forEach((rt) => {
@@ -35,8 +35,9 @@ export default ClientModule.create((webapp) => {
                 button.HtmlElement.addEventListener("click", () => {
                     webapp.cardStack.closeAllCards();
                     console.log(rt);
+                    mainMenu.select(button);
                 });
-                userMenuSection.HtmlElement.appendChild(button.HtmlElement);
+                userMenuSection.addButton(button);
             });
         });
     
@@ -44,15 +45,19 @@ export default ClientModule.create((webapp) => {
     
         let settingsMenuSection = new Section();
         settingsMenuSection.HtmlElement.appendChild(new Title("Einstellungen").HtmlElement)
-        mainMenu.HtmlElement.appendChild(settingsMenuSection.HtmlElement);
+        mainMenu.addSection(settingsMenuSection);
     
         let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
         customObjectsButton.HtmlElement.addEventListener("click", () => {
             let customObjectListCard = new RecordTypeListCard(webapp);
+            customObjectListCard.onClose = () => {
+                mainMenu.select(undefined);
+            };
             webapp.cardStack.closeAllCards();
             webapp.cardStack.addCard(customObjectListCard);
+            mainMenu.select(customObjectsButton);
         });
-        settingsMenuSection.HtmlElement.appendChild(customObjectsButton.HtmlElement);
+        settingsMenuSection.addButton(customObjectsButton);
 
     });
     

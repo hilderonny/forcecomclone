@@ -50,6 +50,10 @@ html {
     cursor: pointer;
 }
 
+.button.selected {
+    background-color: lightgrey;
+}
+
     
 .button:focus {
     outline: none;

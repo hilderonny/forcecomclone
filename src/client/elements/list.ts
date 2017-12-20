@@ -19,4 +19,13 @@ export class List extends AbstractElement {
         button.HtmlElement.parentElement!.removeChild(button.HtmlElement);
     }
 
+    select(button?: Button) {
+        this.Buttons.forEach((b) => {
+            if (b !== button) {
+                b.HtmlElement.classList.remove("selected");
+            }
+        });
+        if (button) button.HtmlElement.classList.add("selected");
+    }
+
 }

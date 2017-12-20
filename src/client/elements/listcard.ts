@@ -57,7 +57,8 @@ export abstract class ListCard<T extends Type> extends Card {
         (button as any as EntityElement<T>).Entity = el.Entity;
         button.HtmlElement.addEventListener("click", (clickEvent) => {
             self.getEditDetailsCard(el.Entity._id).then((detailsCard) => {
-                self.showDetailsCard(self, detailsCard)
+                self.showDetailsCard(self, detailsCard);
+                self.list.select(button);
             });
         });
         self.list.add(button);
@@ -90,6 +91,9 @@ export abstract class ListCard<T extends Type> extends Card {
                     break;
                 }
             }
+        };
+        detailsCard.onClose = () => {
+            self.list.select(undefined);
         };
         this.webApp.cardStack.closeCardsRightTo(this);
         this.webApp.cardStack.addCard(detailsCard);

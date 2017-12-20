@@ -21,6 +21,8 @@ export class Card extends AbstractElement {
     BeforeClose: (card: Card) => void;
     
     handleCloseClick: (mouseClickEvent: MouseEvent) => void;
+
+    onClose: () => void;
     
     /**
      * Creates a card and assigns it to the given card stack
@@ -53,6 +55,7 @@ export class Card extends AbstractElement {
         if (this.BeforeClose) this.BeforeClose(this);
         if (this.HtmlElement.parentElement) this.HtmlElement.parentElement.removeChild(this.HtmlElement);
         this.HtmlElement.innerHTML = ""; // Force garbage collection
+        if (this.onClose) this.onClose();
     }
 
 }
