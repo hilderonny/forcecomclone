@@ -13,7 +13,13 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
             label: viewModelToCreate.Properties[1].Value,
             showInMenu: viewModelToCreate.Properties[2].Value,
         } as RecordType;
-        return this.webApp.api(RecordType).save(recordType);
+        let promise = this.webApp.api(RecordType).save(recordType);
+        promise.catch((statusCode: number) => {
+            if (statusCode === 409) {
+                viewModelToCreate.Properties[0].Property.setErrorMessage("Dieser Name ist bereits vergeben und kann nicht verwendet werden.");
+            }
+        });
+        return promise;
     }
 
     protected deleteEntity(id: string) {

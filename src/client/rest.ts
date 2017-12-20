@@ -31,7 +31,7 @@ export class Rest {
             let req = new XMLHttpRequest();
             req.onreadystatechange = () => {
                 // Handle status codes and parse response
-                this.handleReadyState(req, resolve);
+                this.handleReadyState(req, resolve, reject);
             };
             req.open("DELETE", url, true);
             req.send();
@@ -51,7 +51,7 @@ export class Rest {
             let req = new XMLHttpRequest();
             req.onreadystatechange = () => {
                 // Handle status codes and parse response
-                this.handleReadyState(req, resolve);
+                this.handleReadyState(req, resolve, reject);
             };
             req.open("GET", url, true);
             req.send();
@@ -67,7 +67,7 @@ export class Rest {
      * @param req Request to parse
      * @param resolve Promise's resolve function to call with the response
      */
-    handleReadyState<T>(req: XMLHttpRequest, resolve: (value?: T) => void): void {
+    handleReadyState<T>(req: XMLHttpRequest, resolve: (value?: T) => void, reject: (code: number) => void): void {
         // Ignore partial results
         if (req.readyState !== 4) return;
         if (this.statusHandlers[req.status]) {
@@ -81,6 +81,8 @@ export class Rest {
             // Parse the request when the result is OK
             let result = req.responseText === "OK" ? undefined : JSON.parse(req.responseText) as T;
             resolve(result);                    
+        } else {
+            reject(req.status);
         }
     }
 
@@ -96,7 +98,7 @@ export class Rest {
         return new Promise<T>((resolve, reject) => {
             let req = new XMLHttpRequest();
             req.onreadystatechange = () => {
-                this.handleReadyState(req, resolve);
+                this.handleReadyState(req, resolve, reject);
             };
             req.open("POST", url, true);
             req.setRequestHeader("Content-Type", "application/json");
