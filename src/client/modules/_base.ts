@@ -10,6 +10,8 @@ import { RecordType } from "../../common/types/recordtype";
 
 export default ClientModule.create((webapp) => {
 
+    // Menu
+
     let mainMenuButton = new Button("Menü");
     mainMenuButton.HtmlElement.classList.add("mainmenubutton");
     webapp.toolBar.HtmlElement.appendChild(mainMenuButton.HtmlElement);
@@ -17,7 +19,9 @@ export default ClientModule.create((webapp) => {
         webapp.rootElement.classList.toggle("mainmenuopen");
     });
 
-    webapp.mainMenu.addLoader((mainMenu) => {
+    webapp.mainMenu.addLoader(async (mainMenu) => {
+
+        webapp.SubUrlHandlers = []; // Clean all handlers to reload them
 
         let mainMenuLogo = new Image("images/logo_avorium_komplett.svg");
         mainMenuLogo.HtmlElement.classList.add("logo");
@@ -28,16 +32,22 @@ export default ClientModule.create((webapp) => {
         let userMenuSection = new Section();
         mainMenu.addSection(userMenuSection);
     
-        webapp.api(RecordType).getAll().then((recordTypes) => {
-            recordTypes.forEach((rt) => {
-                if (!rt.showInMenu) return;
-                let button = new Button(rt.label);
-                button.HtmlElement.addEventListener("click", () => {
-                    webapp.cardStack.closeAllCards();
-                    console.log(rt);
-                    mainMenu.select(button);
-                });
-                userMenuSection.addButton(button);
+        let recordTypes = await webapp.api(RecordType).getAll();
+        recordTypes.forEach((rt) => {
+            if (!rt.showInMenu) return;
+            let button = new Button(rt.label);
+            let opener = () => {
+                webapp.cardStack.closeAllCards();
+                console.log(rt);
+                mainMenu.select(button);
+            };
+            button.HtmlElement.addEventListener("click", opener);
+            userMenuSection.addButton(button);
+            webapp.addSubUrlHandler({
+                UrlPart: rt.name + "/", 
+                Handler: (subUrl) => {
+                    opener();
+                }
             });
         });
     
@@ -48,7 +58,7 @@ export default ClientModule.create((webapp) => {
         mainMenu.addSection(settingsMenuSection);
     
         let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
-        customObjectsButton.HtmlElement.addEventListener("click", () => {
+        let opener = () => {
             let customObjectListCard = new RecordTypeListCard(webapp);
             customObjectListCard.onClose = () => {
                 mainMenu.select(undefined);
@@ -56,9 +66,17 @@ export default ClientModule.create((webapp) => {
             webapp.cardStack.closeAllCards();
             webapp.cardStack.addCard(customObjectListCard);
             mainMenu.select(customObjectsButton);
-        });
+        };
+        customObjectsButton.HtmlElement.addEventListener("click", opener);
         settingsMenuSection.addButton(customObjectsButton);
+        webapp.addSubUrlHandler({
+            UrlPart: "RecordType/", 
+            Handler: (subUrl) => {
+                opener();
+            }
+        });
 
+        return Promise.resolve();
     });
     
 });

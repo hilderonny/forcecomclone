@@ -7,6 +7,13 @@ import { ToolBar } from "./elements/toolbar";
 import { MainMenu } from "./elements/mainmenu";
 import { Toast } from "./elements/toast";
 
+export class SubUrlHandler {
+
+    UrlPart: string;
+    Handler: (completeSubUrl: string) => void;
+
+}
+
 /**
  * Main class for an app. Represents the javascript entry point for client
  * functionality. Each app must initialize this class to communicate
@@ -20,7 +27,8 @@ export class WebApp {
     rest: Rest;
     rootElement: Element;
     toast: Toast;
-    
+    SubUrlHandlers: SubUrlHandler[] = [];
+        
     /**
      * Initialize the application within the DOM element with the given selector
      * @param selector Selector to use with document.querySelector(). Normally this is "body".
@@ -49,7 +57,33 @@ export class WebApp {
 
         self.initModules();
 
-        self.mainMenu.load();
+        self.mainMenu.load().then(() => {
+            self.handleSubUrl();
+        });
+
+        window.onhashchange = () => {
+            self.handleSubUrl();
+        };
+    }
+
+    addSubUrlHandler(handler: SubUrlHandler) {
+        this.SubUrlHandlers.push(handler);
+    }
+
+    handleSubUrl() {
+        let self = this;
+        let subUrl = document.URL.substring(document.URL.indexOf('/#/') + 3);
+        self.SubUrlHandlers.forEach((h) => {
+            if (subUrl.startsWith(h.UrlPart)) h.Handler(subUrl);
+        });
+    }
+
+    setSubUrl(subUrlPart: string) {
+        let basePart = document.URL.substring(0, document.URL.indexOf('/#/'));
+        let fullUrl = basePart + "/#/" + subUrlPart;
+        if (fullUrl !== document.URL) {
+            window.history.pushState(undefined, "", fullUrl);
+        }
     }
 
     /**
