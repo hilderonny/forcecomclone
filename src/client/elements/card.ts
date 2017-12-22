@@ -18,6 +18,9 @@ export class Card extends AbstractElement {
 
     CloseButton: Button;
 
+    SubUrl: string;
+    
+
     BeforeClose: (card: Card) => void;
     
     handleCloseClick: (mouseClickEvent: MouseEvent) => void;
@@ -27,7 +30,7 @@ export class Card extends AbstractElement {
     /**
      * Creates a card and assigns it to the given card stack
      */
-    constructor(webApp: WebApp, title?: string) {
+    constructor(webApp: WebApp, title?: string, subUrl?: string) {
         super("div", "card");
         let self = this;
 
@@ -47,6 +50,10 @@ export class Card extends AbstractElement {
         if (title !== undefined) {
             this.Title = new Title(title);
             this.HtmlElement.appendChild(this.Title.HtmlElement);
+        }
+
+        if (subUrl) {
+            self.SubUrl = subUrl;
         }
 
     }

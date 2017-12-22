@@ -30,9 +30,8 @@ export class RecordTypeListCard extends ListCard<RecordType> {
     
     constructor(webapp: WebApp) {
         
-        super(webapp, "Benutzerdefinierte Objekte");
+        super(webapp, "Benutzerdefinierte Objekte", "RecordType/");
 
-        webapp.setSubUrl("RecordType/");
     }
 
 }

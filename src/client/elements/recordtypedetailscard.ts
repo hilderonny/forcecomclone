@@ -83,8 +83,8 @@ export class RecordTypeDetailsCard extends DetailsCard<RecordType> {
 
     constructor(webApp: WebApp, id?: string) {
 
-        super(webApp, id);
-
+        super(webApp, id, "RecordType/" + (id ? id : ""));
+        
     }
 
 }

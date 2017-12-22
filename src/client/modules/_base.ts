@@ -43,12 +43,14 @@ export default ClientModule.create((webapp) => {
             };
             button.HtmlElement.addEventListener("click", opener);
             userMenuSection.addButton(button);
+
             webapp.addSubUrlHandler({
                 UrlPart: rt.name + "/", 
                 Handler: (subUrl) => {
                     opener();
                 }
             });
+
         });
     
         // Section SETTINGS
@@ -58,21 +60,31 @@ export default ClientModule.create((webapp) => {
         mainMenu.addSection(settingsMenuSection);
     
         let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
-        let opener = () => {
+        let opener = (subUrl?: string) => {
             let customObjectListCard = new RecordTypeListCard(webapp);
             customObjectListCard.onClose = () => {
                 mainMenu.select(undefined);
+                webapp.setSubUrl("");
             };
             webapp.cardStack.closeAllCards();
             webapp.cardStack.addCard(customObjectListCard);
             mainMenu.select(customObjectsButton);
+
+            // Check whether a record type was selected
+            if (subUrl && subUrl.length > 11) {
+                let id = subUrl.substring(11);
+                customObjectListCard.select(id);
+            }
         };
-        customObjectsButton.HtmlElement.addEventListener("click", opener);
+        customObjectsButton.HtmlElement.addEventListener("click", () => {
+            opener();
+        });
         settingsMenuSection.addButton(customObjectsButton);
+
         webapp.addSubUrlHandler({
             UrlPart: "RecordType/", 
             Handler: (subUrl) => {
-                opener();
+                opener(subUrl);
             }
         });
 

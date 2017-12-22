@@ -27,9 +27,9 @@ export abstract class ListCard<T extends Type> extends Card {
     private list: List;
     protected webApp: WebApp;
     
-    constructor(webApp: WebApp, title?: string) {
+    constructor(webApp: WebApp, title?: string, subUrl?: string) {
 
-        super(webApp, title);
+        super(webApp, title, subUrl);
 
         let self = this;
         self.HtmlElement.classList.add("listcard");
@@ -49,17 +49,27 @@ export abstract class ListCard<T extends Type> extends Card {
         self.HtmlElement.appendChild(self.list.HtmlElement);
 
         self.load();
+    }
 
+    public select(id: string) {
+        let self = this;
+        self.getEditDetailsCard(id).then((detailsCard) => {
+            self.showDetailsCard(self, detailsCard);
+            for (let i = 0; i < self.list.Buttons.length; i++) {
+                let button = self.list.Buttons[i];
+                if ((button as any as EntityElement<T>).Entity._id === id) {
+                    self.list.select(button);
+                    break;
+                }
+            }
+        });
     }
 
     private addListElement(self: ListCard<T>, el: ListCardElementViewModel<T>) {
         let button = new Button(el.Label, el.IconUrl, el.SecondLine);
         (button as any as EntityElement<T>).Entity = el.Entity;
         button.HtmlElement.addEventListener("click", (clickEvent) => {
-            self.getEditDetailsCard(el.Entity._id).then((detailsCard) => {
-                self.showDetailsCard(self, detailsCard);
-                self.list.select(button);
-            });
+            self.select(el.Entity._id);
         });
         self.list.add(button);
     }
@@ -94,9 +104,10 @@ export abstract class ListCard<T extends Type> extends Card {
         };
         detailsCard.onClose = () => {
             self.list.select(undefined);
+            self.webApp.setSubUrl(self.SubUrl);
         };
-        this.webApp.cardStack.closeCardsRightTo(this);
-        this.webApp.cardStack.addCard(detailsCard);
+        self.webApp.cardStack.closeCardsRightTo(self);
+        self.webApp.cardStack.addCard(detailsCard);
     }
 
     private load() {

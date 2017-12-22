@@ -1,5 +1,6 @@
 import { Card } from "./card";
 import { AbstractElement } from "./abstractelement";
+import { WebApp } from "../webapp";
 
 /**
  * Different modes the cardstack can have.
@@ -32,11 +33,14 @@ export class CardStack extends AbstractElement {
 
     cards: Card[] = [];
 
+    private webApp: WebApp;
+
     /**
      * Initializes the card stack and gives it the type DEFAULT
      */
-    constructor() {
+    constructor(webApp: WebApp) {
         super("div", "cardstack");
+        this.webApp = webApp;
         this.setType(CardStackType.DEFAULT);
     }
 
@@ -51,6 +55,7 @@ export class CardStack extends AbstractElement {
         card.BeforeClose = beforeCloseHandler;
         self.HtmlElement.appendChild(card.HtmlElement);
         self.cards.push(card);
+        self.webApp.setSubUrl(card.SubUrl);
     }
 
     closeAllCards() {

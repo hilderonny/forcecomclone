@@ -49,7 +49,7 @@ export class WebApp {
         self.toolBar = new ToolBar();
         selectorElement.appendChild(self.toolBar.HtmlElement);
         
-        self.cardStack = new CardStack();
+        self.cardStack = new CardStack(self);
         selectorElement.appendChild(self.cardStack.HtmlElement);
 
         self.toast = new Toast();

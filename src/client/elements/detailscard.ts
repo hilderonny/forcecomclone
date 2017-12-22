@@ -47,9 +47,9 @@ export abstract class DetailsCard<T extends Type> extends Card {
     protected abstract prepareNewEntityViewModel(): Promise<DetailsCardViewModel<T>>;
     protected abstract saveEntity(viewModelToSave: DetailsCardViewModel<T>): Promise<T>;
     
-    constructor(webApp: WebApp, id?: string) {
+    constructor(webApp: WebApp, id?: string, subUrl?: string) {
 
-        super(webApp, ""); // Force creation of title tag
+        super(webApp, "", subUrl); // Force creation of title tag
 
         let self = this;
         self.HtmlElement.classList.add("detailscard");
@@ -83,7 +83,7 @@ export abstract class DetailsCard<T extends Type> extends Card {
 
         self.viewModel = viewModel;
 
-        if (viewModel.Title) self.Title.HtmlElement.innerHTML = viewModel.Title;
+        if (viewModel.Title !== undefined) self.Title.HtmlElement.innerHTML = viewModel.Title;
 
         self.buttonRow.HtmlElement.innerHTML = "";
 
@@ -119,6 +119,8 @@ export abstract class DetailsCard<T extends Type> extends Card {
                 self.createEntity(self.viewModel).then((createdEntity) => {
                     if (self.onEntityCreated) self.onEntityCreated(createdEntity);
                     self.loadEntityViewModel(createdEntity._id).then((viewModel) => {
+                        self.SubUrl = self.SubUrl + createdEntity._id;
+                        self.webApp.setSubUrl(self.SubUrl);
                         self.webApp.toast.show(viewModel.Title + " wurde erstellt.");
                         self.load(self, viewModel);
                     });
