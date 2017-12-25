@@ -48,7 +48,6 @@ export default (app: App): void => {
         let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(field.recordTypeId) });
         if (!recordType) { res.sendStatus(404); return; }
         if (!field.type) { res.sendStatus(400); return; } // Attribute type not given
-        if (!FieldType[field.type]) { res.sendStatus(400); return; } // Attribute type not given
         let existingField = await Utils.getFieldCollection(req).findOne({ name: field.name, recordTypeId: field.recordTypeId });
         if (existingField) { res.sendStatus(409); return; } // Field with this name already exists
         field._id = (await Utils.getFieldCollection(req).insertOne(field)).insertedId.toHexString();

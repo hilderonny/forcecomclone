@@ -1,10 +1,10 @@
 import { AbstractElement } from "./abstractelement";
-import { Section } from "./section";
+import { MenuSection } from "./menusection";
 import { Button } from "./button";
 
 export class MainMenu extends AbstractElement {
 
-    Sections: Section[] = [];
+    Sections: MenuSection[] = [];
     
     private loaders: ((mainMenu: MainMenu) => Promise<void>)[] = [];
 
@@ -12,7 +12,7 @@ export class MainMenu extends AbstractElement {
         super("div", "mainmenu");
     }
 
-    addSection(section: Section) {
+    addSection(section: MenuSection) {
         this.HtmlElement.appendChild(section.HtmlElement);
         this.Sections.push(section);
     }

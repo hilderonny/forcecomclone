@@ -1,7 +1,7 @@
 import { ClientModule } from "../clientmodule";
 import { Button } from "../elements/button";
 import { Image } from "../elements/image";
-import { Section } from "../elements/section";
+import { MenuSection } from "../elements/menusection";
 import { Title } from "../elements/title";
 import { Card } from "../elements/card";
 import { ListCard, ListCardElementViewModel } from "../elements/listcard";
@@ -29,7 +29,7 @@ export default ClientModule.create((webapp) => {
     
         // Custom objects
     
-        let userMenuSection = new Section();
+        let userMenuSection = new MenuSection();
         mainMenu.addSection(userMenuSection);
     
         let recordTypes = await webapp.api(RecordType).getAll();
@@ -55,7 +55,7 @@ export default ClientModule.create((webapp) => {
     
         // Section SETTINGS
     
-        let settingsMenuSection = new Section();
+        let settingsMenuSection = new MenuSection();
         settingsMenuSection.HtmlElement.appendChild(new Title("Einstellungen").HtmlElement)
         mainMenu.addSection(settingsMenuSection);
     

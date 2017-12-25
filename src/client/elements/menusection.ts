@@ -1,7 +1,7 @@
 import { AbstractElement } from "./abstractelement";
 import { Button } from "./button";
 
-export class Section extends AbstractElement {
+export class MenuSection extends AbstractElement {
 
     Buttons: Button[] = [];
 
