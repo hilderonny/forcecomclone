@@ -1,37 +1,29 @@
-import { ListCard, ListCardElementViewModel } from "./listcard";
+import { ListCard } from "./listcard";
 import { RecordType } from "../../common/types/recordtype";
 import { DetailsCard } from "./detailscard";
 import { RecordTypeDetailsCard } from "./recordtypedetailscard";
 import { WebApp } from "../webapp";
+import { Card } from "./card";
+import { ListSection, ListElement } from "./section";
+import { listenerCount } from "cluster";
 
 
 export class RecordTypeListCard extends ListCard<RecordType> {
 
-    protected getCreateDetailsCard(): Promise<DetailsCard<RecordType>> {
-        return Promise.resolve(new RecordTypeDetailsCard(this.webApp));
-    }
+    listSection: ListSection<RecordType>;
 
-    protected getEditDetailsCard(id: string): Promise<DetailsCard<RecordType>> {
-        return Promise.resolve(new RecordTypeDetailsCard(this.webApp, id));
-    }
-
-    protected getViewModelForEntity(entity: RecordType): Promise<ListCardElementViewModel<RecordType>> {
-        return Promise.resolve({
-            IconUrl: "categorize.png",
-            Entity: entity,
-            Label: entity.label,
-            SecondLine: entity.name
-        } as ListCardElementViewModel<RecordType>);
-    }
-
-    protected loadEntities(): Promise<RecordType[]> {
-        return this.webApp.api(RecordType).getAll();
-    }
-    
-    constructor(webapp: WebApp) {
-        
-        super(webapp, "Benutzerdefinierte Objekte", "RecordType/");
-
+    constructor(webApp: WebApp) {
+        super(RecordTypeDetailsCard, webApp, "Benutzerdefinierte Objekte", "RecordType/");
+        let self = this;
+        self.listSection.listSectionConfig.loadListElements = async () => {
+            let recordTypes = await this.webApp.api(RecordType).getAll();
+            return recordTypes.map((rt) => { return {
+                entity: rt,
+                firstLine: rt.label,
+                iconUrl: "categorize.png",
+                secondLine: rt.name
+            } as ListElement<RecordType> });
+        };
     }
 
 }

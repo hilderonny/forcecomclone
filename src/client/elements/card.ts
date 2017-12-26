@@ -4,6 +4,7 @@ import { Title } from "./title";
 import { Button } from "./button";
 import { ResizeHandle } from "./resizehandle";
 import { WebApp } from "../webapp";
+import { Section } from "./section";
 
 /**
  * This is a card contained in a cardstack.
@@ -63,6 +64,13 @@ export class Card extends AbstractElement {
         if (this.HtmlElement.parentElement) this.HtmlElement.parentElement.removeChild(this.HtmlElement);
         this.HtmlElement.innerHTML = ""; // Force garbage collection
         if (this.onClose) this.onClose();
+    }
+
+    private sections: Section[] = [];
+
+    addSection(section: Section) {
+        this.sections.push(section);
+        this.HtmlElement.appendChild(section.HtmlElement);
     }
 
 }

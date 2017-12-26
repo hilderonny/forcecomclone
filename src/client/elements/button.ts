@@ -1,5 +1,7 @@
 import { AbstractElement } from "./abstractelement";
 import { Image } from "./image";
+import { Type } from "../../server/core/type";
+import { List } from "./list";
 
 export class Button extends AbstractElement {
 
@@ -43,6 +45,18 @@ export class Button extends AbstractElement {
 
     setSecondLine(secondLine: string) {
         if (this.secondLineSpan) this.secondLineSpan.innerHTML = secondLine;
+    }
+
+}
+
+export class ListButton<T extends Type> extends Button {
+
+    entity: T;
+    list: List;
+
+    constructor(entity: T, label?: string, iconFileName?: string, secondLine?: string) {
+        super(label, iconFileName, secondLine);
+        this.entity = entity;
     }
 
 }

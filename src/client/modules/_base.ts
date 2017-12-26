@@ -4,7 +4,7 @@ import { Image } from "../elements/image";
 import { MenuSection } from "../elements/menusection";
 import { Title } from "../elements/title";
 import { Card } from "../elements/card";
-import { ListCard, ListCardElementViewModel } from "../elements/listcard";
+import { ListCard } from "../elements/listcard";
 import { RecordTypeListCard } from "../elements/recordtypelistcard";
 import { RecordType } from "../../common/types/recordtype";
 
@@ -59,27 +59,28 @@ export default ClientModule.create((webapp) => {
         settingsMenuSection.HtmlElement.appendChild(new Title("Einstellungen").HtmlElement)
         mainMenu.addSection(settingsMenuSection);
     
-        let customObjectsButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
-        let opener = (subUrl?: string) => {
-            let customObjectListCard = new RecordTypeListCard(webapp);
-            customObjectListCard.onClose = () => {
+        let recordTypesButton = new Button("Benutzerdefinierte Objekte", "categorize.png");
+        let opener = async (subUrl?: string) => {
+            let recordTypesListCard = new RecordTypeListCard(webapp);
+            recordTypesListCard.onClose = () => {
                 mainMenu.select(undefined);
                 webapp.setSubUrl("");
             };
             webapp.cardStack.closeAllCards();
-            webapp.cardStack.addCard(customObjectListCard);
-            mainMenu.select(customObjectsButton);
+            await recordTypesListCard.load();
+            webapp.cardStack.addCard(recordTypesListCard);
+            mainMenu.select(recordTypesButton);
 
             // Check whether a record type was selected
             if (subUrl && subUrl.length > 11) {
                 let id = subUrl.substring(11);
-                customObjectListCard.select(id);
+                recordTypesListCard.select(id);
             }
         };
-        customObjectsButton.HtmlElement.addEventListener("click", () => {
+        recordTypesButton.HtmlElement.addEventListener("click", () => {
             opener();
         });
-        settingsMenuSection.addButton(customObjectsButton);
+        settingsMenuSection.addButton(recordTypesButton);
 
         webapp.addSubUrlHandler({
             UrlPart: "RecordType/", 
