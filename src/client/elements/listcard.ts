@@ -15,6 +15,7 @@ export abstract class ListCard<T extends Type> extends Card {
     constructor(detailsCardConstructor: new(webApp: WebApp, id?: string) => DetailsCard<T>, webApp: WebApp, title?: string, subUrl?: string) {
         super(webApp, title, subUrl);
         let self = this;
+        self.HtmlElement.classList.add("listcard");
         self.listSection = new ListSection({
 
             onAdd: async () => {
