@@ -6,6 +6,10 @@ import { ButtonRow } from "./buttonrow";
 import { ActionButton } from "./actionbutton";
 import { FieldType } from "../../common/types/field";
 import { Property } from "./property";
+import { LabelProperty } from "./labelproperty";
+import { TextProperty } from "./textproperty";
+import { CheckBoxProperty } from "./checkboxproperty";
+import { RedActionButton } from "./redactionbutton";
 
 export abstract class SectionConfig {
     sectionTitle?: string;
@@ -34,9 +38,9 @@ export class ListSectionConfig<T extends Type> extends SectionConfig {
 
 export class DetailsSectionConfig<T extends Type> extends SectionConfig {
     loadProperties?: () => Promise<PropertyElement[]>;
-    onCreate?: (properties: PropertyElement[]) => Promise<string>;
-    onSave?: (properties: PropertyElement[]) => Promise<void>;
-    validate?: (properties: PropertyElement[]) => Promise<boolean>;
+    onCreate?: () => Promise<void>;
+    onSave?: () => Promise<void>;
+    validate?: () => Promise<boolean>;
     reallyDelete?: () => Promise<boolean>;
     onDelete?: () => Promise<void>;
 }
@@ -62,6 +66,7 @@ export class DetailsSection<T extends Type> extends Section {
     constructor(cfg: DetailsSectionConfig<T>) {
         super();
         let self = this;
+        self.HtmlElement.classList.add("detailssection");
         self.detailsSectionConfig = cfg;
         
         self.content = document.createElement("div");
@@ -75,8 +80,9 @@ export class DetailsSection<T extends Type> extends Section {
             if (cfg.onCreate) {
                 let createButton = new ActionButton("Erstellen");
                 createButton.HtmlElement.addEventListener("click", async (evt) => {
-                    if (cfg.validate && !await cfg.validate!(self.properties)) return;
-                    await cfg.onCreate!(self.properties);
+                    self.resetErrorMessages();
+                    if (cfg.validate && !await cfg.validate!()) return;
+                    await cfg.onCreate!();
                 });
                 buttonRow.HtmlElement.appendChild(createButton.HtmlElement);
             }
@@ -84,14 +90,15 @@ export class DetailsSection<T extends Type> extends Section {
             if (cfg.onSave) {
                 let saveButton = new ActionButton("Speichern");
                 saveButton.HtmlElement.addEventListener("click", async (evt) => {
-                    if (cfg.validate && !await cfg.validate!(self.properties)) return;
-                    await cfg.onSave!(self.properties);
+                    self.resetErrorMessages();
+                    if (cfg.validate && !await cfg.validate!()) return;
+                    await cfg.onSave!();
                 });
                 buttonRow.HtmlElement.appendChild(saveButton.HtmlElement);
             }
 
             if (cfg.onDelete) {
-                let deleteButton = new ActionButton("Löschen");
+                let deleteButton = new RedActionButton("Löschen");
                 deleteButton.HtmlElement.addEventListener("click", async (evt) => {
                     if (cfg.reallyDelete && !await cfg.reallyDelete!()) return;
                     await cfg.onDelete!();
@@ -102,8 +109,26 @@ export class DetailsSection<T extends Type> extends Section {
         }
     }
 
-    load(): Promise<void> {
-        throw new Error("Method not implemented.");
+    resetErrorMessages() {
+        let self = this;
+        self.properties.forEach((p) => {
+            if (p.property) p.property.setErrorMessage(null);
+        });
+    }
+
+    async load(): Promise<void> {
+        let self = this;
+        if (!self.detailsSectionConfig.loadProperties) return;
+        self.content.innerHTML = "";
+        self.properties = await self.detailsSectionConfig.loadProperties();
+        self.properties.forEach((p) => {
+            switch (p.type) {
+                case FieldType.Label: self.content.appendChild(new LabelProperty(p).HtmlElement); break;
+                case FieldType.Text: self.content.appendChild(new TextProperty(p).HtmlElement); break;
+                case FieldType.Checkbox: self.content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
+                default: break;
+            }
+        });
     }
 
     
@@ -118,6 +143,7 @@ export class ListSection<T extends Type> extends Section {
     constructor(cfg: ListSectionConfig<T>) {
         super();
         let self = this;
+        self.HtmlElement.classList.add("listsection");
         self.listSectionConfig = cfg;
 
         if (cfg.onAdd) {
@@ -154,6 +180,18 @@ export class ListSection<T extends Type> extends Section {
                 });
             }
             self.list.add(button);
+        });
+    }
+
+    select(id?: string) {
+        let self = this;
+        if (!id) {
+            self.list.select();
+            return;
+        }
+        self.listElements.forEach((le) => {
+            if (le.entity._id !== id) return;
+            self.list.select(le.button);
         });
     }
 

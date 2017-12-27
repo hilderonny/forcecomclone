@@ -1,11 +1,11 @@
 import { AbstractElement } from "./abstractelement";
 import { Image } from "./image";
-import { DetailsCardProperty } from "./detailscard";
+import { PropertyElement } from "./section";
 
 export abstract class Property extends AbstractElement {
 
     private errorDiv: HTMLDivElement;
-    Property: DetailsCardProperty;
+    propertyElement: PropertyElement;
     
     setErrorMessage(errorMessage: string | null): void {
         if (errorMessage) {
@@ -17,13 +17,13 @@ export abstract class Property extends AbstractElement {
         }
     }
 
-    constructor(property: DetailsCardProperty) {
+    constructor(propertyElement: PropertyElement) {
         super("div", "property");
 
         let self = this;
-        self.Property = property;
+        self.propertyElement = propertyElement;
 
-        property.Property = self; // For error messages
+        propertyElement.property = self; // For error messages
 
         self.errorDiv = document.createElement("div") as HTMLDivElement;
         self.errorDiv.classList.add("errormessage");

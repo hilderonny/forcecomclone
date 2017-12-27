@@ -1,27 +1,27 @@
-import { DetailsCardProperty } from "./detailscard";
 import { Property } from "./property";
+import { PropertyElement } from "./section";
 
 export class TextProperty extends Property {
 
-    constructor(property: DetailsCardProperty) {
-        super(property);
+    constructor(propertyElement: PropertyElement) {
+        super(propertyElement);
 
         let self = this;
         self.HtmlElement.classList.add("textproperty");
 
         let label = document.createElement("label") as HTMLLabelElement;
-        label.innerHTML = property.Label;
+        label.innerHTML = propertyElement.label;
         self.addChild(label);
 
         let input = document.createElement("input") as HTMLInputElement;
         self.addChild(input);
-        input.setAttribute("placeholder", property.Label);
+        input.setAttribute("placeholder", propertyElement.label);
 
         let changeHandler = () => {
-            self.Property.Value = input.value;
+            self.propertyElement.value = input.value;
             label.style.visibility = input.value.length > 0 ? "visible" : "hidden";
         };
-        input.value = property.Value;
+        input.value = propertyElement.value;
         changeHandler();
         input.addEventListener("change", changeHandler);
         input.addEventListener("keyup", changeHandler);

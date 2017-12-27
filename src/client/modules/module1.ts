@@ -1,7 +1,7 @@
 import { ClientModule } from "../clientmodule";
 import { User } from "../../common/types/user";
 
-export default ClientModule.create((webapp) => {
+export default ClientModule.create(async (webapp) => {
     // console.log("Module 1");
     // webapp.cardStack.addCard();
 

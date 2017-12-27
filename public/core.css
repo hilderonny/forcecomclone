@@ -181,11 +181,11 @@ html {
     text-align: right;
 }
 
-.detailscard > .content {
+.detailssection > .content {
     padding: 0 8px 8px 8px;
 }
 
-.detailscard > .content > .textproperty > input {
+.detailssection > .content > .textproperty > input {
     border-color: rgba(0,0,0,0.12);
     border-style: solid;
     border-width: 0 0 1px 0;
@@ -196,19 +196,19 @@ html {
     width: 100%;
 }
 
-.detailscard > .content > .textproperty > input:focus {
+.detailssection > .content > .textproperty > input:focus {
     border-color: rgb(63,81,181);
     border-bottom-width: 2px;
     padding-bottom: 1px;
 }
 
-.detailscard > .content > .labelproperty > label {
+.detailssection > .content > .labelproperty > label {
     color: rgba(0,0,0,0.54);
     display: block;
     font-size: 12px;
 }
 
-.detailscard > .content > .labelproperty > span {
+.detailssection > .content > .labelproperty > span {
     color: rgba(0,0,0,0.54);
     display: block;
     font-size: 100%;
@@ -217,26 +217,26 @@ html {
     width: 100%;
 }
 
-.detailscard > .content > .textproperty > label {
+.detailssection > .content > .textproperty > label {
     color: rgba(0,0,0,0.54);
     display: block;
     font-size: 12px;
     visibility: hidden;
 }
 
-.detailscard > .content > .property {
+.detailssection > .content > .property {
     margin: 18px 0 8px 0;
 }
 
-.detailscard > .content > .property.haserror > input {
+.detailssection > .content > .property.haserror > input {
     border-color: #f00;
 }
 
-.detailscard > .content > .property.haserror > label {
+.detailssection > .content > .property.haserror > label {
     color: #f00;
 }
 
-.detailscard > .content > .property > .errormessage {
+.detailssection > .content > .property > .errormessage {
     color: #f00;
     font-size: 12px;
 }

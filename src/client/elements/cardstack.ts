@@ -58,6 +58,11 @@ export class CardStack extends AbstractElement {
         self.webApp.setSubUrl(card.SubUrl);
     }
 
+    setSingleCard(card: Card) {
+        this.closeAllCards();
+        this.addCard(card);
+    }
+
     closeAllCards() {
         for (let i = this.cards.length - 1; i >= 0; i--) {
             this.cards.pop()!.close();

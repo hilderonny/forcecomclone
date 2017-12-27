@@ -43,7 +43,7 @@ export class WebApp {
 
         self.rootElement = selectorElement;
 
-        self.mainMenu = new MainMenu();
+        self.mainMenu = new MainMenu(self);
         selectorElement.appendChild(self.mainMenu.HtmlElement);
 
         self.toolBar = new ToolBar();
@@ -55,9 +55,9 @@ export class WebApp {
         self.toast = new Toast();
         selectorElement.appendChild(self.toast.HtmlElement);
 
-        self.initModules();
-
-        self.mainMenu.load().then(() => {
+        self.initModules().then(() => {
+            return self.mainMenu.load();
+        }).then(() => {
             self.handleSubUrl();
         });
 
@@ -94,12 +94,14 @@ export class WebApp {
      * to let webpack merge all available client modules dynamically on start and provide
      * them all as bundle to the client.
      */
-    initModules(): void {
+    initModules(): Promise<void> {
         let modules = require.context('./modules', true, /\.ts$/);
         let self = this;
+        let promises: Promise<void>[] = [];
         modules.keys().forEach((key) => {
-            modules(key).default(self);
+            promises.push(modules(key).default(self));
         });
+        return Promise.all(promises).then(() => { return Promise.resolve(); });
     }
 
     /**

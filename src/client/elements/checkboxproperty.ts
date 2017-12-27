@@ -1,12 +1,10 @@
-import { DetailsCardProperty } from "./detailscard";
 import { Property } from "./property";
+import { PropertyElement } from "./section";
 
 export class CheckBoxProperty extends Property {
-
-    Property: DetailsCardProperty;
     
-    constructor(property: DetailsCardProperty) {
-        super(property);
+    constructor(propertyElement: PropertyElement) {
+        super(propertyElement);
         
         let self = this;
         self.HtmlElement.classList.add("checkboxproperty");
@@ -17,14 +15,14 @@ export class CheckBoxProperty extends Property {
         let input = document.createElement("input") as HTMLInputElement;
         input.setAttribute("type", "checkbox");
         label.appendChild(input);
-        input.checked = property.Value;
+        input.checked = propertyElement.value;
 
         let span = document.createElement("span") as HTMLSpanElement;
-        span.innerHTML = property.Label;
+        span.innerHTML = propertyElement.label;
         label.appendChild(span);
 
         let changeHandler = () => {
-            self.Property.Value = input.checked;
+            propertyElement.value = input.checked;
         };
         input.addEventListener("change", changeHandler);
 
