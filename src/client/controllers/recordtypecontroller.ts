@@ -4,7 +4,7 @@ import { MenuItem } from "../elements/mainmenu";
 import { Card } from "../elements/card";
 import { ListSection, DetailsSection, DetailsSectionConfig, PropertyElement } from "../elements/section";
 import { RecordType } from "../../common/types/recordtype";
-import { FieldType } from "../../common/types/field";
+import { FieldType, Field } from "../../common/types/field";
 
 export class RecordTypeController extends Controller {
 
@@ -14,7 +14,7 @@ export class RecordTypeController extends Controller {
     recordTypesListCardListSection: ListSection<RecordType>;
     recordTypeMenuItem: MenuItem;
 
-    async showDetailsCard(id?: string) {
+    async showRecordTypeDetailsCard(id?: string) {
         let self = this;
         let subUrl = "RecordType/" + (id ? id : "");
         self.recordTypeDetailsCard = new Card(self.webApp, "", subUrl);
@@ -23,6 +23,7 @@ export class RecordTypeController extends Controller {
         let detailsSectionConfig: DetailsSectionConfig<RecordType> = { };
         if (id) {
             // EDIT
+            // Detailssection
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
             let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.Checkbox, value: false };
             let originalRecordType: RecordType;
@@ -85,11 +86,10 @@ export class RecordTypeController extends Controller {
                 let promise = self.webApp.api(RecordType).save(recordType);
                 promise.then(async (createdRecordType) => {
                     self.webApp.toast.show("Der RecordType '" + namePropertyElement.value + "' wurde erstellt.");
-                    await self.recordTypesListCardListSection.add(self.createListElement(createdRecordType));
+                    await self.recordTypesListCardListSection.add(self.createRecordTypeListElement(createdRecordType));
                     self.recordTypeDetailsCard.close();
-                    await self.showDetailsCard(createdRecordType._id);
+                    await self.showRecordTypeDetailsCard(createdRecordType._id);
                     self.recordTypesListCardListSection.select(createdRecordType._id);
-                    // TODO: Ggf. in Menü einblenden
                     if (createdRecordType.showInMenu) {
                         await self.webApp.mainMenu.load();
                         self.recordTypeMenuItem.select!();
@@ -122,6 +122,26 @@ export class RecordTypeController extends Controller {
         self.recordTypeDetailsCard.addSection(detailsSection);
         await detailsSection.load();
 
+        // Field list section
+        if (id) {
+            let fieldsListSection = new ListSection<Field>({
+                onAdd: async () => {
+                    self.webApp.cardStack.closeCardsRightTo(self.recordTypeDetailsCard);
+                    self.showFieldDetailsCard();
+                },
+                onSelect: async (listElement) => {
+                    self.webApp.cardStack.closeCardsRightTo(self.recordTypeDetailsCard);
+                    self.showFieldDetailsCard(listElement.entity._id);
+                },
+                loadListElements: async () => {
+                    let fields = await this.webApp.api(Field).getAll('/forRecordType/' + id);
+                    return fields.map((field) => { return self.createFieldListElement(field); });
+                }
+            });
+            self.recordTypeDetailsCard.addSection(fieldsListSection);
+            await fieldsListSection.load();
+        }
+
         self.recordTypeDetailsCard.onClose = () => {
             self.recordTypesListCardListSection.select();
             self.webApp.setSubUrl("RecordType/");
@@ -130,12 +150,24 @@ export class RecordTypeController extends Controller {
         self.webApp.cardStack.addCard(self.recordTypeDetailsCard);
     }
 
-    createListElement(recordType: RecordType) {
+    async showFieldDetailsCard(id?: string) {
+    }
+
+    createRecordTypeListElement(recordType: RecordType) {
         return {
             entity: recordType,
             firstLine: recordType.label,
             iconUrl: "categorize.png",
             secondLine: recordType.name
+        }
+    }
+
+    createFieldListElement(field: Field) {
+        return {
+            entity: field,
+            firstLine: field.label,
+            iconUrl: "categorize.png", // TODO: Icon depending on type
+            secondLine: field.name
         }
     }
 
@@ -153,17 +185,17 @@ export class RecordTypeController extends Controller {
 
             onAdd: async () => {
                 self.webApp.cardStack.closeCardsRightTo(self.recordTypesListCard);
-                self.showDetailsCard();
+                self.showRecordTypeDetailsCard();
             },
 
             onSelect: async (listElement) => {
                 self.webApp.cardStack.closeCardsRightTo(self.recordTypesListCard);
-                self.showDetailsCard(listElement.entity._id);
+                self.showRecordTypeDetailsCard(listElement.entity._id);
             },
 
             loadListElements: async () => {
                 let recordTypes = await this.webApp.api(RecordType).getAll();
-                return recordTypes.map((rt) => { return self.createListElement(rt); });
+                return recordTypes.map((rt) => { return self.createRecordTypeListElement(rt); });
             }
 
         });
@@ -176,7 +208,7 @@ export class RecordTypeController extends Controller {
         if (subUrl && subUrl.length > 11) {
             let id = subUrl.substring(11);
             self.recordTypesListCardListSection.select(id);
-            self.showDetailsCard(id);
+            self.showRecordTypeDetailsCard(id);
         }
     }
     

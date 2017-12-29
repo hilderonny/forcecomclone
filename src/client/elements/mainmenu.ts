@@ -2,7 +2,6 @@ import { AbstractElement } from "./abstractelement";
 import { Image } from "../elements/image";
 import { Button } from "./button";
 import { WebApp } from "../webapp";
-import { MenuSection } from "./menusection";
 import { Title } from "./title";
 import { ListSection, ListElement } from "./section";
 
@@ -93,40 +92,9 @@ export class MainMenu extends AbstractElement {
                     };
                     self.sections[sectionLabel] = sectionObject;
                     self.HtmlElement.appendChild(sectionObject.listSection.HtmlElement);
-        //             let menuSection = new MenuSection();
-        //             sections[sectionLabel] = menuSection;
-        //             menuSection.HtmlElement.appendChild(new Title(sectionLabel).HtmlElement);
-        //             self.HtmlElement.appendChild(menuSection.HtmlElement);
                 }
                 let sectionObject = self.sections[sectionLabel];
                 sectionObject.menuItems.push(menuItem);
-
-        //         let button = new Button(menuItem.label, menuItem.iconUrl);
-        //         allButtons.push(button);
-        //         button.HtmlElement.addEventListener("click", () => {
-        //             classSwitcher();
-        //             menuItem.onClick(menuItem.subUrl);
-        //         });
-
-
-        //         let indexToInsertBefore = 0;
-        //         let section = sections[sectionLabel];
-        //         console.log(section, button);
-        //         if (button.labelSpan) {
-        //             for (let i = 0; i < section.Buttons.length; i++, indexToInsertBefore++) {
-        //                 if (!section.Buttons[i].labelSpan) continue;
-        //                 if (section.Buttons[i].labelSpan!.innerHTML.localeCompare(button.labelSpan!.innerHTML, undefined, { numeric: true, sensitivity: "base"}) >= 0) break;
-        //             }
-        //         }
-        
-        //         if (indexToInsertBefore >= section.Buttons.length) {
-        //             section.HtmlElement.appendChild(button.HtmlElement);
-        //         } else {
-        //             section.HtmlElement.insertBefore(button.HtmlElement, section.HtmlElement.childNodes.item(indexToInsertBefore));
-        //         }
-                        
-
-        //         // sections[sectionLabel].HtmlElement.appendChild(button.HtmlElement);
 
                 if (menuItem.subUrl) {
                     self.webApp.addSubUrlHandler({

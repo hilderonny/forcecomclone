@@ -36,8 +36,8 @@ export class Api<T extends Type> {
     /**
      * Retrieve all entities of the given type from the server
      */
-    getAll(): Promise<T[]> {
-        let url = `/api/${this.type.name}`;
+    getAll(subUrl?: string): Promise<T[]> {
+        let url = `/api/${this.type.name}${subUrl?subUrl:""}`;
         return this.rest.get<T[]>(url);
     }
 
