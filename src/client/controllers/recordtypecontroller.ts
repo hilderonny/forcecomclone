@@ -12,6 +12,7 @@ export class RecordTypeController extends Controller {
     recordTypesListCard: Card;
     recordTypeDetailsCard: Card;
     recordTypesListCardListSection: ListSection<RecordType>;
+    recordTypeMenuItem: MenuItem;
 
     async showDetailsCard(id?: string) {
         let self = this;
@@ -43,8 +44,8 @@ export class RecordTypeController extends Controller {
                     }
                 }
                 if (updatedRecordType.label !== originalRecordType.label || updatedRecordType.showInMenu !== originalRecordType.showInMenu) {
-                    // TODO: Ggf. Menü aktualisieren (Label und Sortierung, showInMenu)
-                    self.webApp.mainMenu.load();
+                    await self.webApp.mainMenu.load();
+                    self.recordTypeMenuItem.select();
                 }
                 originalRecordType = updatedRecordType;
             };
@@ -55,9 +56,9 @@ export class RecordTypeController extends Controller {
                     self.webApp.toast.show("Der RecordType wurde gelöscht.");
                     let listElement = self.recordTypesListCardListSection.listElements.find((el) => { return el.entity._id === id; });
                     if (listElement) self.recordTypesListCardListSection.remove(listElement);
-                    // TODO: Ggf. aus Menü löschen
                     if (originalRecordType.showInMenu) {
-                        self.webApp.mainMenu.load();
+                        await self.webApp.mainMenu.load();
+                        self.recordTypeMenuItem.select();
                     }
                     self.webApp.setSubUrl("RecordType/");
                 }
@@ -91,6 +92,7 @@ export class RecordTypeController extends Controller {
                     // TODO: Ggf. in Menü einblenden
                     if (createdRecordType.showInMenu) {
                         await self.webApp.mainMenu.load();
+                        self.recordTypeMenuItem.select();
                     }
                 }, (statusCode: number) => {
                     if (statusCode === 409) {
@@ -142,6 +144,11 @@ export class RecordTypeController extends Controller {
         self.recordTypesListCard = new Card(self.webApp, "Benutzerdefinierte Objekte", "RecordType/");
         self.recordTypesListCard.HtmlElement.classList.add("listcard");
 
+        self.recordTypesListCard.onClose = () => {
+            self.recordTypeMenuItem.listElement!.button!.HtmlElement.classList.remove("selected");
+            self.webApp.setSubUrl("");
+        }
+
         self.recordTypesListCardListSection = new ListSection({
 
             onAdd: async () => {
@@ -176,28 +183,25 @@ export class RecordTypeController extends Controller {
     async initialize(webApp: WebApp): Promise<void> {
         let self = this;
         self.webApp = webApp;
+        self.recordTypeMenuItem = {
+            label: "Benutzerdefinierte Objekte",
+            iconUrl: "categorize.png",
+            section: "Einstellungen",
+            onClick: async () => {
+                await self.showListCard();
+            },
+            subUrl: "RecordType/"
+        };
         webApp.mainMenu.menuHandlers.push({
             async load() {
-                let menuItems: MenuItem[] = [];
-    
-                menuItems.push({
-                    label: "Benutzerdefinierte Objekte",
-                    iconUrl: "categorize.png",
-                    section: "Einstellungen",
-                    onClick: async () => {
-                        await self.showListCard();
-                    },
-                    subUrl: "RecordType/"
-                });
-    
-                return menuItems;
+                return [ self.recordTypeMenuItem ];
             }
         });
 
         self.webApp.addSubUrlHandler({
             UrlPart: "RecordType/",
             Handler: async (completeSubUrl) => {
-                await self.showListCard();
+                await self.showListCard(completeSubUrl);
             }
         });
 
