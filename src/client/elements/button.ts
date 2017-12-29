@@ -6,7 +6,7 @@ import { List } from "./list";
 export class Button extends AbstractElement {
 
     private iconImage?: Image;
-    private labelSpan?: HTMLSpanElement;
+    labelSpan?: HTMLSpanElement;
     private secondLineSpan?: HTMLSpanElement;
     
     constructor(label?: string, iconFileName?: string, secondLine?: string) {
@@ -49,7 +49,7 @@ export class Button extends AbstractElement {
 
 }
 
-export class ListButton<T extends Type> extends Button {
+export class ListButton<T> extends Button {
 
     entity: T;
     list: List;

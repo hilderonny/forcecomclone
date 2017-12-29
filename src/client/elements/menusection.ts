@@ -1,6 +1,7 @@
 import { AbstractElement } from "./abstractelement";
 import { Button } from "./button";
 
+// OBSOLETE
 export class MenuSection extends AbstractElement { // TODO: Nach Section umbauen
 
     Buttons: Button[] = [];

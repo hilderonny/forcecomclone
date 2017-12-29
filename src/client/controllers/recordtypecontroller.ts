@@ -24,32 +24,50 @@ export class RecordTypeController extends Controller {
             // EDIT
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
             let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.Checkbox, value: false };
+            let originalRecordType: RecordType;
             detailsSectionConfig.onSave = async () => {
-                let recordType = {
+                let updatedRecordType = {
                     _id: id,
                     label: labelPropertyElement.value,
                     showInMenu: showInMenuPropertyElement.value
                 } as RecordType;
-                await self.webApp.api(RecordType).save(recordType);
-                self.webApp.mainMenu.load();
+                await self.webApp.api(RecordType).save(updatedRecordType);
                 self.webApp.toast.show("Änderungen gespeichert.");
-                await self.showListCard("RecordType/" + id);
+                if (updatedRecordType.label !== originalRecordType.label) {
+                    let listElement = self.recordTypesListCardListSection.listElements.find((el) => { return el.entity._id === id; });
+                    if (listElement) {
+                        self.recordTypesListCardListSection.remove(listElement);
+                        listElement.firstLine = updatedRecordType.label;
+                        self.recordTypesListCardListSection.add(listElement);
+                        self.recordTypesListCardListSection.select(id);
+                    }
+                }
+                if (updatedRecordType.label !== originalRecordType.label || updatedRecordType.showInMenu !== originalRecordType.showInMenu) {
+                    // TODO: Ggf. Menü aktualisieren (Label und Sortierung, showInMenu)
+                    self.webApp.mainMenu.load();
+                }
+                originalRecordType = updatedRecordType;
             };
             detailsSectionConfig.onDelete = async () => {
                 if (confirm('Soll der RecordType wirklich gelöscht werden?')) {
                     await self.webApp.api(RecordType).delete(id);
                     self.recordTypeDetailsCard.close();
-                    self.webApp.mainMenu.load();
                     self.webApp.toast.show("Der RecordType wurde gelöscht.");
-                    await self.showListCard("RecordType/");
+                    let listElement = self.recordTypesListCardListSection.listElements.find((el) => { return el.entity._id === id; });
+                    if (listElement) self.recordTypesListCardListSection.remove(listElement);
+                    // TODO: Ggf. aus Menü löschen
+                    if (originalRecordType.showInMenu) {
+                        self.webApp.mainMenu.load();
+                    }
+                    self.webApp.setSubUrl("RecordType/");
                 }
             };
             detailsSectionConfig.loadProperties = async () => {
-                let recordType = await self.webApp.api(RecordType).getOne(id);
-                self.recordTypeDetailsCard.Title.HtmlElement.innerHTML = (recordType.label ? recordType.label : recordType.name);
-                let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Label, value: recordType.name };
-                labelPropertyElement.value = recordType.label;
-                showInMenuPropertyElement.value = recordType.showInMenu;
+                originalRecordType = await self.webApp.api(RecordType).getOne(id);
+                self.recordTypeDetailsCard.Title.HtmlElement.innerHTML = (originalRecordType.label ? originalRecordType.label : originalRecordType.name);
+                let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Label, value: originalRecordType.name };
+                labelPropertyElement.value = originalRecordType.label;
+                showInMenuPropertyElement.value = originalRecordType.showInMenu;
                 return [ namePropertyElement, labelPropertyElement, showInMenuPropertyElement ];
             };
         } else {
@@ -64,10 +82,16 @@ export class RecordTypeController extends Controller {
                     showInMenu: showInMenuPropertyElement.value
                 } as RecordType;
                 let promise = self.webApp.api(RecordType).save(recordType);
-                promise.then((createdRecordType) => {
-                    if (createdRecordType.showInMenu) self.webApp.mainMenu.load();
+                promise.then(async (createdRecordType) => {
                     self.webApp.toast.show("Der RecordType '" + namePropertyElement.value + "' wurde erstellt.");
-                    return self.showListCard("RecordType/" + createdRecordType._id);
+                    await self.recordTypesListCardListSection.add(self.createListElement(createdRecordType));
+                    self.recordTypeDetailsCard.close();
+                    await self.showDetailsCard(createdRecordType._id);
+                    self.recordTypesListCardListSection.select(createdRecordType._id);
+                    // TODO: Ggf. in Menü einblenden
+                    if (createdRecordType.showInMenu) {
+                        await self.webApp.mainMenu.load();
+                    }
                 }, (statusCode: number) => {
                     if (statusCode === 409) {
                         namePropertyElement.property!.setErrorMessage("Dieser Name ist bereits vergeben und kann nicht verwendet werden.");
@@ -104,6 +128,15 @@ export class RecordTypeController extends Controller {
         self.webApp.cardStack.addCard(self.recordTypeDetailsCard);
     }
 
+    createListElement(recordType: RecordType) {
+        return {
+            entity: recordType,
+            firstLine: recordType.label,
+            iconUrl: "categorize.png",
+            secondLine: recordType.name
+        }
+    }
+
     async showListCard(subUrl?: string) {
         let self = this;
         self.recordTypesListCard = new Card(self.webApp, "Benutzerdefinierte Objekte", "RecordType/");
@@ -123,12 +156,7 @@ export class RecordTypeController extends Controller {
 
             loadListElements: async () => {
                 let recordTypes = await this.webApp.api(RecordType).getAll();
-                return recordTypes.map((rt) => { return {
-                    entity: rt,
-                    firstLine: rt.label,
-                    iconUrl: "categorize.png",
-                    secondLine: rt.name
-                } });
+                return recordTypes.map((rt) => { return self.createListElement(rt); });
             }
 
         });
@@ -156,8 +184,8 @@ export class RecordTypeController extends Controller {
                     label: "Benutzerdefinierte Objekte",
                     iconUrl: "categorize.png",
                     section: "Einstellungen",
-                    onClick: async (subUrl) => {
-                        self.showListCard(subUrl);
+                    onClick: async () => {
+                        await self.showListCard();
                     },
                     subUrl: "RecordType/"
                 });
@@ -165,6 +193,14 @@ export class RecordTypeController extends Controller {
                 return menuItems;
             }
         });
+
+        self.webApp.addSubUrlHandler({
+            UrlPart: "RecordType/",
+            Handler: async (completeSubUrl) => {
+                await self.showListCard();
+            }
+        });
+
     }
 
 }

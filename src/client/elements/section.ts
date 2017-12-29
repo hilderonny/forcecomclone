@@ -10,6 +10,7 @@ import { LabelProperty } from "./labelproperty";
 import { TextProperty } from "./textproperty";
 import { CheckBoxProperty } from "./checkboxproperty";
 import { RedActionButton } from "./redactionbutton";
+import { Title } from "./title";
 
 export abstract class SectionConfig {
     sectionTitle?: string;
@@ -146,6 +147,10 @@ export class ListSection<T extends Type> extends Section {
         self.HtmlElement.classList.add("listsection");
         self.listSectionConfig = cfg;
 
+        if (cfg.sectionTitle) {
+            self.HtmlElement.appendChild(new Title(cfg.sectionTitle).HtmlElement);
+        }
+
         if (cfg.onAdd) {
             let buttonRow = new ButtonRow();
             let addButton = new ActionButton("Neu");
@@ -161,26 +166,36 @@ export class ListSection<T extends Type> extends Section {
 
     }
 
+    async add(listElement: ListElement<T>) {
+        let self = this;
+        let button = new ListButton(listElement.entity, listElement.firstLine, listElement.iconUrl, listElement.secondLine);
+        listElement.button = button;
+        button.list = self.list;
+        if (self.listSectionConfig.onSelect) {
+            button.HtmlElement.addEventListener("click", (clickEvent) => {
+                self.listSectionConfig.onSelect!(listElement).then(() => {
+                    self.list.select(button);
+                });
+            });
+        }
+        self.listElements.push(listElement);
+        self.list.add(button);
+    }
+
+    async remove(listElement: ListElement<T>) {
+        let self = this;
+        self.listElements.splice(self.listElements.indexOf(listElement), 1);
+        if (listElement.button) self.list.remove(listElement.button);
+    }
+
     async load() {
         let self = this;
         self.list.Buttons = [];
+        self.listElements = [];
         self.list.HtmlElement.innerHTML = "";
         if (!self.listSectionConfig.loadListElements) return;
         let listElements = await self.listSectionConfig.loadListElements();
-        self.listElements = listElements;
-        listElements.forEach((le) => {
-            let button = new ListButton(le.entity, le.firstLine, le.iconUrl, le.secondLine);
-            le.button = button;
-            button.list = self.list;
-            if (self.listSectionConfig.onSelect) {
-                button.HtmlElement.addEventListener("click", (clickEvent) => {
-                    self.listSectionConfig.onSelect!(le).then(() => {
-                        self.list.select(button);
-                    });
-                });
-            }
-            self.list.add(button);
-        });
+        listElements.forEach((le) => { self.add(le); });
     }
 
     select(id?: string) {
