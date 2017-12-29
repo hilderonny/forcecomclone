@@ -161,7 +161,7 @@ export class RecordTypeController extends Controller {
         if (id) {
             // EDIT
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Label, value: "" };
+            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Label, value: "" }; // TODO: Type select box
             let originalField: Field;
             detailsSectionConfig.onSave = async () => {
                 let updatedField = {
@@ -202,7 +202,7 @@ export class RecordTypeController extends Controller {
             // CREATE
             let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Text, value: "" };
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Text, value: "" };
+            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Text, value: "" }; // TODO: Type select box
             detailsSectionConfig.onCreate = async () => {
                 let field = {
                     name: namePropertyElement.value,
