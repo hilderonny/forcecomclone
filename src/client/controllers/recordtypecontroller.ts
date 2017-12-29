@@ -13,6 +13,8 @@ export class RecordTypeController extends Controller {
     recordTypeDetailsCard: Card;
     recordTypesListCardListSection: ListSection<RecordType>;
     recordTypeMenuItem: MenuItem;
+    fieldDetailsCard: Card;
+    fieldsListSection: ListSection<Field>;
 
     async showRecordTypeDetailsCard(id?: string) {
         let self = this;
@@ -124,22 +126,22 @@ export class RecordTypeController extends Controller {
 
         // Field list section
         if (id) {
-            let fieldsListSection = new ListSection<Field>({
+            self.fieldsListSection = new ListSection<Field>({
                 onAdd: async () => {
                     self.webApp.cardStack.closeCardsRightTo(self.recordTypeDetailsCard);
-                    self.showFieldDetailsCard();
+                    self.showFieldDetailsCard(id);
                 },
                 onSelect: async (listElement) => {
                     self.webApp.cardStack.closeCardsRightTo(self.recordTypeDetailsCard);
-                    self.showFieldDetailsCard(listElement.entity._id);
+                    self.showFieldDetailsCard(id, listElement.entity._id);
                 },
                 loadListElements: async () => {
                     let fields = await this.webApp.api(Field).getAll('/forRecordType/' + id);
                     return fields.map((field) => { return self.createFieldListElement(field); });
                 }
             });
-            self.recordTypeDetailsCard.addSection(fieldsListSection);
-            await fieldsListSection.load();
+            self.recordTypeDetailsCard.addSection(self.fieldsListSection);
+            await self.fieldsListSection.load();
         }
 
         self.recordTypeDetailsCard.onClose = () => {
@@ -150,7 +152,105 @@ export class RecordTypeController extends Controller {
         self.webApp.cardStack.addCard(self.recordTypeDetailsCard);
     }
 
-    async showFieldDetailsCard(id?: string) {
+    async showFieldDetailsCard(recordTypeId: string, id?: string) {
+        let self = this;
+        self.fieldDetailsCard = new Card(self.webApp, "", "RecordType/" + recordTypeId);
+        self.fieldDetailsCard.HtmlElement.classList.add("detailscard");
+
+        let detailsSectionConfig: DetailsSectionConfig<Field> = { };
+        if (id) {
+            // EDIT
+            let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
+            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Text, value: "" };
+            let originalField: Field;
+            detailsSectionConfig.onSave = async () => {
+                let updatedField = {
+                    _id: id,
+                    label: labelPropertyElement.value,
+                    type: typePropertyElement.value
+                } as Field;
+                await self.webApp.api(Field).save(updatedField);
+                self.webApp.toast.show("Änderungen gespeichert.");
+                if (updatedField.label !== originalField.label || updatedField.type !== originalField.type) { // TODO: Icon depending on type
+                    let listElement = self.fieldsListSection.listElements.find((el) => { return el.entity._id === id; });
+                    if (listElement) {
+                        self.fieldsListSection.remove(listElement);
+                        listElement.firstLine = updatedField.label;
+                        self.fieldsListSection.add(listElement);
+                        self.fieldsListSection.select(id);
+                    }
+                }
+                originalField = updatedField;
+            };
+            detailsSectionConfig.onDelete = async () => {
+                if (confirm('Soll das Feld wirklich gelöscht werden?')) {
+                    await self.webApp.api(Field).delete(id);
+                    self.fieldDetailsCard.close();
+                    self.webApp.toast.show("Das Feld wurde gelöscht.");
+                    let listElement = self.fieldsListSection.listElements.find((el) => { return el.entity._id === id; });
+                    if (listElement) self.fieldsListSection.remove(listElement);
+                }
+            };
+            detailsSectionConfig.loadProperties = async () => {
+                originalField = await self.webApp.api(Field).getOne(id);
+                self.fieldDetailsCard.Title.HtmlElement.innerHTML = (originalField.label ? originalField.label : originalField.name);
+                let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Label, value: originalField.name };
+                labelPropertyElement.value = originalField.label;
+                typePropertyElement.value = originalField.type;
+                return [ namePropertyElement, labelPropertyElement, typePropertyElement ];
+            };
+        } else {
+            // CREATE
+            let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Text, value: "" };
+            let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
+            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Text, value: "" };
+            detailsSectionConfig.onCreate = async () => {
+                let field = {
+                    name: namePropertyElement.value,
+                    label: labelPropertyElement.value,
+                    type: typePropertyElement.value,
+                    recordTypeId: recordTypeId
+                } as Field;
+                let promise = self.webApp.api(Field).save(field);
+                promise.then(async (createdField) => {
+                    self.webApp.toast.show("Das Feld '" + namePropertyElement.value + "' wurde erstellt.");
+                    await self.fieldsListSection.add(self.createFieldListElement(createdField));
+                    self.fieldDetailsCard.close();
+                    await self.showFieldDetailsCard(recordTypeId, createdField._id);
+                    self.fieldsListSection.select(createdField._id);
+                }, (statusCode: number) => {
+                    if (statusCode === 409) {
+                        namePropertyElement.property!.setErrorMessage("Dieser Name ist bereits vergeben und kann nicht verwendet werden.");
+                    }
+                });
+            };
+            detailsSectionConfig.loadProperties = async () => {
+                return [ namePropertyElement, labelPropertyElement, typePropertyElement ];
+            };
+            detailsSectionConfig.validate = async () => {
+                let name = namePropertyElement.value as string;
+                if (!name || 
+                    name.length < 1 ||
+                    name.includes('__') ||
+                    name.match(/[\W]/) ||
+                    !name.match(/^[A-Za-z]/) ||
+                    [ "_id" ].includes(name)
+                ) {
+                    namePropertyElement.property!.setErrorMessage("Name muss mit Buchstaben beginnen, darf nur Buchstaben (ohne Umlaute), Ziffern und '_' enthalten, darf nicht '__' enthalten und darf nicht '_id' lauten.");
+                    return false;
+                }
+                return true;
+            };
+        }
+        let detailsSection = new DetailsSection(detailsSectionConfig);
+        self.fieldDetailsCard.addSection(detailsSection);
+        await detailsSection.load();
+
+        self.fieldDetailsCard.onClose = () => {
+            self.fieldsListSection.select();
+        };
+
+        self.webApp.cardStack.addCard(self.fieldDetailsCard);
     }
 
     createRecordTypeListElement(recordType: RecordType) {
