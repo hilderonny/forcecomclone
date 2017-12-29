@@ -161,13 +161,12 @@ export class RecordTypeController extends Controller {
         if (id) {
             // EDIT
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Text, value: "" };
+            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Label, value: "" };
             let originalField: Field;
             detailsSectionConfig.onSave = async () => {
                 let updatedField = {
                     _id: id,
-                    label: labelPropertyElement.value,
-                    type: typePropertyElement.value
+                    label: labelPropertyElement.value
                 } as Field;
                 await self.webApp.api(Field).save(updatedField);
                 self.webApp.toast.show("Änderungen gespeichert.");
