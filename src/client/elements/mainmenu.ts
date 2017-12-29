@@ -11,7 +11,7 @@ export class MenuItem {
     iconUrl?: string;
     subUrl?: string;
     section: string;
-    select: () => void;
+    select?: () => void;
     listElement?: ListElement<any>;
     onClick: () => Promise<void>;
 }
@@ -87,7 +87,7 @@ export class MainMenu extends AbstractElement {
                             },
                             onSelect: async (listElement) => {
                                 await menuItem.onClick();
-                                menuItem.select();
+                                menuItem.select!();
                             }
                         })
                     };
@@ -132,7 +132,7 @@ export class MainMenu extends AbstractElement {
                     self.webApp.addSubUrlHandler({
                         UrlPart: menuItem.subUrl,
                         Handler: (completeSubUrl) => {
-                            menuItem.select();
+                            menuItem.select!();
                         }
                     });
                 }

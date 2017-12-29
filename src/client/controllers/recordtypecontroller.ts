@@ -45,7 +45,7 @@ export class RecordTypeController extends Controller {
                 }
                 if (updatedRecordType.label !== originalRecordType.label || updatedRecordType.showInMenu !== originalRecordType.showInMenu) {
                     await self.webApp.mainMenu.load();
-                    self.recordTypeMenuItem.select();
+                    self.recordTypeMenuItem.select!();
                 }
                 originalRecordType = updatedRecordType;
             };
@@ -58,7 +58,7 @@ export class RecordTypeController extends Controller {
                     if (listElement) self.recordTypesListCardListSection.remove(listElement);
                     if (originalRecordType.showInMenu) {
                         await self.webApp.mainMenu.load();
-                        self.recordTypeMenuItem.select();
+                        self.recordTypeMenuItem.select!();
                     }
                     self.webApp.setSubUrl("RecordType/");
                 }
@@ -92,7 +92,7 @@ export class RecordTypeController extends Controller {
                     // TODO: Ggf. in Menü einblenden
                     if (createdRecordType.showInMenu) {
                         await self.webApp.mainMenu.load();
-                        self.recordTypeMenuItem.select();
+                        self.recordTypeMenuItem.select!();
                     }
                 }, (statusCode: number) => {
                     if (statusCode === 409) {
