@@ -27,7 +27,7 @@ export class RecordTypeController extends Controller {
             // EDIT
             // Detailssection
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.Checkbox, value: false };
+            let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.CheckBox, value: false };
             let originalRecordType: RecordType;
             detailsSectionConfig.onSave = async () => {
                 let updatedRecordType = {
@@ -78,7 +78,7 @@ export class RecordTypeController extends Controller {
             // CREATE
             let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Text, value: "" };
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.Checkbox, value: false };
+            let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.CheckBox, value: false };
             detailsSectionConfig.onCreate = async () => {
                 let recordType = {
                     name: namePropertyElement.value,
@@ -202,7 +202,7 @@ export class RecordTypeController extends Controller {
             // CREATE
             let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Text, value: "" };
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Text, value: "" }; // TODO: Type select box
+            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.SelectBox, value: FieldType.Text, options: Object.keys(FieldType) };
             detailsSectionConfig.onCreate = async () => {
                 let field = {
                     name: namePropertyElement.value,
@@ -249,6 +249,8 @@ export class RecordTypeController extends Controller {
             self.fieldsListSection.select();
         };
 
+        // TODO: Select options list and card
+
         self.webApp.cardStack.addCard(self.fieldDetailsCard);
     }
 
@@ -262,10 +264,17 @@ export class RecordTypeController extends Controller {
     }
 
     createFieldListElement(field: Field) {
+        let iconFileName: string = "categorize.png";
+        switch(field.type) {
+            case FieldType.CheckBox: iconFileName = "Checked CheckBox.svg"; break;
+            case FieldType.Label: iconFileName = "type.svg"; break;
+            case FieldType.SelectBox: iconFileName = "List.svg"; break;
+            case FieldType.Text: iconFileName = "Text Box.svg"; break;
+        }
         return {
             entity: field,
             firstLine: field.label,
-            iconUrl: "categorize.png", // TODO: Icon depending on type
+            iconUrl: iconFileName,
             secondLine: field.name
         }
     }

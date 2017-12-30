@@ -11,6 +11,7 @@ import { TextProperty } from "./textproperty";
 import { CheckBoxProperty } from "./checkboxproperty";
 import { RedActionButton } from "./redactionbutton";
 import { Title } from "./title";
+import { SelectBoxProperty } from "./selectboxproperty";
 
 export abstract class SectionConfig {
     sectionTitle?: string;
@@ -29,6 +30,7 @@ export class PropertyElement {
     type: FieldType;
     value: any;
     property?: Property;
+    options?: any[];
 }
 
 export class ListSectionConfig<T extends Type> extends SectionConfig {
@@ -126,7 +128,8 @@ export class DetailsSection<T extends Type> extends Section {
             switch (p.type) {
                 case FieldType.Label: self.content.appendChild(new LabelProperty(p).HtmlElement); break;
                 case FieldType.Text: self.content.appendChild(new TextProperty(p).HtmlElement); break;
-                case FieldType.Checkbox: self.content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
+                case FieldType.CheckBox: self.content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
+                case FieldType.SelectBox: self.content.appendChild(new SelectBoxProperty(p).HtmlElement); break;
                 default: break;
             }
         });

@@ -228,7 +228,7 @@ describe('API Field', () => {
             await TestHelper.prepareRecordTypes();
             await TestHelper.prepareFields();
             let fieldFromDatabase = await TestHelper.db.collection<Field>(Field.name).findOne({}) as Field;
-            let updateSet = { _id: fieldFromDatabase._id.toString(), type: FieldType.Checkbox, label: 'NewLabel' } as Field;
+            let updateSet = { _id: fieldFromDatabase._id.toString(), type: FieldType.CheckBox, label: 'NewLabel' } as Field;
             await TestHelper.post('/api/Field/').send(updateSet).expect(400);
         });
         

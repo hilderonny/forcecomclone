@@ -24,6 +24,8 @@ export enum FieldType {
     /**
      * Checkbox true / false
      */
-    Checkbox = "Checkbox"
+    CheckBox = "CheckBox",
+
+    SelectBox = "SelectBox"
 
 }
