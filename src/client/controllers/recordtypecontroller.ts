@@ -159,16 +159,20 @@ export class RecordTypeController extends Controller {
         self.fieldDetailsCard = new Card(self.webApp, "", "RecordType/" + recordTypeId);
         self.fieldDetailsCard.HtmlElement.classList.add("detailscard");
 
+        let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Text, value: "" };
+        let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
+        let typePropertyElement: PropertyElement = { label: "Typ", type: id ? FieldType.Label : FieldType.SelectBox, value: FieldType.Text, options: Object.keys(FieldType) };
+        let isTitlePropertyElement: PropertyElement = { label: "Listentitel", type: FieldType.CheckBox, value: false };
+
         let detailsSectionConfig: DetailsSectionConfig<Field> = { };
         if (id) {
             // EDIT
-            let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.Label, value: "" }; // TODO: Type select box
             let originalField: Field;
             detailsSectionConfig.onSave = async () => {
                 let updatedField = {
                     _id: id,
-                    label: labelPropertyElement.value
+                    label: labelPropertyElement.value,
+                    isTitle: isTitlePropertyElement.value
                 } as Field;
                 await self.webApp.api(Field).save(updatedField);
                 self.webApp.toast.show("Änderungen gespeichert.");
@@ -198,18 +202,17 @@ export class RecordTypeController extends Controller {
                 let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Label, value: originalField.name };
                 labelPropertyElement.value = originalField.label;
                 typePropertyElement.value = originalField.type;
-                return [ namePropertyElement, labelPropertyElement, typePropertyElement ];
+                isTitlePropertyElement.value = originalField.isTitle;
+                return [ namePropertyElement, labelPropertyElement, typePropertyElement, isTitlePropertyElement ];
             };
         } else {
             // CREATE
-            let namePropertyElement: PropertyElement = { label: "Name", type: FieldType.Text, value: "" };
-            let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
-            let typePropertyElement: PropertyElement = { label: "Typ", type: FieldType.SelectBox, value: FieldType.Text, options: Object.keys(FieldType) };
             detailsSectionConfig.onCreate = async () => {
                 let field = {
                     name: namePropertyElement.value,
                     label: labelPropertyElement.value,
                     type: typePropertyElement.value,
+                    isTitle: isTitlePropertyElement.value,
                     recordTypeId: recordTypeId
                 } as Field;
                 let promise = self.webApp.api(Field).save(field);
@@ -226,7 +229,7 @@ export class RecordTypeController extends Controller {
                 });
             };
             detailsSectionConfig.loadProperties = async () => {
-                return [ namePropertyElement, labelPropertyElement, typePropertyElement ];
+                return [ namePropertyElement, labelPropertyElement, typePropertyElement, isTitlePropertyElement ];
             };
             detailsSectionConfig.validate = async () => {
                 let name = namePropertyElement.value as string;
