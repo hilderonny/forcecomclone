@@ -20,6 +20,8 @@ export class Card extends AbstractElement {
     CloseButton: Button;
 
     SubUrl: string;
+
+    content: HTMLDivElement;
     
 
     BeforeClose: (card: Card) => void;
@@ -53,6 +55,10 @@ export class Card extends AbstractElement {
             this.HtmlElement.appendChild(this.Title.HtmlElement);
         }
 
+        self.content = document.createElement("div");
+        self.content.classList.add("content");
+        self.HtmlElement.appendChild(self.content);
+
         if (subUrl) {
             self.SubUrl = subUrl;
         }
@@ -70,7 +76,7 @@ export class Card extends AbstractElement {
 
     addSection(section: Section) {
         this.sections.push(section);
-        this.HtmlElement.appendChild(section.HtmlElement);
+        this.content.appendChild(section.HtmlElement);
     }
 
 }

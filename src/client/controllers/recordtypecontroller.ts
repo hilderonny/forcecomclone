@@ -29,6 +29,7 @@ export class RecordTypeController extends Controller {
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
             let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.CheckBox, value: false };
             let originalRecordType: RecordType;
+            detailsSectionConfig.sectionTitle = "Details";
             detailsSectionConfig.onSave = async () => {
                 let updatedRecordType = {
                     _id: id,
@@ -127,6 +128,7 @@ export class RecordTypeController extends Controller {
         // Field list section
         if (id) {
             self.fieldsListSection = new ListSection<Field>({
+                sectionTitle: "Felder",
                 onAdd: async () => {
                     self.webApp.cardStack.closeCardsRightTo(self.recordTypeDetailsCard);
                     self.showFieldDetailsCard(id);

@@ -51,8 +51,13 @@ export class DetailsSectionConfig<T extends Type> extends SectionConfig {
 
 export abstract class Section extends AbstractElement {
 
-    constructor() {
+    constructor(cfg: SectionConfig) {
         super("div", "section");
+
+        if (cfg.sectionTitle) {
+            this.HtmlElement.appendChild(new Title(cfg.sectionTitle).HtmlElement);
+        }
+
     }
 
     abstract load(): Promise<void>;
@@ -67,7 +72,7 @@ export class DetailsSection<T extends Type> extends Section {
     id: string;
 
     constructor(cfg: DetailsSectionConfig<T>) {
-        super();
+        super(cfg);
         let self = this;
         self.HtmlElement.classList.add("detailssection");
         self.detailsSectionConfig = cfg;
@@ -145,14 +150,10 @@ export class ListSection<T extends Type> extends Section {
     list: List;
 
     constructor(cfg: ListSectionConfig<T>) {
-        super();
+        super(cfg);
         let self = this;
         self.HtmlElement.classList.add("listsection");
         self.listSectionConfig = cfg;
-
-        if (cfg.sectionTitle) {
-            self.HtmlElement.appendChild(new Title(cfg.sectionTitle).HtmlElement);
-        }
 
         if (cfg.onAdd) {
             let buttonRow = new ButtonRow();
