@@ -20,8 +20,8 @@ export abstract class SectionConfig {
 export class ListElement<T extends Type> {
     entity: T;
     firstLine: string
-    secondLine: string;
-    iconUrl: string;
+    secondLine?: string;
+    iconUrl?: string;
     button?: ListButton<T>;
 }
 
@@ -39,7 +39,7 @@ export class ListSectionConfig<T extends Type> extends SectionConfig {
     onSelect?: (listElement: ListElement<T>) => Promise<void>;
 }
 
-export class DetailsSectionConfig<T extends Type> extends SectionConfig {
+export class DetailsSectionConfig extends SectionConfig {
     loadProperties?: () => Promise<PropertyElement[]>;
     onCreate?: () => Promise<void>;
     onSave?: () => Promise<void>;
@@ -66,12 +66,12 @@ export abstract class Section extends AbstractElement {
 
 export class DetailsSection<T extends Type> extends Section {
 
-    detailsSectionConfig: DetailsSectionConfig<T>;
+    detailsSectionConfig: DetailsSectionConfig;
     content: HTMLDivElement;
     properties: PropertyElement[] = [];
     id: string;
 
-    constructor(cfg: DetailsSectionConfig<T>) {
+    constructor(cfg: DetailsSectionConfig) {
         super(cfg);
         let self = this;
         self.HtmlElement.classList.add("detailssection");

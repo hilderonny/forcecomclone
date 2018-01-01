@@ -12,7 +12,8 @@ export class MenuItem {
     section: string;
     select?: () => void;
     listElement?: ListElement<any>;
-    onClick: () => Promise<void>;
+    onClick: (menuItem: MenuItem) => Promise<void>;
+    dataObject?: any;
 }
 
 export interface MenuHandler {
@@ -76,7 +77,7 @@ export class MainMenu extends AbstractElement {
                             loadListElements: async () => {
                                 return sectionObject.menuItems.map((mi) => { 
                                     let listElement = {
-                                        entity: menuItem,
+                                        entity: mi,
                                         firstLine: mi.label,
                                         iconUrl: mi.iconUrl
                                     } as ListElement<any>;
@@ -85,7 +86,7 @@ export class MainMenu extends AbstractElement {
                                 });
                             },
                             onSelect: async (listElement) => {
-                                await menuItem.onClick();
+                                await menuItem.onClick(listElement.entity);
                                 menuItem.select!();
                             }
                         })

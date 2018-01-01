@@ -67,3 +67,35 @@ export class Api<T extends Type> {
     }
 
 }
+
+export class GenericApi {
+
+    type: string;
+    rest: Rest;
+
+    constructor(type: string) {
+        this.type = type;
+        this.rest = new Rest();
+    }
+
+    delete(id: string): Promise<void> {
+        let url = `/api/${this.type}/${id}`;
+        return this.rest.delete<object>(url);
+    }
+
+    getAll(subUrl?: string): Promise<object[]> {
+        let url = `/api/${this.type}${subUrl?subUrl:""}`;
+        return this.rest.get<object[]>(url);
+    }
+
+    getOne(id: string): Promise<object> {
+        let url = `/api/${this.type}/${id}`;
+        return this.rest.get<object>(url);
+    }
+
+    save(entity: object): Promise<object> {
+        let url = `/api/${this.type}/`;
+        return this.rest.post<object>(url, entity);
+    }
+
+}

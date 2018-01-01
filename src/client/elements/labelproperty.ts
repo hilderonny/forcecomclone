@@ -15,7 +15,7 @@ export class LabelProperty extends Property {
 
         let span = document.createElement("span") as HTMLSpanElement;
         self.addChild(span);
-        span.innerHTML = propertyElement.value;
+        span.innerHTML = propertyElement.value === undefined ? "" : propertyElement.value;
 
     }
 

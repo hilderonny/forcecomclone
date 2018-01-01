@@ -21,7 +21,7 @@ export class TextProperty extends Property {
             self.propertyElement.value = input.value;
             label.style.visibility = input.value.length > 0 ? "visible" : "hidden";
         };
-        input.value = propertyElement.value;
+        input.value = propertyElement.value === undefined ? "" : propertyElement.value;
         changeHandler();
         input.addEventListener("change", changeHandler);
         input.addEventListener("keyup", changeHandler);

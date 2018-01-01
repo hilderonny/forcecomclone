@@ -2,7 +2,7 @@ import { Controller } from "./controller";
 import { WebApp } from "../webapp";
 import { MenuItem } from "../elements/mainmenu";
 import { Card } from "../elements/card";
-import { ListSection, DetailsSection, DetailsSectionConfig, PropertyElement } from "../elements/section";
+import { ListSection, DetailsSection, DetailsSectionConfig, PropertyElement, ListElement } from "../elements/section";
 import { RecordType } from "../../common/types/recordtype";
 import { FieldType, Field } from "../../common/types/field";
 
@@ -22,7 +22,7 @@ export class RecordTypeController extends Controller {
         self.recordTypeDetailsCard = new Card(self.webApp, "", subUrl);
         self.recordTypeDetailsCard.HtmlElement.classList.add("detailscard");
 
-        let detailsSectionConfig: DetailsSectionConfig<RecordType> = { };
+        let detailsSectionConfig: DetailsSectionConfig = { };
         if (id) {
             // EDIT
             // Detailssection
@@ -164,7 +164,7 @@ export class RecordTypeController extends Controller {
         let typePropertyElement: PropertyElement = { label: "Typ", type: id ? FieldType.Label : FieldType.SelectBox, value: FieldType.Text, options: Object.keys(FieldType) };
         let isTitlePropertyElement: PropertyElement = { label: "Listentitel", type: FieldType.CheckBox, value: false };
 
-        let detailsSectionConfig: DetailsSectionConfig<Field> = { };
+        let detailsSectionConfig: DetailsSectionConfig = { };
         if (id) {
             // EDIT
             let originalField: Field;
@@ -259,7 +259,7 @@ export class RecordTypeController extends Controller {
         self.webApp.cardStack.addCard(self.fieldDetailsCard);
     }
 
-    createRecordTypeListElement(recordType: RecordType) {
+    createRecordTypeListElement(recordType: RecordType): ListElement<RecordType> {
         return {
             entity: recordType,
             firstLine: recordType.label,
