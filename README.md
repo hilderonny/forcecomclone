@@ -12,6 +12,7 @@ Now you need to install some helper tools globally, which are used for compiling
 
 ```
 npm install -g typescript
+npm install -g npm@5.3.0
 ```
 
 # Application parts

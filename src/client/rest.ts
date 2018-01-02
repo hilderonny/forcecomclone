@@ -26,6 +26,19 @@ export class Rest {
         this.statusHandlers[statusCode].push(handler);
     }
 
+    delete<T>(url: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            let req = new XMLHttpRequest();
+            req.onreadystatechange = () => {
+                // Handle status codes and parse response
+                this.handleReadyState(req, resolve, reject);
+            };
+            req.open("DELETE", url, true);
+            req.send();
+        });
+    }
+
+
     /**
      * Performs a GET request and returns the response from the server casted
      * to the given generic type. It is expected that the requested URL returns a JSON
@@ -38,7 +51,7 @@ export class Rest {
             let req = new XMLHttpRequest();
             req.onreadystatechange = () => {
                 // Handle status codes and parse response
-                this.handleReadyState(req, resolve);
+                this.handleReadyState(req, resolve, reject);
             };
             req.open("GET", url, true);
             req.send();
@@ -54,7 +67,7 @@ export class Rest {
      * @param req Request to parse
      * @param resolve Promise's resolve function to call with the response
      */
-    handleReadyState<T>(req: XMLHttpRequest, resolve: (value: T) => void): void {
+    handleReadyState<T>(req: XMLHttpRequest, resolve: (value?: T) => void, reject: (code: number) => void): void {
         // Ignore partial results
         if (req.readyState !== 4) return;
         if (this.statusHandlers[req.status]) {
@@ -66,8 +79,10 @@ export class Rest {
             }
         } else if (req.status === 200) {
             // Parse the request when the result is OK
-            let result = JSON.parse(req.responseText) as T;
+            let result = req.responseText === "OK" ? undefined : JSON.parse(req.responseText) as T;
             resolve(result);                    
+        } else {
+            reject(req.status);
         }
     }
 
@@ -83,7 +98,73 @@ export class Rest {
         return new Promise<T>((resolve, reject) => {
             let req = new XMLHttpRequest();
             req.onreadystatechange = () => {
-                this.handleReadyState(req, resolve);
+                this.handleReadyState(req, resolve, reject);
+            };
+            req.open("POST", url, true);
+            req.setRequestHeader("Content-Type", "application/json");
+            req.send(JSON.stringify(entity));
+        });
+    }
+    
+}
+
+export class GenericRest {
+
+    statusHandlers: { [id: number]: ((req: XMLHttpRequest) => boolean)[] } = {};
+
+    addStatusHandler(statusCode: number, handler: (req: XMLHttpRequest) => boolean): void {
+        if (!this.statusHandlers[statusCode]) this.statusHandlers[statusCode] = [];
+        this.statusHandlers[statusCode].push(handler);
+    }
+
+    delete(url: string): Promise<object> {
+        return new Promise<object>((resolve, reject) => {
+            let req = new XMLHttpRequest();
+            req.onreadystatechange = () => {
+                // Handle status codes and parse response
+                this.handleReadyState(req, resolve, reject);
+            };
+            req.open("DELETE", url, true);
+            req.send();
+        });
+    }
+
+    get(url: string): Promise<object> {
+        return new Promise<object>((resolve, reject) => {
+            let req = new XMLHttpRequest();
+            req.onreadystatechange = () => {
+                // Handle status codes and parse response
+                this.handleReadyState(req, resolve, reject);
+            };
+            req.open("GET", url, true);
+            req.send();
+        });
+    }
+
+    handleReadyState(req: XMLHttpRequest, resolve: (value?: object) => void, reject: (code: number) => void): void {
+        // Ignore partial results
+        if (req.readyState !== 4) return;
+        if (this.statusHandlers[req.status]) {
+            let statusHandlers = this.statusHandlers[req.status];
+            for (let i = 0; i < statusHandlers.length; i++) {
+                let proceed = statusHandlers[i](req);
+                // Cancel further processing when on status handler returned false
+                if (!proceed) break;
+            }
+        } else if (req.status === 200) {
+            // Parse the request when the result is OK
+            let result = req.responseText === "OK" ? undefined : JSON.parse(req.responseText) as object;
+            resolve(result);                    
+        } else {
+            reject(req.status);
+        }
+    }
+
+    post(url: string, entity: object): Promise<object> {
+        return new Promise<object>((resolve, reject) => {
+            let req = new XMLHttpRequest();
+            req.onreadystatechange = () => {
+                this.handleReadyState(req, resolve, reject);
             };
             req.open("POST", url, true);
             req.setRequestHeader("Content-Type", "application/json");

@@ -1,5 +1,6 @@
 import { Type } from "../../server/core/type";
 import { Request } from "express"
+import { Db } from "mongodb";
 
 /**
  * Defines an user which can login into the application
@@ -16,6 +17,8 @@ export class User extends Type {
      */
     password: string
 
+    db: Db
+
 }
 
 /**
@@ -29,7 +32,7 @@ export interface UserRequest extends Request {
     /**
      * Detailed information about the logged in user
      */
-    user?: User
+    user?: User; // Muss nullable sein, damit das Interface zu RequestHandler gecastet werden kann
 
 }
     
