@@ -14,7 +14,7 @@ export abstract class ClientModule {
      * @param createFunction Initialization function of the module. Is called with a
      *                       WebApp instance as parameter.
      */
-    static create(createFunction : (webapp: WebApp) => void) : (webapp:WebApp) => void {
+    static create(createFunction : (webapp: WebApp) => Promise<void>) : (webapp:WebApp) => Promise<void> {
         return (webapp: WebApp) => createFunction(webapp);
     }
 

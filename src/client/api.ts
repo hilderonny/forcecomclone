@@ -28,11 +28,16 @@ export class Api<T extends Type> {
         this.rest = new Rest();
     }
 
+    delete(id: string): Promise<void> {
+        let url = `/api/${this.type.name}/${id}`;
+        return this.rest.delete<T>(url);
+    }
+
     /**
      * Retrieve all entities of the given type from the server
      */
-    getAll(): Promise<T[]> {
-        let url = `/api/${this.type.name}`;
+    getAll(subUrl?: string): Promise<T[]> {
+        let url = `/api/${this.type.name}${subUrl?subUrl:""}`;
         return this.rest.get<T[]>(url);
     }
 
@@ -59,6 +64,38 @@ export class Api<T extends Type> {
     save(entity: T): Promise<T> {
         let url = `/api/${this.type.name}/`;
         return this.rest.post<T>(url, entity);
+    }
+
+}
+
+export class GenericApi {
+
+    type: string;
+    rest: Rest;
+
+    constructor(type: string) {
+        this.type = type;
+        this.rest = new Rest();
+    }
+
+    delete(id: string): Promise<void> {
+        let url = `/api/${this.type}/${id}`;
+        return this.rest.delete<any>(url);
+    }
+
+    getAll(subUrl?: string): Promise<any[]> {
+        let url = `/api/${this.type}${subUrl?subUrl:""}`;
+        return this.rest.get<any[]>(url);
+    }
+
+    getOne(id: string): Promise<any> {
+        let url = `/api/${this.type}/${id}`;
+        return this.rest.get<any>(url);
+    }
+
+    save(entity: any): Promise<any> {
+        let url = `/api/${this.type}/`;
+        return this.rest.post<any>(url, entity);
     }
 
 }

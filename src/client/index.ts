@@ -1,5 +1,6 @@
 import { WebApp } from "./webapp"
-import {CardStackType} from "./cardstack"
+import {CardStackType} from "./elements/cardstack"
+import { Card } from "./elements/card";
 
 /**
  * Initilize the client side of the app when the page was loaded
@@ -10,7 +11,6 @@ window.addEventListener("load", () => {
     
     let webapp = new WebApp("body");
 
-    webapp.setCardStackType(CardStackType.LISTDETAIL);
-    webapp.addCard();
+    webapp.cardStack.setType(CardStackType.LISTDETAIL);
     
-})
+});

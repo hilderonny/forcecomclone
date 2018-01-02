@@ -1,14 +1,6 @@
-import { CardStack } from "./cardstack";
+import { AbstractElement } from "./abstractelement";
 
-/**
- * This is a card contained in a cardstack.
- */
-export class Card {
-
-    /**
-     * Reference to the underlying DIV element for DOM manipulations
-     */
-    DivElement: HTMLDivElement;
+export class ResizeHandle extends AbstractElement {
 
     /**
      * When starting card resizing this variable remembers the starting X
@@ -22,33 +14,33 @@ export class Card {
      */
     ResizeStartWidth: number;
 
-    /**
-     * Creates a card and asings it to the given card stack
-     */
     constructor() {
-        this.DivElement = document.createElement("div");
-        this.DivElement.classList.add("card");
+        super("div", "resizehandle");
         let self = this;
         // Initialize resize behaviour of card in list-detail-mode
         // See https://jsfiddle.net/ronnyhildebrandt/2rez90co/ for detailed example
-        this.DivElement.addEventListener("mousedown", function(evt) {
-            let handleResizeDrag = (evt: MouseEvent) => {
+        let handleMouseDown = (mouseDownEvent: MouseEvent) => {
+            let handleResizeDrag = (resizeDragEvent: MouseEvent) => {
                 // Dragging the resize handle
-                let delta = evt.pageX - self.ResizeStartX;
+                let delta = resizeDragEvent.pageX - self.ResizeStartX;
                 let width = (self.ResizeStartWidth + delta) + 'px';
-                self.DivElement.style.minWidth = width;
-                evt.preventDefault();
+                self.HtmlElement.parentElement!.style.minWidth = width;
+                self.HtmlElement.parentElement!.style.width = width;
+                resizeDragEvent.preventDefault();
                 return false;
             }
-            let handleResizeEnd = (evt: MouseEvent) => {
+            let handleResizeEnd = (resizeEndEvent: MouseEvent) => {
                 document.removeEventListener("mousemove", handleResizeDrag);
                 document.removeEventListener("mouseup", handleResizeEnd);
             }
             document.addEventListener("mousemove", handleResizeDrag);
             document.addEventListener("mouseup", handleResizeEnd);
-            self.ResizeStartX = evt.pageX;
-            self.ResizeStartWidth = self.DivElement.offsetWidth;
-        });
+            self.ResizeStartX = mouseDownEvent.pageX;
+            self.ResizeStartWidth = self.HtmlElement.parentElement!.offsetWidth;
+            mouseDownEvent.preventDefault();
+            return false;
+    };
+        this.HtmlElement.addEventListener("mousedown", handleMouseDown);
     }
 
 }
