@@ -2,7 +2,7 @@ import { Controller } from "./controller";
 import { WebApp } from "../webapp";
 import { MenuItem } from "../elements/mainmenu";
 import { Card } from "../elements/card";
-import { ListSection, DetailsSection, DetailsSectionConfig, PropertyElement, ListElement } from "../elements/section";
+import { ListSection, DetailsSection, DetailsSectionConfig, PropertyElement, ListElement, CheckBoxListSection, CheckBoxListElement } from "../elements/section";
 import { RecordType } from "../../common/types/recordtype";
 import { FieldType, Field } from "../../common/types/field";
 
@@ -12,6 +12,7 @@ export class RecordTypeController extends Controller {
     recordTypesListCard: Card;
     recordTypeDetailsCard: Card;
     recordTypesListCardListSection: ListSection<RecordType>;
+    allowedChildElementsSection: CheckBoxListSection<RecordType>;
     recordTypeMenuItem: MenuItem;
     fieldDetailsCard: Card;
     fieldsListSection: ListSection<Field>;
@@ -21,6 +22,7 @@ export class RecordTypeController extends Controller {
         let subUrl = "RecordType/" + (id ? id : "");
         self.recordTypeDetailsCard = new Card(self.webApp, "", subUrl);
         self.recordTypeDetailsCard.HtmlElement.classList.add("detailscard");
+        let originalRecordType: RecordType;
 
         let detailsSectionConfig: DetailsSectionConfig = { };
         if (id) {
@@ -28,15 +30,14 @@ export class RecordTypeController extends Controller {
             // Detailssection
             let labelPropertyElement: PropertyElement = { label: "Bezeichnung", type: FieldType.Text, value: "" };
             let showInMenuPropertyElement: PropertyElement = { label: "In Menü zeigen", type: FieldType.CheckBox, value: false };
-            let originalRecordType: RecordType;
             detailsSectionConfig.sectionTitle = "Details";
             detailsSectionConfig.onSave = async () => {
-                let updatedRecordType = {
+                let updateSet = {
                     _id: id,
                     label: labelPropertyElement.value,
                     showInMenu: showInMenuPropertyElement.value
                 } as RecordType;
-                await self.webApp.api(RecordType).save(updatedRecordType);
+                let updatedRecordType = await self.webApp.api(RecordType).save(updateSet);
                 self.webApp.toast.show("Änderungen gespeichert.");
                 if (updatedRecordType.label !== originalRecordType.label) {
                     let listElement = self.recordTypesListCardListSection.listElements.find((el) => { return el.entity._id === id; });
@@ -50,8 +51,11 @@ export class RecordTypeController extends Controller {
                 if (updatedRecordType.label !== originalRecordType.label || updatedRecordType.showInMenu !== originalRecordType.showInMenu) {
                     await self.webApp.mainMenu.load();
                     self.recordTypeMenuItem.select!();
+                    originalRecordType = updatedRecordType;
+                    await self.allowedChildElementsSection.load();
+                } else {
+                    originalRecordType = updatedRecordType;
                 }
-                originalRecordType = updatedRecordType;
             };
             detailsSectionConfig.onDelete = async () => {
                 if (confirm('Soll der RecordType wirklich gelöscht werden?')) {
@@ -145,6 +149,38 @@ export class RecordTypeController extends Controller {
             });
             self.recordTypeDetailsCard.addSection(self.fieldsListSection);
             await self.fieldsListSection.load();
+        }
+
+        // Allowed child elements section
+        if (id) {
+            self.allowedChildElementsSection = new CheckBoxListSection<RecordType>({
+                sectionTitle: "Erlaubte Kindelemente",
+                loadListElements: async () => {
+                    let recordTypes = await this.webApp.api(RecordType).getAll('/');
+                    return recordTypes.map((recordType) => { 
+                        return {
+                            entity: recordType,
+                            checked: originalRecordType.allowedChildRecordTypeIds && originalRecordType.allowedChildRecordTypeIds.includes(recordType._id),
+                            label: recordType.label,
+                            onChange: async (newValue) => {
+                                let updateSet = {
+                                    _id: originalRecordType._id,
+                                    allowedChildRecordTypeIds: originalRecordType.allowedChildRecordTypeIds
+                                } as RecordType;
+                                if(newValue && !(updateSet.allowedChildRecordTypeIds && updateSet.allowedChildRecordTypeIds.includes(recordType._id))) {
+                                    if (!updateSet.allowedChildRecordTypeIds) updateSet.allowedChildRecordTypeIds = [];
+                                    updateSet.allowedChildRecordTypeIds.push(recordType._id);
+                                }
+                                else if(!newValue && (updateSet.allowedChildRecordTypeIds && updateSet.allowedChildRecordTypeIds.includes(recordType._id))) updateSet.allowedChildRecordTypeIds.splice(updateSet.allowedChildRecordTypeIds.indexOf(recordType._id), 1);
+                                let changedRecordType = await this.webApp.api(RecordType).save(updateSet);
+                                return changedRecordType.allowedChildRecordTypeIds && changedRecordType.allowedChildRecordTypeIds.includes(recordType._id);
+                            }
+                        } as CheckBoxListElement<RecordType>;
+                    });
+                }
+            });
+            self.recordTypeDetailsCard.addSection(self.allowedChildElementsSection);
+            await self.allowedChildElementsSection.load();
         }
 
         self.recordTypeDetailsCard.onClose = () => {

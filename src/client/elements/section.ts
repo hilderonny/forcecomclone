@@ -18,12 +18,20 @@ export abstract class SectionConfig {
     sectionTitle?: string;
 }
 
-export class ListElement<T extends Type> {
+export class ListElement<T> {
     entity: T;
     firstLine: string
     secondLine?: string;
     iconUrl?: string;
     button?: ListButton<T>;
+}
+
+export class CheckBoxListElement<T> {
+    label: string;
+    checked: boolean;
+    entity: T;
+    listItem?: HTMLDivElement;
+    onChange: (newValue: boolean) => Promise<boolean>;
 }
 
 export class PropertyElement {
@@ -35,10 +43,14 @@ export class PropertyElement {
     dataObject?: any;
 }
 
-export class ListSectionConfig<T extends Type> extends SectionConfig {
+export class ListSectionConfig<T> extends SectionConfig {
     loadListElements?: () => Promise<ListElement<T>[]>;
     onAdd?: () => Promise<void>;
     onSelect?: (listElement: ListElement<T>) => Promise<void>;
+}
+
+export class CheckBoxListSectionConfig<T> extends SectionConfig {
+    loadListElements: () => Promise<CheckBoxListElement<T>[]>;
 }
 
 export class DetailsSectionConfig extends SectionConfig {
@@ -215,6 +227,60 @@ export class ListSection<T extends Type> extends Section {
             if (le.entity._id !== id) return;
             self.list.select(le.button);
         });
+    }
+
+}
+
+export class CheckBoxListSection<T> extends Section {
+
+    listSectionConfig: CheckBoxListSectionConfig<T>;
+    list: HTMLDivElement;
+
+    constructor(cfg: CheckBoxListSectionConfig<T>) {
+        super(cfg);
+        let self = this;
+        self.HtmlElement.classList.add("checkboxlistsection");
+        self.listSectionConfig = cfg;
+
+        self.list = document.createElement("div");
+        self.list.classList.add("list");
+        self.HtmlElement.appendChild(self.list);
+    }
+
+    async add(listElement: CheckBoxListElement<T>) {
+        let self = this;
+
+        let listItem = document.createElement("div");
+        listItem.classList.add("listitem");
+        self.list.appendChild(listItem);
+        listElement.listItem = listItem;
+
+        let clickLabel = document.createElement("label");
+        listItem.appendChild(clickLabel);
+
+        let labelSpan = document.createElement("span");
+        labelSpan.classList.add("label");
+        labelSpan.innerHTML = listElement.label;
+        clickLabel.appendChild(labelSpan);
+        
+        let input = document.createElement("input");
+        input.setAttribute("type", "checkbox");
+        clickLabel.appendChild(input);
+        input.checked = listElement.checked;
+        input.addEventListener("change", async () => {
+            input.checked = await listElement.onChange(input.checked);
+        });
+    }
+
+    async remove(listElement: CheckBoxListElement<T>) {
+        this.list.removeChild(listElement.listItem!);
+    }
+
+    async load() {
+        let self = this;
+        self.list.innerHTML = "";
+        let listElements = await self.listSectionConfig.loadListElements();
+        listElements.forEach((le) => { self.add(le); });
     }
 
 }
