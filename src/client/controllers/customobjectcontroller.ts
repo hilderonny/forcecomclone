@@ -7,6 +7,9 @@ import { ListSection, ListElement, DetailsSectionConfig, DetailsSection, Propert
 import { Type } from "../../server/core/type";
 import { Api, GenericApi } from "../api";
 import { Field } from "../../common/types/field";
+import { Dialog } from "../elements/dialogs";
+import { Button, AccentButton, ActionButton } from "../elements/button";
+import { List } from "../elements/list";
 
 export class CustomObjectController extends Controller {
     
@@ -14,6 +17,7 @@ export class CustomObjectController extends Controller {
     customObjectsListCard: Card;
     customObjectDetailsCard: Card;
     customObjectsListCardListSection: ListSection<any>;
+    childrenListSection: ListSection<any>;
 
     createListElement(recordType: RecordType, fields: Field[], obj: any): ListElement<Type> {
         let titleField = fields.find((f) => f.isTitle);
@@ -21,6 +25,44 @@ export class CustomObjectController extends Controller {
             entity: obj as Type,
             firstLine: titleField && obj[titleField.name] ? obj[titleField.name] : obj._id
         }
+    }
+
+    async showRecordTypeSelectionDialog(parentRecordType: RecordType, onSelect: (recordType: RecordType) => void) {
+
+        let dialog: Dialog;
+        let selectedRecordType: RecordType;
+
+        let okButton = new AccentButton("OK");
+        okButton.HtmlElement.style.display = "none";
+        okButton.HtmlElement.addEventListener("click", () => {
+            onSelect(selectedRecordType);
+            dialog.close();
+        });
+
+        let cancelButton = new ActionButton("Abbrechen");
+        cancelButton.HtmlElement.addEventListener("click", () => {
+            dialog.close();
+        });
+
+        let selectRecordType = (rt: RecordType) => {
+            okButton.HtmlElement.style.display = "unset";
+            selectedRecordType = rt;
+        };
+
+        let list = new List();
+        let recordTypes = await new GenericApi("RecordType/children/").getAll(parentRecordType._id) as RecordType[];
+        recordTypes.forEach((rt) => {
+            let button = new Button(rt.label, undefined, rt.name);
+            button.HtmlElement.addEventListener("click", () => {
+                list.select(button);
+                selectRecordType(rt);
+            });
+            list.add(button);
+        });
+
+        dialog = new Dialog("Objekttyp auswählen", list.HtmlElement, [ okButton, cancelButton ]);
+        document.body.appendChild(dialog.HtmlElement);
+
     }
 
     async showCustomObjectDetailsCard(recordType: RecordType, fields: Field[], id?: string) {
@@ -36,6 +78,7 @@ export class CustomObjectController extends Controller {
         if (id) {
             // EDIT
             let originalObject: any;
+            detailsSectionConfig.sectionTitle = "Details";
             detailsSectionConfig.onSave = async () => {
                 let updatedObject = { _id: originalObject._id } as any;
                 propertyElements.forEach((element) => {
@@ -113,12 +156,95 @@ export class CustomObjectController extends Controller {
         self.customObjectDetailsCard.addSection(detailsSection);
         await detailsSection.load();
 
+        // Child list section
+        if (id && recordType.allowedChildRecordTypeIds && recordType.allowedChildRecordTypeIds.length > 0) {
+            self.childrenListSection = new ListSection<any>({
+                sectionTitle: "Kindelemente",
+                onAdd: async () => {
+                    self.webApp.cardStack.closeCardsRightTo(self.customObjectDetailsCard);
+                    self.showRecordTypeSelectionDialog(recordType, async (selectedRecordType) => {
+                        self.showChildCustomObjectDetailsCard(selectedRecordType, id);
+                    });
+                },
+                onSelect: async (listElement) => {
+                    self.webApp.cardStack.closeCardsRightTo(self.customObjectDetailsCard);
+                    //self.showFieldDetailsCard(id, listElement.entity._id);
+                },
+                loadListElements: async () => {
+
+
+
+                    // TODO: Hier brauchen wir eine Server-API, die eine Liste von Objekten verschiedener
+                    // RecordTypes samt deren Felddefinitionen liefern kann.
+                    // Oder eine API, die nur ViewModels (ListElements) zurück gibt (ist das sauber so?)
+
+
+
+                    // let children = await new GenericApi(recordType.name).getAll();
+                    // return objects.map((o) => { return self.createListElement(recordType, fields, o); });
+                    //     //let fields = await new Api(Field).getAll('/forRecordType/' + recordType._id);
+                    // // self.childrenListSection.add(self.createListElement(recordType, fields, createdObject));
+
+                    // let fields = await this.webApp.api(Field).getAll('/forRecordType/' + id);
+                    // return fields.map((field) => { return self.createListElement(recordType, fields); });
+                    return [];
+                }
+            });
+            self.customObjectDetailsCard.addSection(self.childrenListSection);
+            await self.childrenListSection.load();
+        }
+        
+
         self.customObjectDetailsCard.onClose = () => {
             self.customObjectsListCardListSection.select();
             self.webApp.setSubUrl(recordType.name + "/");
         };
 
         self.webApp.cardStack.addCard(self.customObjectDetailsCard);
+    }
+
+    async showChildCustomObjectDetailsCard(recordType: RecordType, parentId: string) {
+        // TODO: Irgendwie Child zu Parent zuordnen, dabei Referenz auf RecordType halten, etwa so:
+        // parent: { recordTypeId: ..., parentId: ... }
+        // Außerdem noch Testfälle für diesen Murks erstellen
+        let self = this;
+        let childDetailsCard = new Card(self.webApp, "");
+        childDetailsCard.HtmlElement.classList.add("detailscard");
+        let fields = await new Api(Field).getAll('/forRecordType/' + recordType._id);
+        let titleField = fields.find((f) => f.isTitle);
+        let title: string;
+
+        let detailsSectionConfig: DetailsSectionConfig = { };
+        // CREATE
+        let propertyElements = fields.map((f) => {
+            return {
+                label: f.label,
+                type: f.type,
+                dataObject: f
+            } as PropertyElement
+        });
+        detailsSectionConfig.onCreate = async () => {
+            let obj = {} as any;
+            propertyElements.forEach((element) => {
+                let field = element.dataObject as Field;
+                obj[field.name] = element.value;
+            });
+            let createdObject = await new GenericApi(recordType.name).save(obj);
+            let title = titleField ? createdObject[titleField.name] : "";
+            self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
+            self.childrenListSection.add(self.createListElement(recordType, fields, createdObject));
+            childDetailsCard.close();
+        };
+        detailsSectionConfig.loadProperties = async () => {
+            self.customObjectDetailsCard.Title.HtmlElement.innerHTML = "Neues DINGSBUMS"; // TODO: Update label depending on record type name (pluralName, sex, etc.)
+            return propertyElements;
+        };
+
+        let detailsSection = new DetailsSection(detailsSectionConfig);
+        childDetailsCard.addSection(detailsSection);
+        await detailsSection.load();
+
+        self.webApp.cardStack.addCard(childDetailsCard);
     }
 
     async showListCard(menuItem: MenuItem, subUrl?: string) {

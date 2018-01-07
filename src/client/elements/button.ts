@@ -60,3 +60,30 @@ export class ListButton<T> extends Button {
     }
 
 }
+
+export class ActionButton extends Button {
+
+    constructor(label?: string, iconFileName?: string) {
+        super(label, iconFileName);
+        this.HtmlElement.classList.add("actionbutton");
+    }
+
+}
+
+export class AccentButton extends ActionButton {
+
+    constructor(label?: string, iconFileName?: string) {
+        super(label, iconFileName);
+        this.HtmlElement.classList.add("accent");
+    }
+
+}
+
+export class RedActionButton extends ActionButton {
+
+    constructor(label?: string, iconFileName?: string) {
+        super(label, iconFileName);
+        this.HtmlElement.classList.add("red");
+    }
+
+}

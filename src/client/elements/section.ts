@@ -1,15 +1,13 @@
 import { Type } from "../../server/core/type";
 import { AbstractElement } from "./abstractelement";
 import { List } from "./list";
-import { ListButton } from "./button";
+import { ListButton, ActionButton,RedActionButton } from "./button";
 import { ButtonRow } from "./buttonrow";
-import { ActionButton } from "./actionbutton";
 import { FieldType } from "../../common/types/field";
 import { Property } from "./property";
 import { LabelProperty } from "./labelproperty";
 import { TextProperty } from "./textproperty";
 import { CheckBoxProperty } from "./checkboxproperty";
-import { RedActionButton } from "./redactionbutton";
 import { Title } from "./title";
 import { SelectBoxProperty } from "./selectboxproperty";
 import { TextAreaProperty } from "./textareaproperty";

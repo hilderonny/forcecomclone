@@ -27,6 +27,10 @@ html {
     text-transform: uppercase;
     white-space: nowrap;
 }
+
+.actionbutton.accent {
+    background-color: rgb(176,190,197)
+}
     
 .actionbutton.red {
     background-color: #f00;
@@ -145,6 +149,7 @@ html {
 }
 
 .card > .content > .section:first-child:last-child::before { content: none; }
+.card > .content > .section:first-child:last-child > .title { display: none; }
 
 .card > .content > .section:first-child:nth-last-child(2){height:50%;width:100%;top:0;left:0;}
 .card > .content > .section:nth-child(2):last-child{height:50%;width:100%;top:50%;left:0;}
@@ -380,6 +385,34 @@ html {
     color: rgba(0,0,0,0.54);
     display: block;
     font-size: 12px;
+}
+
+.dialogbackground {
+    background: rgba(0,0,0,0.87);
+    display: flex;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 10000;
+}
+
+.dialogbackground > .dialog {
+    background: white;
+    border-radius: 8px 8px 4px 4px;
+    margin: auto;
+}
+
+.dialogbackground > .dialog > .content {
+    margin: 10px;
+}
+
+.dialogbackground > .dialog > .title {
+    background: rgb(63, 81, 181);
+    border-radius: 4px 4px 0 0;
+    color: white;
+    font-size: 20px;
+    font-weight: 400;
+    padding: 4px 16px;
 }
 
 .list {

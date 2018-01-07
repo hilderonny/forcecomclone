@@ -2,7 +2,7 @@ import { RecordType } from "../../common/types/recordtype";
 import { App } from "../core/app";
 import { UserRequest } from "../../common/types/user";
 import { Collection } from "mongodb";
-import { ObjectId } from "bson";
+import { ObjectId, ObjectID } from "bson";
 import Utils from "../core/utils";
 import { Response } from "express-serve-static-core";
 
@@ -12,6 +12,24 @@ export default (app: App): void => {
         let recordTypes = await Utils.getRecordTypeCollection(req).find({}).toArray();
         res.send(recordTypes);
     })
+
+    app.router.get('/RecordType/children/:id', async (req: UserRequest, res) => {
+        if (!ObjectId.isValid(req.params.id)) {
+            res.sendStatus(400);
+            return;
+        }
+        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        if (!recordType) {
+            res.sendStatus(404);
+            return;
+        }
+        if (!recordType.allowedChildRecordTypeIds || recordType.allowedChildRecordTypeIds.length < 1) {
+            res.send([]);
+            return;
+        }
+        let children = await Utils.getRecordTypeCollection(req).find({ _id: { $in: recordType.allowedChildRecordTypeIds } }).toArray();
+        res.send(children);
+    });
 
     app.router.get('/RecordType/:id', async (req: UserRequest, res) => {
         if (!ObjectId.isValid(req.params.id)) {
@@ -52,6 +70,15 @@ export default (app: App): void => {
         delete recordType._id;
         let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: id });
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
+        if (recordType.allowedChildRecordTypeIds) {
+            let childIds = [];
+            for (let i = 0; i < recordType.allowedChildRecordTypeIds.length; i++) {
+                let childId = recordType.allowedChildRecordTypeIds[i];
+                if (!ObjectId.isValid(childId)) { res.sendStatus(400); return; }
+                childIds.push(new ObjectId(childId));
+            }
+            recordType.allowedChildRecordTypeIds = childIds as any as string[];
+        }
         // Update entry in database
         await Utils.getRecordTypeCollection(req).updateOne({ _id: recordTypeFromDatabase._id }, { $set: recordType });
         let recordTypeFromDatabaseAfterUpdate = await Utils.getRecordTypeCollection(req).findOne({ _id: id });
