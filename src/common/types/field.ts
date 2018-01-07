@@ -21,6 +21,9 @@ export enum FieldType {
      * Editable textfield
      */
     Text = "Text",
+
+    TextArea = "TextArea",
+    
     /**
      * Checkbox true / false
      */

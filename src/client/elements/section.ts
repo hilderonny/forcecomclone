@@ -12,6 +12,7 @@ import { CheckBoxProperty } from "./checkboxproperty";
 import { RedActionButton } from "./redactionbutton";
 import { Title } from "./title";
 import { SelectBoxProperty } from "./selectboxproperty";
+import { TextAreaProperty } from "./textareaproperty";
 
 export abstract class SectionConfig {
     sectionTitle?: string;
@@ -134,6 +135,7 @@ export class DetailsSection<T extends Type> extends Section {
             switch (p.type) {
                 case FieldType.Label: self.content.appendChild(new LabelProperty(p).HtmlElement); break;
                 case FieldType.Text: self.content.appendChild(new TextProperty(p).HtmlElement); break;
+                case FieldType.TextArea: self.content.appendChild(new TextAreaProperty(p).HtmlElement); break;
                 case FieldType.CheckBox: self.content.appendChild(new CheckBoxProperty(p).HtmlElement); break;
                 case FieldType.SelectBox: self.content.appendChild(new SelectBoxProperty(p).HtmlElement); break;
                 default: break;
