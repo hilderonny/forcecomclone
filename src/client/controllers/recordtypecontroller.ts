@@ -104,6 +104,7 @@ export class RecordTypeController extends Controller {
                 });
             };
             detailsSectionConfig.loadProperties = async () => {
+                self.recordTypeDetailsCard.Title.HtmlElement.innerHTML = "Neues benutzerdefiniertes Objekt";
                 return [ namePropertyElement, labelPropertyElement, showInMenuPropertyElement ];
             };
             detailsSectionConfig.validate = async () => {
