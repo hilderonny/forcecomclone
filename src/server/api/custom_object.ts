@@ -66,14 +66,48 @@ export default (app: App): void => {
         // Check for undefined fields
         let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
         let fieldNames = fields.map(f => f.name);
+        fieldNames.push("parent"); // For parent definitions
         for (let i = 0; i < keys.length; i++) {
             if (!fieldNames.includes(keys[i])) {
                 res.sendStatus(400);
                 return;
             }
         }
-        record._id = (await Utils.getCustomObjectCollection(req, recordType.name).insertOne(record)).insertedId.toHexString();
-        res.send(record);
+        // Check for parent definitions
+        if (record.parent) {
+            if (!record.parent.recordTypeId || !ObjectId.isValid(record.parent.recordTypeId) || !record.parent.parentId || !ObjectId.isValid(record.parent.parentId)) {
+                res.sendStatus(400);
+                return;
+            }
+            let parentRecordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(record.parent.recordTypeId) });
+            if (!parentRecordType) {
+                res.sendStatus(404);
+                return;
+            }
+            let parentObject = await Utils.getCustomObjectCollection(req, parentRecordType.name).findOne({ _id: new ObjectId(record.parent.parentId) });
+            if (!parentObject) {
+                res.sendStatus(404);
+                return;
+            }
+            delete record.parent;
+            let insertedId = (await Utils.getCustomObjectCollection(req, recordType.name).insertOne(record)).insertedId;
+            let parentChildren  = parentObject.children;
+            if (!parentChildren) {
+                parentChildren = {};
+            }
+            if (!parentChildren[recordType._id]) {
+                parentChildren[recordType._id] = [];
+            }
+            parentChildren[recordType._id].push(insertedId);
+            await Utils.getCustomObjectCollection(req, parentRecordType.name).updateOne({ _id: parentObject._id }, { $set: { children: parentChildren } });
+            record._id = insertedId.toHexString();
+            res.send(record);
+        } else {
+            // Insert object
+            let insertedId = (await Utils.getCustomObjectCollection(req, recordType.name).insertOne(record)).insertedId;
+            record._id = insertedId.toHexString();
+            res.send(record);
+        }
     }
 
     async function handleUpdate(req: UserRequest, res: Response) {
