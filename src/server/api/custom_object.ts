@@ -33,25 +33,49 @@ export default (app: App): void => {
             return;
         }
         let recordTypeName = req.params.recordTypeName as string;
-        let recordType = await Utils.getRecordTypeCollection(req).findOne({ name: recordTypeName });
+        let allRecordTypes = await Utils.getRecordTypeCollection(req).find({ }).toArray();
+        let recordType = allRecordTypes.find(rt => rt.name === recordTypeName);
         if (!recordType) {
             res.sendStatus(404);
             return;
+        }
+
+        let getObjectAggregation = () => {
+            return [
+                { $project: {
+                    root: "$$ROOT",
+                    isInIds: { $in: [ "$_id", "$$ids" ] }
+                } },
+                { $match: { isInIds: true } },
+                { $replaceRoot: { newRoot: "$root" } }
+            ];
         }
         // Filter only configured fields
         let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
         let fieldFilter:any = {};
         fieldFilter["_id"] = 1; // Always return the id
+        fieldFilter["children"] = 1;
         fields.forEach(f => fieldFilter[f.name] = 1);
-        let records = await Utils.getCustomObjectCollection(req, recordType.name).aggregate([
+        let aggregation = [
             { $match : { _id : new ObjectId(req.params.id) } },
             { $project : fieldFilter }
-        ]).toArray();
+        ];
+        let records = await Utils.getCustomObjectCollection(req, recordType.name).aggregate(aggregation).toArray();
         if (records.length < 1) {
             res.sendStatus(404);
             return;
         }
-        res.send(records[0]);
+        let record = records[0];
+        if (record.children) {
+            let children = record.children as any[];
+            for (let i = 0; i < children.length; i++) {
+                let child = children[i];
+                let childRecordType = allRecordTypes.find(rt => rt._id.toString() === child.recordTypeId.toString());
+                if (!childRecordType) continue;
+                child.children = await Utils.getCustomObjectCollection(req, childRecordType!.name).find({ _id: { $in: child.children } }).toArray();
+            }
+        }
+        res.send(record);
     })
 
     async function handleInsert(req: UserRequest, res: Response) {
@@ -91,14 +115,19 @@ export default (app: App): void => {
             }
             delete record.parent;
             let insertedId = (await Utils.getCustomObjectCollection(req, recordType.name).insertOne(record)).insertedId;
-            let parentChildren  = parentObject.children;
+            let parentChildren: any[] = parentObject.children;
             if (!parentChildren) {
-                parentChildren = {};
+                parentChildren = [];
             }
-            if (!parentChildren[recordType._id]) {
-                parentChildren[recordType._id] = [];
+            let childrenForRecordType = parentChildren.find(c => c.recordTypeId.toString() === recordType!._id.toString());
+            if (!childrenForRecordType) {
+                childrenForRecordType = {
+                    recordTypeId: recordType!._id,
+                    children: []
+                };
+                parentChildren.push(childrenForRecordType);
             }
-            parentChildren[recordType._id].push(insertedId);
+            childrenForRecordType.children.push(insertedId);
             await Utils.getCustomObjectCollection(req, parentRecordType.name).updateOne({ _id: parentObject._id }, { $set: { children: parentChildren } });
             record._id = insertedId.toHexString();
             res.send(record);

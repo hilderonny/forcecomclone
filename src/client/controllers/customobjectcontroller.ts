@@ -19,7 +19,7 @@ export class CustomObjectController extends Controller {
     customObjectsListCardListSection: ListSection<any>;
     childrenListSection: ListSection<any>;
 
-    createListElement(recordType: RecordType, fields: Field[], obj: any): ListElement<Type> {
+    createListElement(fields: Field[], obj: any): ListElement<Type> {
         let titleField = fields.find((f) => f.isTitle);
         return {
             entity: obj as Type,
@@ -76,9 +76,9 @@ export class CustomObjectController extends Controller {
         let propertyElements: PropertyElement[];
 
         let detailsSectionConfig: DetailsSectionConfig = { };
+        let originalObject: any;
         if (id) {
             // EDIT
-            let originalObject: any;
             detailsSectionConfig.sectionTitle = "Details";
             detailsSectionConfig.onSave = async () => {
                 let updatedObject = { _id: originalObject._id } as any;
@@ -143,7 +143,7 @@ export class CustomObjectController extends Controller {
                 let createdObject = await new GenericApi(recordType.name).save(obj);
                 let title = titleField ? createdObject[titleField.name] : "";
                 self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
-                await self.customObjectsListCardListSection.add(self.createListElement(recordType, fieldsOfRecordType, createdObject));
+                await self.customObjectsListCardListSection.add(self.createListElement(fieldsOfRecordType, createdObject));
                 self.customObjectDetailsCard.close();
                 await self.showCustomObjectDetailsCard(recordType, fieldMap, createdObject._id);
                 self.customObjectsListCardListSection.select(createdObject._id);
@@ -172,23 +172,16 @@ export class CustomObjectController extends Controller {
                     //self.showFieldDetailsCard(id, listElement.entity._id);
                 },
                 loadListElements: async () => {
-
-
-
-                    // TODO: Hier brauchen wir eine Server-API, die eine Liste von Objekten verschiedener
-                    // RecordTypes samt deren Felddefinitionen liefern kann.
-                    // Oder eine API, die nur ViewModels (ListElements) zurück gibt (ist das sauber so?)
-
-
-
-                    // let children = await new GenericApi(recordType.name).getAll();
-                    // return objects.map((o) => { return self.createListElement(recordType, fields, o); });
-                    //     //let fields = await new Api(Field).getAll('/forRecordType/' + recordType._id);
-                    // // self.childrenListSection.add(self.createListElement(recordType, fields, createdObject));
-
-                    // let fields = await this.webApp.api(Field).getAll('/forRecordType/' + id);
-                    // return fields.map((field) => { return self.createListElement(recordType, fields); });
-                    return [];
+                    let listElements : ListElement<any>[] = [];
+                    if (originalObject.children) {
+                        (originalObject.children as any[]).forEach((childRecordType) => {
+                            let childFields = fieldMap[childRecordType.recordTypeId];
+                            (childRecordType.children as any[]).forEach((childObject) => {
+                                listElements.push(self.createListElement(childFields, childObject));
+                            });
+                        });
+                    }
+                    return listElements;
                 }
             });
             self.customObjectDetailsCard.addSection(self.childrenListSection);
@@ -205,16 +198,6 @@ export class CustomObjectController extends Controller {
     }
 
     async showChildCustomObjectDetailsCard(childRecordType: RecordType, parentRecordType: RecordType, parentId: string, fieldMap: { [key: string]: Field[] }) {
-        // TODO: Irgendwie Child zu Parent zuordnen, dabei Referenz auf RecordType halten, etwa so:
-        // parent: { recordTypeId: ..., parentId: ... }
-        // Oder besser: am Parent eine Liste von Childs führen, dann kann beim Auslesen besser über die anderen Tabellen iteriert werden:
-        /*
-        children: {
-            '0815recordtypeid': [ id1, id2, id3 ],
-            '4711andereRecordtypeid': [ id4, id5, id6 ]
-        }
-        */
-
         // Außerdem noch Testfälle für diesen Murks erstellen
         let self = this;
         let childDetailsCard = new Card(self.webApp, "");
@@ -242,7 +225,7 @@ export class CustomObjectController extends Controller {
             let createdObject = await new GenericApi(childRecordType.name).save(obj);
             let title = titleField ? createdObject[titleField.name] : "";
             self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
-            self.childrenListSection.add(self.createListElement(childRecordType, childFields, createdObject));
+            self.childrenListSection.add(self.createListElement(childFields, createdObject));
             childDetailsCard.close();
         };
         detailsSectionConfig.loadProperties = async () => {
@@ -291,7 +274,7 @@ export class CustomObjectController extends Controller {
 
             loadListElements: async () => {
                 let objects = await new GenericApi(recordType.name).getAll();
-                return objects.map((o) => { return self.createListElement(recordType, fieldsOfRecordType, o); });
+                return objects.map((o) => { return self.createListElement(fieldsOfRecordType, o); });
             }
 
         });
