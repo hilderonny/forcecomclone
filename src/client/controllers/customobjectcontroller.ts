@@ -65,12 +65,13 @@ export class CustomObjectController extends Controller {
 
     }
 
-    async showCustomObjectDetailsCard(recordType: RecordType, fields: Field[], id?: string) {
+    async showCustomObjectDetailsCard(recordType: RecordType, fieldMap: { [key: string]: Field[] }, id?: string) {
         let self = this;
         let subUrl = recordType.name + "/" + (id ? id : "");
         self.customObjectDetailsCard = new Card(self.webApp, "", subUrl);
         self.customObjectDetailsCard.HtmlElement.classList.add("detailscard");
-        let titleField = fields.find((f) => f.isTitle);
+        let fieldsOfRecordType = fieldMap[recordType._id];
+        let titleField = fieldsOfRecordType.find((f) => f.isTitle);
         let title: string;
         let propertyElements: PropertyElement[];
 
@@ -114,7 +115,7 @@ export class CustomObjectController extends Controller {
                 originalObject = await new GenericApi(recordType.name).getOne(id);
                 title = titleField && originalObject[titleField.name] ? originalObject[titleField.name] : originalObject._id;
                 self.customObjectDetailsCard.Title.HtmlElement.innerHTML = title;
-                propertyElements = fields.map((f) => {
+                propertyElements = fieldsOfRecordType.map((f) => {
                     return {
                         label: f.label,
                         type: f.type,
@@ -126,7 +127,7 @@ export class CustomObjectController extends Controller {
             };
         } else {
             // CREATE
-            let propertyElements = fields.map((f) => {
+            let propertyElements = fieldsOfRecordType.map((f) => {
                 return {
                     label: f.label,
                     type: f.type,
@@ -142,9 +143,9 @@ export class CustomObjectController extends Controller {
                 let createdObject = await new GenericApi(recordType.name).save(obj);
                 let title = titleField ? createdObject[titleField.name] : "";
                 self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
-                await self.customObjectsListCardListSection.add(self.createListElement(recordType, fields, createdObject));
+                await self.customObjectsListCardListSection.add(self.createListElement(recordType, fieldsOfRecordType, createdObject));
                 self.customObjectDetailsCard.close();
-                await self.showCustomObjectDetailsCard(recordType, fields, createdObject._id);
+                await self.showCustomObjectDetailsCard(recordType, fieldMap, createdObject._id);
                 self.customObjectsListCardListSection.select(createdObject._id);
             };
             detailsSectionConfig.loadProperties = async () => {
@@ -163,7 +164,7 @@ export class CustomObjectController extends Controller {
                 onAdd: async () => {
                     self.webApp.cardStack.closeCardsRightTo(self.customObjectDetailsCard);
                     self.showRecordTypeSelectionDialog(recordType, async (selectedRecordType) => {
-                        self.showChildCustomObjectDetailsCard(selectedRecordType, recordType, id);
+                        self.showChildCustomObjectDetailsCard(selectedRecordType, recordType, id, fieldMap);
                     });
                 },
                 onSelect: async (listElement) => {
@@ -203,7 +204,7 @@ export class CustomObjectController extends Controller {
         self.webApp.cardStack.addCard(self.customObjectDetailsCard);
     }
 
-    async showChildCustomObjectDetailsCard(childRecordType: RecordType, parentRecordType: RecordType, parentId: string) {
+    async showChildCustomObjectDetailsCard(childRecordType: RecordType, parentRecordType: RecordType, parentId: string, fieldMap: { [key: string]: Field[] }) {
         // TODO: Irgendwie Child zu Parent zuordnen, dabei Referenz auf RecordType halten, etwa so:
         // parent: { recordTypeId: ..., parentId: ... }
         // Oder besser: am Parent eine Liste von Childs führen, dann kann beim Auslesen besser über die anderen Tabellen iteriert werden:
@@ -218,13 +219,13 @@ export class CustomObjectController extends Controller {
         let self = this;
         let childDetailsCard = new Card(self.webApp, "");
         childDetailsCard.HtmlElement.classList.add("detailscard");
-        let fields = await new Api(Field).getAll('/forRecordType/' + childRecordType._id);
-        let titleField = fields.find((f) => f.isTitle);
+        let childFields = fieldMap[childRecordType._id];
+        let titleField = childFields.find((f) => f.isTitle);
         let title: string;
 
         let detailsSectionConfig: DetailsSectionConfig = { };
         // CREATE
-        let propertyElements = fields.map((f) => {
+        let propertyElements = childFields.map((f) => {
             return {
                 label: f.label,
                 type: f.type,
@@ -241,7 +242,7 @@ export class CustomObjectController extends Controller {
             let createdObject = await new GenericApi(childRecordType.name).save(obj);
             let title = titleField ? createdObject[titleField.name] : "";
             self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
-            self.childrenListSection.add(self.createListElement(childRecordType, fields, createdObject));
+            self.childrenListSection.add(self.createListElement(childRecordType, childFields, createdObject));
             childDetailsCard.close();
         };
         detailsSectionConfig.loadProperties = async () => {
@@ -259,7 +260,15 @@ export class CustomObjectController extends Controller {
     async showListCard(menuItem: MenuItem, subUrl?: string) {
         let self = this;
         let recordType = menuItem.dataObject as RecordType;
-        let fields = await new Api(Field).getAll('/forRecordType/' + recordType._id);
+        let allFields = await new Api(Field).getAll();
+        let fieldMap: { [key: string]: Field[] } = { };
+        allFields.forEach(f => {
+            if (!fieldMap[f.recordTypeId]) {
+                fieldMap[f.recordTypeId] = [];
+            }
+            fieldMap[f.recordTypeId].push(f);
+        });
+        let fieldsOfRecordType = fieldMap[recordType._id];
         self.customObjectsListCard = new Card(self.webApp, recordType.label, recordType.name + "/");
         self.customObjectsListCard.HtmlElement.classList.add("listcard");
 
@@ -272,17 +281,17 @@ export class CustomObjectController extends Controller {
 
             onAdd: async () => {
                 self.webApp.cardStack.closeCardsRightTo(self.customObjectsListCard);
-                self.showCustomObjectDetailsCard(recordType, fields);
+                self.showCustomObjectDetailsCard(recordType, fieldMap);
             },
 
             onSelect: async (listElement) => {
                 self.webApp.cardStack.closeCardsRightTo(self.customObjectsListCard);
-                self.showCustomObjectDetailsCard(recordType, fields, listElement.entity._id);
+                self.showCustomObjectDetailsCard(recordType, fieldMap, listElement.entity._id);
             },
 
             loadListElements: async () => {
                 let objects = await new GenericApi(recordType.name).getAll();
-                return objects.map((o) => { return self.createListElement(recordType, fields, o); });
+                return objects.map((o) => { return self.createListElement(recordType, fieldsOfRecordType, o); });
             }
 
         });
@@ -294,7 +303,7 @@ export class CustomObjectController extends Controller {
         if (subUrl && subUrl.length > recordType.name.length + 1) {
             let id = subUrl.substring(recordType.name.length + 1);
             self.customObjectsListCardListSection.select(id);
-            self.showCustomObjectDetailsCard(recordType, fields, id);
+            self.showCustomObjectDetailsCard(recordType, fieldMap, id);
         }
     }
     

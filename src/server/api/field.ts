@@ -9,6 +9,11 @@ import { Response } from "express-serve-static-core";
 
 export default (app: App): void => {
 
+    app.router.get('/Field', async (req: UserRequest, res) => {
+        let fields = await Utils.getFieldCollection(req).find({ }).toArray();
+        res.send(fields);
+    })
+
     app.router.get('/Field/forRecordType/:id', async (req: UserRequest, res) => {
         if (!ObjectId.isValid(req.params.id)) {
             res.sendStatus(400);
