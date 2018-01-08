@@ -163,7 +163,7 @@ export class CustomObjectController extends Controller {
                 onAdd: async () => {
                     self.webApp.cardStack.closeCardsRightTo(self.customObjectDetailsCard);
                     self.showRecordTypeSelectionDialog(recordType, async (selectedRecordType) => {
-                        self.showChildCustomObjectDetailsCard(selectedRecordType, id);
+                        self.showChildCustomObjectDetailsCard(selectedRecordType, recordType, id);
                     });
                 },
                 onSelect: async (listElement) => {
@@ -203,14 +203,22 @@ export class CustomObjectController extends Controller {
         self.webApp.cardStack.addCard(self.customObjectDetailsCard);
     }
 
-    async showChildCustomObjectDetailsCard(recordType: RecordType, parentId: string) {
+    async showChildCustomObjectDetailsCard(childRecordType: RecordType, parentRecordType: RecordType, parentId: string) {
         // TODO: Irgendwie Child zu Parent zuordnen, dabei Referenz auf RecordType halten, etwa so:
         // parent: { recordTypeId: ..., parentId: ... }
+        // Oder besser: am Parent eine Liste von Childs führen, dann kann beim Auslesen besser über die anderen Tabellen iteriert werden:
+        /*
+        children: {
+            '0815recordtypeid': [ id1, id2, id3 ],
+            '4711andereRecordtypeid': [ id4, id5, id6 ]
+        }
+        */
+
         // Außerdem noch Testfälle für diesen Murks erstellen
         let self = this;
         let childDetailsCard = new Card(self.webApp, "");
         childDetailsCard.HtmlElement.classList.add("detailscard");
-        let fields = await new Api(Field).getAll('/forRecordType/' + recordType._id);
+        let fields = await new Api(Field).getAll('/forRecordType/' + childRecordType._id);
         let titleField = fields.find((f) => f.isTitle);
         let title: string;
 
@@ -228,11 +236,12 @@ export class CustomObjectController extends Controller {
             propertyElements.forEach((element) => {
                 let field = element.dataObject as Field;
                 obj[field.name] = element.value;
+                obj.parent = { recordTypeId: parentRecordType._id, parentId: parentId };
             });
-            let createdObject = await new GenericApi(recordType.name).save(obj);
+            let createdObject = await new GenericApi(childRecordType.name).save(obj);
             let title = titleField ? createdObject[titleField.name] : "";
             self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
-            self.childrenListSection.add(self.createListElement(recordType, fields, createdObject));
+            self.childrenListSection.add(self.createListElement(childRecordType, fields, createdObject));
             childDetailsCard.close();
         };
         detailsSectionConfig.loadProperties = async () => {
