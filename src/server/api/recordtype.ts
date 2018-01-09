@@ -13,6 +13,11 @@ export default (app: App): void => {
         res.send(recordTypes);
     })
 
+    /**
+     * Get list if allowed children record types of a specific record type.
+     * Used for showing record type selection dialog when creating child objects.
+     * Normally each logged in user should be able to read this API.
+     */
     app.router.get('/RecordType/children/:id', async (req: UserRequest, res) => {
         if (!ObjectId.isValid(req.params.id)) {
             res.sendStatus(400);
@@ -70,6 +75,7 @@ export default (app: App): void => {
         delete recordType._id;
         let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: id });
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
+        // The allowed children must be sent as complete array to handle removing allowed children correctly
         if (recordType.allowedChildRecordTypeIds) {
             let childIds = [];
             for (let i = 0; i < recordType.allowedChildRecordTypeIds.length; i++) {

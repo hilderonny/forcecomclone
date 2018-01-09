@@ -104,6 +104,12 @@ describe('Custom object APIs', () => {
             expect(fieldsFromApi[0]).equals("_id");
         });
 
+        xit('Returns an empty children array when the object has no children', async() => {});
+
+        xit('Returns no child object array for recordtypes, where there are no children of the specific record type', async() => {});
+
+        xit('Returns an array of children grouped by their record types', async() => {});
+
     });
 
     describe('POST/:recordTypeName', () => {
@@ -141,6 +147,26 @@ describe('Custom object APIs', () => {
             let insertedRecord = (await TestHelper.post('/api/Document').send(record).expect(200)).body as Type;
             expect(insertedRecord._id).not.to.be.undefined;
         });
+
+        xit('Returns 400 when a parent is given but its recordTypeId is missing', async() => {});
+
+        xit('Returns 400 when a parent is given but its recordTypeId is invalid', async() => {});
+
+        xit('Returns 404 when a parent is given but its recordTypeId is unknown', async() => {});
+
+        xit('Returns 400 when a parent is given but its parentId is missing', async() => {});
+
+        xit('Returns 400 when a parent is given but its parentId is invalid', async() => {});
+
+        xit('Returns 404 when a parent is given but its parentId is unknown', async() => {});
+
+        xit('Does not insert thew attribute "parent" into the database', async() => {});
+
+        xit('Adds a children field to the parent object when the parent had no children before', async() => {});
+
+        xit('Adds an entry for the child record type to the parents children when the parent did not have a children of this record type before', async() => {});
+
+        xit('Adds the Id of the object to the parents children array which is of type ObjectId', async() => {});
 
         // Update
 

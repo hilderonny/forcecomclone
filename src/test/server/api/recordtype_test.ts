@@ -62,6 +62,22 @@ describe('API RecordType', () => {
         
     })
 
+    describe('GET/children/:id', () => {
+
+        xit('Returns 401 when user is not authenticated', async() => {});
+
+        xit('Returns 400 when id is invalid', async () => {
+        });
+
+        xit('Returns 404 when no custom recordtype of given id exists', async () => {
+        });
+
+        xit('Returns an empty list when the record type has no allowed children', async() => {});
+
+        xit('Returns a list of all allowed children form the given record type', async() => {});
+
+    });
+
     describe('POST', () => {
 
         xit('Returns 401 when user is not authenticated', async() => {});
@@ -167,6 +183,22 @@ describe('API RecordType', () => {
             let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
             expect(recordTypeFromDatabaseAfterUpdate.label).to.equal(updateSet.label);
         });
+
+        xit('Returns 400 when the update set contains ids for allowed children which are invalid', async() => {
+
+        });
+
+        xit('Returns 404 when the update set contains ids for allowed children for which no record types exist', async() => {
+
+        });
+
+        xit('Replaces the existing definition of allowed children with the given ones', async() => {
+
+        });
+
+        xit('Stores the ids of the allowed children as ObjectId and not as string', async() => {
+
+        });
         
     });
 
@@ -205,7 +237,9 @@ describe('API RecordType', () => {
 
         xit('Deletes the corresponding entries in Field table', async () => {});
 
-        xit('Deletes all references everywhere to the recordtype and its fields', async () => {});
+        xit('Deletes all custom objects of the record type', async () => {});
+
+        xit('Deletes all allowed child definitions to the deleted record type', async () => {});
         
     })
 

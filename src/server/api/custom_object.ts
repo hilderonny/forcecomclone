@@ -39,17 +39,6 @@ export default (app: App): void => {
             res.sendStatus(404);
             return;
         }
-
-        let getObjectAggregation = () => {
-            return [
-                { $project: {
-                    root: "$$ROOT",
-                    isInIds: { $in: [ "$_id", "$$ids" ] }
-                } },
-                { $match: { isInIds: true } },
-                { $replaceRoot: { newRoot: "$root" } }
-            ];
-        }
         // Filter only configured fields
         let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
         let fieldFilter:any = {};
