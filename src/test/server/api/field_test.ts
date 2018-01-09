@@ -13,7 +13,34 @@ describe('API Field', () => {
 
     afterEach(async () => {
         await TestHelper.cleanup();
-    })
+    });
+
+    describe('GET/', () => {
+
+        xit('Returns 401 when user is not authenticated', async() => {
+        });
+
+        xit('Returns 403 when user has no read access', async() => {
+        });
+
+        it('Returns an empty array when no fields are existing', async() => {
+            let fieldsFromApi = (await TestHelper.get('/api/Field/').expect(200)).body as Field[];
+            expect(fieldsFromApi).to.be.empty;
+        });
+
+        it('Returns a list of all fields of all existing record types', async() => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareFields();
+            let fieldsFromDatabase = await TestHelper.db.collection<Field>(Field.name).find({ }).toArray();
+            let fieldsFromApi = (await TestHelper.get('/api/Field/').expect(200)).body as Field[];
+            expect(fieldsFromApi.length).to.equal(fieldsFromDatabase.length);
+            fieldsFromDatabase.forEach(ffd => {
+                let ffa = fieldsFromApi.find(f => f.name === ffd.name);
+                expect(ffa).not.to.be.undefined;
+            });
+        });
+
+    });
 
     describe('GET/forRecordType/:id', () => {
 
