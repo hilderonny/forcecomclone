@@ -77,10 +77,12 @@ export default (app: App): void => {
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
         // The allowed children must be sent as complete array to handle removing allowed children correctly
         if (recordType.allowedChildRecordTypeIds) {
+            let allRecordTypes = await Utils.getRecordTypeCollection(req).find({ }).toArray();
             let childIds = [];
             for (let i = 0; i < recordType.allowedChildRecordTypeIds.length; i++) {
                 let childId = recordType.allowedChildRecordTypeIds[i];
                 if (!ObjectId.isValid(childId)) { res.sendStatus(400); return; }
+                if (!allRecordTypes.find(rt => rt._id.toString() === childId)) { res.sendStatus(404); return; }
                 childIds.push(new ObjectId(childId));
             }
             recordType.allowedChildRecordTypeIds = childIds as any as string[];
@@ -105,6 +107,8 @@ export default (app: App): void => {
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
         // Delete table
         await req.user!.db.dropCollection(recordTypeFromDatabase.name);
+        // Delete fields
+        await Utils.getFieldCollection(req).deleteMany({ recordTypeId: recordTypeFromDatabase._id });
         // Delete entry in database
         await Utils.getRecordTypeCollection(req).deleteOne({ _id: recordTypeFromDatabase._id });
         res.sendStatus(200);

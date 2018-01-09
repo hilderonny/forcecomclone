@@ -20,8 +20,7 @@ describe('API Field', () => {
         xit('Returns 401 when user is not authenticated', async() => {
         });
 
-        xit('Returns 403 when user has no read access', async() => {
-        });
+        // Read access should be in every case because the field meta data is required for client side custom object handling
 
         it('Returns an empty array when no fields are existing', async() => {
             let fieldsFromApi = (await TestHelper.get('/api/Field/').expect(200)).body as Field[];
@@ -69,7 +68,7 @@ describe('API Field', () => {
             await TestHelper.prepareRecordTypes();
             await TestHelper.prepareFields();
             let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' })) as RecordType;
-            let fieldsFromDatabase = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id.toString() }).toArray();
+            let fieldsFromDatabase = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id }).toArray();
             let fieldsFromApi = (await TestHelper.get('/api/Field/forRecordType/' + recordType._id.toString()).expect(200)).body as Field[];
             expect(fieldsFromApi.length).to.equal(fieldsFromDatabase.length);
             fieldsFromDatabase.forEach(ffd => {
@@ -100,9 +99,12 @@ describe('API Field', () => {
             await TestHelper.prepareRecordTypes();
             await TestHelper.prepareFields();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({}) as RecordType;
-            let fieldFromDatabase = await TestHelper.db.collection<Field>(Field.name).findOne({ recordTypeId: recordTypeFromDatabase._id.toString() }) as Field;
+            let fieldFromDatabase = await TestHelper.db.collection<Field>(Field.name).findOne({ recordTypeId: recordTypeFromDatabase._id }) as Field;
             fieldFromDatabase._id = fieldFromDatabase._id.toString();
             let fieldFromApi = (await TestHelper.get('/api/Field/' + fieldFromDatabase._id).expect(200)).body as Field;
+            expect(fieldFromApi.recordTypeId).to.equal(fieldFromDatabase.recordTypeId.toString());
+            delete fieldFromApi.recordTypeId;
+            delete fieldFromDatabase.recordTypeId;
             expect(fieldFromApi).to.deep.equal(fieldFromDatabase);
         });
         
@@ -192,24 +194,28 @@ describe('API Field', () => {
             await TestHelper.prepareRecordTypes();
             await TestHelper.prepareFields();
             let fieldFromDatabase = await TestHelper.db.collection<Field>(Field.name).findOne({}) as Field;
-            let field = { recordTypeId: fieldFromDatabase.recordTypeId, name: fieldFromDatabase.name, type: FieldType.Text };
+            let field = { recordTypeId: fieldFromDatabase.recordTypeId.toString(), name: fieldFromDatabase.name, type: FieldType.Text };
             await TestHelper.post('/api/Field').send(field).expect(409);
         });
         
         it('Creates the field with the given name even when another recordtype has a field with the same name', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypes = await TestHelper.db.collection<RecordType>(RecordType.name).find({}).toArray();
-            await TestHelper.db.collection<Field>(Field.name).insertOne({ name: "MyField", recordTypeId: recordTypes[0]._id.toString() });
+            await TestHelper.db.collection<Field>(Field.name).insertOne({ name: "MyField", recordTypeId: recordTypes[0]._id });
             let field = { recordTypeId: recordTypes[1]._id.toString(), name: "MyField", type: FieldType.Text };
             await TestHelper.post('/api/Field').send(field).expect(200);
             let fieldsWithSameName = await TestHelper.db.collection<Field>(Field.name).find({ name: "MyField" }).toArray();
             expect(fieldsWithSameName).length(2);
         });
         
-        xit('Creates the field and makes it available to existing custom objects of the record type', async () => {
-        });
-        
-        xit('After creating the field, new custum objects have this field available', async () => {
+        it('Creates the field and makes it available to existing custom objects of the record type', async () => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypes = await TestHelper.db.collection<RecordType>(RecordType.name).find({}).toArray();
+            let field = { recordTypeId: recordTypes[0]._id.toString(), name: "MyField", type: FieldType.Text };
+            await TestHelper.post('/api/Field').send(field).expect(200);
+            let fieldsFromApi = (await TestHelper.get('/api/Field/forRecordType/' + recordTypes[0]._id.toString()).expect(200)).body as Field[];
+            expect(fieldsFromApi.length).to.equal(1);
+            expect(fieldsFromApi[0].name).to.equal("MyField");
         });
         
         it('Returns the field after creating it with the generated _id', async () => {
@@ -304,10 +310,23 @@ describe('API Field', () => {
             expect(fieldFromDatabaseAfterDelete).to.be.null;
         });
         
-        xit('Deletes all references everywhere to the field', async () => {
+        /**
+         * Es ist wichtig, dass die Werte aus den custom objects gelöscht werden. Ansonsten könnte jemand, der
+         * bisher keinen Zugriff auf die Daten hätte, ein neues Feld mit einem vormals bergebenen Namen wiedererwecken
+         * und damit die Daten auslesen. Außerdem wäre es inkonstitent, wenn man beispeilsweise ein Feld vom Typ Text
+         * löscht und danach eines mit demselben Namen, aber anderem Datentypen erzeugt. Das gibt nur Murks.
+         */
+        it('Deletes all references in the corresponding custom objects to the field', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareFields();
+            await TestHelper.prepareRecords();
+            let recordType = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({}) as RecordType;
+            let field = await TestHelper.db.collection<Field>(Field.name).findOne({ recordTypeId: recordType._id, name: "Owner" }) as Field;
+            await TestHelper.del('/api/Field/' + field._id.toString()).expect(200);
+            let record = await TestHelper.db.collection(recordType.name).findOne({});
+            expect(record[field.name]).to.be.undefined;
         });
         
-        
-    })
+    });
 
 })

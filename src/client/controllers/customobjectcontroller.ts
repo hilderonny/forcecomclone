@@ -21,6 +21,7 @@ export class CustomObjectController extends Controller {
 
     createListElement(fields: Field[], obj: any): ListElement<Type> {
         let titleField = fields.find((f) => f.isTitle);
+        console.log(titleField, obj);
         return {
             entity: obj as Type,
             firstLine: titleField && obj[titleField.name] ? obj[titleField.name] : obj._id

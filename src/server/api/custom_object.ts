@@ -18,7 +18,7 @@ export default (app: App): void => {
             return;
         }
         // Filter only configured fields
-        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
+        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id }).toArray();
         let collection = Utils.getCustomObjectCollection(req, recordType.name);
         let fieldFilter:any = {};
         fieldFilter["_id"] = 1; // Always return the id
@@ -40,10 +40,10 @@ export default (app: App): void => {
             return;
         }
         // Filter only configured fields
-        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
+        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id }).toArray();
         let fieldFilter:any = {};
         fieldFilter["_id"] = 1; // Always return the id
-        fieldFilter["children"] = 1;
+        fieldFilter["children"] = { $ifNull: [ "$children", [] ] };
         fields.forEach(f => fieldFilter[f.name] = 1);
         let aggregation = [
             { $match : { _id : new ObjectId(req.params.id) } },
@@ -55,12 +55,12 @@ export default (app: App): void => {
             return;
         }
         let record = records[0];
-        if (record.children) {
-            let children = record.children as any[];
+        if (record.children.length > 0) {
+            let children = (record.children as any[]).filter((c) => { return c.children.length > 0; });
+            record.children = children; // The filter function above creates a new array
             for (let i = 0; i < children.length; i++) {
                 let child = children[i];
                 let childRecordType = allRecordTypes.find(rt => rt._id.toString() === child.recordTypeId.toString());
-                if (!childRecordType) continue;
                 child.children = await Utils.getCustomObjectCollection(req, childRecordType!.name).find({ _id: { $in: child.children } }).toArray();
             }
         }
@@ -77,7 +77,7 @@ export default (app: App): void => {
         let record = req.body;
         let keys = Object.keys(record);
         // Check for undefined fields
-        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
+        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id }).toArray();
         let fieldNames = fields.map(f => f.name);
         fieldNames.push("parent"); // For parent definitions
         for (let i = 0; i < keys.length; i++) {
@@ -144,7 +144,7 @@ export default (app: App): void => {
         let recordFromDatabase = await Utils.getCustomObjectCollection(req, recordType.name).findOne({ _id: new ObjectId(id) });
         if (!recordFromDatabase) { res.sendStatus(404); return; }
         // Check for undefined fields
-        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
+        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id }).toArray();
         let fieldNames = fields.map(f => f.name);
         for (let i = 0; i < keys.length; i++) {
             if (!fieldNames.includes(keys[i])) {

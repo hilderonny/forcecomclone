@@ -24,7 +24,7 @@ export default (app: App): void => {
             res.sendStatus(404);
             return;
         }
-        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id.toString() }).toArray();
+        let fields = await Utils.getFieldCollection(req).find({ recordTypeId: recordType._id }).toArray();
         res.send(fields);
     })
 
@@ -52,6 +52,7 @@ export default (app: App): void => {
         if (!ObjectId.isValid(field.recordTypeId)) { res.sendStatus(400); return; }
         let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(field.recordTypeId) });
         if (!recordType) { res.sendStatus(404); return; }
+        field.recordTypeId = recordType._id;
         if (!field.type) { res.sendStatus(400); return; } // Attribute type not given
         if (!Object.keys(FieldType).includes(field.type)) { res.sendStatus(400); return; } // Invalid type
         let existingField = await Utils.getFieldCollection(req).findOne({ name: field.name, recordTypeId: field.recordTypeId });
@@ -89,6 +90,11 @@ export default (app: App): void => {
         if (!ObjectId.isValid(req.params.id)) { res.sendStatus(400); return; }
         let fieldFromDatabase = await Utils.getFieldCollection(req).findOne({ _id: new ObjectId(req.params.id) });
         if (!fieldFromDatabase) { res.sendStatus(404); return; }
+        // Find corresponding custom objects table and delete the fields
+        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: fieldFromDatabase.recordTypeId }) as RecordType;
+        let updateSet = {} as any; // Nur so kan $unset dazu überredet werden, danymische keys anzunehmen
+        updateSet[fieldFromDatabase.name] = "";
+        await Utils.getCustomObjectCollection(req, recordType.name).updateMany({}, { $unset: updateSet });
         // Delete entry in database
         await Utils.getFieldCollection(req).deleteOne({ _id: fieldFromDatabase._id });
         res.sendStatus(200);

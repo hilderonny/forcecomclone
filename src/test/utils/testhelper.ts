@@ -82,14 +82,24 @@ export class TestHelper {
         return recordTypes;
     }
     
+    static async prepareRecordTypeAllowedChildren() {
+        let recordTypes = await TestHelper.db.collection<RecordType>(RecordType.name).find({}).toArray();
+        let recordTypeIds = recordTypes.map(rt => rt._id);
+        for (let i = 0; i < recordTypes.length; i++) {
+            let recordType = recordTypes[i];
+            await TestHelper.db.collection<RecordType>(RecordType.name).updateOne({ _id: recordType._id}, { $set: { allowedChildRecordTypeIds: recordTypeIds }});
+        }
+        return recordTypes;
+    }
+    
     static async prepareFields() {
         let recordTypes = await TestHelper.db.collection<RecordType>(RecordType.name).find({}).toArray();
         let allFields: Field[] = [];
         for (let i = 0; i < recordTypes.length; i++) {
             let rt = recordTypes[i];
             let fields: Field[] = [
-                { name: 'Owner', recordTypeId: rt._id.toString() } as Field,
-                { name: 'Name', recordTypeId: rt._id.toString() } as Field
+                { name: 'Owner', recordTypeId: rt._id } as Field,
+                { name: 'Name', recordTypeId: rt._id } as Field
             ];
             for (let j = 0; j < fields.length; j++) {
                 let f = fields[j];

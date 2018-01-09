@@ -4,6 +4,7 @@ import { default as BaseModule } from "../../../server/modules/base";
 import { RecordType } from "../../../common/types/recordtype";
 import { Field } from "../../../common/types/field";
 import { Type } from "../../../server/core/type";
+import { ObjectId } from "bson";
 
 describe('Custom object APIs', () => {
 
@@ -33,7 +34,7 @@ describe('Custom object APIs', () => {
 
         it('Returns all records only with configured fields', async() => {
             let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' })) as RecordType;
-            let configuredFields = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id.toString() }).toArray();
+            let configuredFields = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id }).toArray();
             let configuredFieldNames = configuredFields.map(f => f.name);
             configuredFieldNames.push('_id');
             let recordsFromApi = (await TestHelper.get('/api/Document').expect(200)).body as any[];
@@ -48,7 +49,7 @@ describe('Custom object APIs', () => {
 
         it('Returns all records with _id field when no fields are configured for record type', async() => {
             let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' })) as RecordType;
-            await TestHelper.db.collection<Field>(Field.name).deleteMany({ recordTypeId: recordType._id.toString() });
+            await TestHelper.db.collection<Field>(Field.name).deleteMany({ recordTypeId: recordType._id });
             let recordsFromApi = (await TestHelper.get('/api/Document').expect(200)).body as any[];
             recordsFromApi.forEach(r => {
                 let fieldsFromApi = Object.keys(r);
@@ -80,11 +81,12 @@ describe('Custom object APIs', () => {
             await TestHelper.get('/api/Document/999999999999999999999999').expect(404);
         });
 
-        it('Returns the record only with configured fields', async() => {
+        it('Returns the record only with configured fields and with children', async() => {
             let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' })) as RecordType;
-            let configuredFields = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id.toString() }).toArray();
+            let configuredFields = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id }).toArray();
             let configuredFieldNames = configuredFields.map(f => f.name);
-            configuredFieldNames.push('_id');
+            configuredFieldNames.push('_id'); // _id and children come always
+            configuredFieldNames.push('children');
             let recordFromDatabase = await TestHelper.db.collection('Document').findOne({}) as Type;
             let recordFromApi = (await TestHelper.get('/api/Document/' + recordFromDatabase._id.toString()).expect(200)).body;
             let fieldsFromApi = Object.keys(recordFromApi);
@@ -94,21 +96,65 @@ describe('Custom object APIs', () => {
             });
         });
 
-        it('Returns the record with _id field when no fields are configured for record type', async() => {
+        it('Returns the record with _id and children fields when no fields are configured for record type', async() => {
             let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' })) as RecordType;
-            await TestHelper.db.collection<Field>(Field.name).deleteMany({ recordTypeId: recordType._id.toString() });
+            await TestHelper.db.collection<Field>(Field.name).deleteMany({ recordTypeId: recordType._id });
             let recordFromDatabase = await TestHelper.db.collection('Document').findOne({}) as Type;
             let recordFromApi = (await TestHelper.get('/api/Document/' + recordFromDatabase._id.toString()).expect(200)).body;
             let fieldsFromApi = Object.keys(recordFromApi);
-            expect(fieldsFromApi.length).equals(1);
-            expect(fieldsFromApi[0]).equals("_id");
+            expect(fieldsFromApi.length).equals(2);
+            expect(fieldsFromApi).contains("_id");
+            expect(fieldsFromApi).contains("children");
         });
 
-        xit('Returns an empty children array when the object has no children', async() => {});
+        it('Returns an empty children array when the object has no children', async() => {
+            let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ })) as RecordType;
+            let recordFromDatabase = await TestHelper.db.collection(recordType.name).findOne({}) as Type;
+            let recordFromApi = (await TestHelper.get('/api/' + recordType.name + '/' + recordFromDatabase._id.toString()).expect(200)).body;
+            expect(recordFromApi["children"]).deep.equals([]);
+        });
 
-        xit('Returns no child object array for recordtypes, where there are no children of the specific record type', async() => {});
+        it('Returns no child object array for a recordtype, when there are no children of the specific record type', async() => {
+            let recordTypes = (await TestHelper.db.collection<RecordType>(RecordType.name).find({ }).toArray()) as RecordType[];
+            let children: any[] = [{ recordTypeId: recordTypes[0]._id, children: [] }]; // Empty child definition for record type
+            let recordType = recordTypes[1];
+            let childrenChildren = {
+                recordTypeId: recordType._id,
+                children: [] as ObjectId[]
+            }
+            children.push(childrenChildren);
+            ((await TestHelper.db.collection(recordType.name).find({}).toArray()) as any[]).forEach(r => { childrenChildren.children.push(r._id); });
+            let record = (await TestHelper.db.collection(recordTypes[0].name).findOne({ })) as Type;
+            await TestHelper.db.collection(recordTypes[0].name).update({ _id: record._id }, { $set: { children: children } });
+            let recordFromApi = (await TestHelper.get('/api/' + recordTypes[0].name + '/' + record._id.toString()).expect(200)).body;
+            expect(recordFromApi.children).not.to.be.undefined;
+            expect(recordFromApi.children.length).to.equal(1);
+            expect(recordFromApi.children[0].children).not.to.be.undefined;
+            expect(recordFromApi.children[0].children.length).to.equal(2);
+        });
 
-        xit('Returns an array of children grouped by their record types', async() => {});
+        it('Returns an array of children grouped by their record types', async() => {
+            let recordTypes = (await TestHelper.db.collection<RecordType>(RecordType.name).find({ }).toArray()) as RecordType[];
+            let children: any[] = [];
+            for (let i = 0; i < recordTypes.length; i++) {
+                let recordType = recordTypes[i];
+                let childrenChildren = {
+                    recordTypeId: recordType._id,
+                    children: [] as ObjectId[]
+                }
+                children.push(childrenChildren);
+                ((await TestHelper.db.collection(recordType.name).find({}).toArray()) as any[]).forEach(r => { childrenChildren.children.push(r._id); });
+            }
+            let record = (await TestHelper.db.collection(recordTypes[0].name).findOne({ })) as Type;
+            await TestHelper.db.collection(recordTypes[0].name).update({ _id: record._id }, { $set: { children: children } });
+            let recordFromApi = (await TestHelper.get('/api/' + recordTypes[0].name + '/' + record._id.toString()).expect(200)).body;
+            expect(recordFromApi.children).not.to.be.undefined;
+            expect(recordFromApi.children.length).to.equal(2);
+            expect(recordFromApi.children[0].children).not.to.be.undefined;
+            expect(recordFromApi.children[0].children.length).to.equal(2);
+            expect(recordFromApi.children[1].children).not.to.be.undefined;
+            expect(recordFromApi.children[1].children.length).to.equal(2);
+        });
 
     });
 
@@ -148,19 +194,43 @@ describe('Custom object APIs', () => {
             expect(insertedRecord._id).not.to.be.undefined;
         });
 
-        xit('Returns 400 when a parent is given but its recordTypeId is missing', async() => {});
+        it('Returns 400 when a parent is given but its recordTypeId is missing', async() => {
+            let parent = await TestHelper.db.collection('Document').findOne({});
+            let record = { Owner: 'Me', Name: 'My new document', parent: { parentId: parent._id.toString() } };
+            await TestHelper.post('/api/Document').send(record).expect(400);
+        });
 
-        xit('Returns 400 when a parent is given but its recordTypeId is invalid', async() => {});
+        it('Returns 400 when a parent is given but its recordTypeId is invalid', async() => {
+            let parent = await TestHelper.db.collection('Document').findOne({});
+            let record = { Owner: 'Me', Name: 'My new document', parent: { recordTypeId: "invalidId", parentId: parent._id.toString() } };
+            await TestHelper.post('/api/Document').send(record).expect(400);
+        });
 
-        xit('Returns 404 when a parent is given but its recordTypeId is unknown', async() => {});
+        it('Returns 404 when a parent is given but its recordTypeId is unknown', async() => {
+            let parent = await TestHelper.db.collection('Document').findOne({}) as Type;
+            let record = { Owner: 'Me', Name: 'My new document', parent: { recordTypeId: "999999999999999999999999", parentId: parent._id.toString() } };
+            await TestHelper.post('/api/Document').send(record).expect(404);
+        });
 
-        xit('Returns 400 when a parent is given but its parentId is missing', async() => {});
+        it('Returns 400 when a parent is given but its parentId is missing', async() => {
+            let recordType = await TestHelper.db.collection(RecordType.name).findOne({}) as RecordType;
+            let record = { Owner: 'Me', Name: 'My new document', parent: { recordTypeId: recordType._id } };
+            await TestHelper.post('/api/Document').send(record).expect(400);
+        });
 
-        xit('Returns 400 when a parent is given but its parentId is invalid', async() => {});
+        it('Returns 400 when a parent is given but its parentId is invalid', async() => {
+            let recordType = await TestHelper.db.collection(RecordType.name).findOne({}) as RecordType;
+            let record = { Owner: 'Me', Name: 'My new document', parent: { recordTypeId: recordType._id, parentId: "invalidId" } };
+            await TestHelper.post('/api/Document').send(record).expect(400);
+        });
 
-        xit('Returns 404 when a parent is given but its parentId is unknown', async() => {});
+        it('Returns 404 when a parent is given but its parentId is unknown', async() => {
+            let recordType = await TestHelper.db.collection(RecordType.name).findOne({}) as RecordType;
+            let record = { Owner: 'Me', Name: 'My new document', parent: { recordTypeId: recordType._id, parentId: "999999999999999999999999" } };
+            await TestHelper.post('/api/Document').send(record).expect(404);
+        });
 
-        xit('Does not insert thew attribute "parent" into the database', async() => {});
+        xit('Does not insert the attribute "parent" into the database', async() => {});
 
         xit('Adds a children field to the parent object when the parent had no children before', async() => {});
 
@@ -246,6 +316,8 @@ describe('Custom object APIs', () => {
             let recordFromDatabaseAfterDelete = await TestHelper.db.collection('Document').findOne({ _id: recordFromDatabaseBeforeDelete._id });
             expect(recordFromDatabaseAfterDelete).to.be.null;
         });
+
+        xit('Deletes all references within custom object children to the deleted object', async() => {});
 
     });
         

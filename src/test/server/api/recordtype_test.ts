@@ -3,6 +3,7 @@ import { TestHelper } from "../../utils/testhelper";
 import { default as BaseModule } from "../../../server/modules/base";
 import { expect } from "chai";
 import { ObjectId } from "bson";
+import { Field } from "../../../common/types/field";
 
 describe('API RecordType', () => {
 
@@ -66,15 +67,36 @@ describe('API RecordType', () => {
 
         xit('Returns 401 when user is not authenticated', async() => {});
 
-        xit('Returns 400 when id is invalid', async () => {
+        it('Returns 400 when id is invalid', async () => {
+            await TestHelper.get('/api/RecordType/children/invalidId').expect(400);
         });
 
-        xit('Returns 404 when no custom recordtype of given id exists', async () => {
+        it('Returns 404 when no custom recordtype of given id exists', async () => {
+            await TestHelper.get('/api/RecordType/children/999999999999999999999999').expect(404);
         });
 
-        xit('Returns an empty list when the record type has no allowed children', async() => {});
+        it('Returns an empty list when the record type has no allowed children', async() => {
+            await TestHelper.prepareRecordTypes();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({}) as RecordType;
+            let childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as string[];
+            expect(childrenFromApi).to.be.empty;
+            // Check when allowedChildRecordTypeIds is empty
+            await TestHelper.db.collection<RecordType>(RecordType.name).updateOne({ _id: recordTypeFromDatabase._id}, { $set: { allowedChildRecordTypeIds: [] }});
+            childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as string[];
+            expect(childrenFromApi).to.be.empty;
+        });
 
-        xit('Returns a list of all allowed children form the given record type', async() => {});
+        it('Returns a list of all allowed children from the given record type', async() => {
+            let allRecordTypes = await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareRecordTypeAllowedChildren();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({}) as RecordType;
+            let childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as RecordType[];
+            expect(childrenFromApi.length).equals(allRecordTypes.length);
+            let childIds = childrenFromApi.map(c => c._id.toString());
+            allRecordTypes.forEach(rt => {
+                expect(childIds).contains(rt._id.toString());
+            });
+        });
 
     });
 
@@ -184,20 +206,42 @@ describe('API RecordType', () => {
             expect(recordTypeFromDatabaseAfterUpdate.label).to.equal(updateSet.label);
         });
 
-        xit('Returns 400 when the update set contains ids for allowed children which are invalid', async() => {
-
+        it('Returns 400 when the update set contains ids for allowed children which are invalid', async() => {
+            let recordTypes = await TestHelper.prepareRecordTypes();
+            let recordTypeIds = recordTypes.map(rt => rt._id.toString());
+            recordTypeIds.push("invalidId");
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
-        xit('Returns 404 when the update set contains ids for allowed children for which no record types exist', async() => {
-
+        it('Returns 404 when the update set contains ids for allowed children for which no record types exist', async() => {
+            let recordTypes = await TestHelper.prepareRecordTypes();
+            let recordTypeIds = recordTypes.map(rt => rt._id.toString());
+            recordTypeIds.push("999999999999999999999999");
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(404);
         });
 
-        xit('Replaces the existing definition of allowed children with the given ones', async() => {
-
+        it('Replaces the existing definition of allowed children with the given ones', async() => {
+            let recordTypes = await TestHelper.prepareRecordTypes();
+            await TestHelper.db.collection<RecordType>(RecordType.name).updateOne({ _id: recordTypes[0]._id}, { $set: { allowedChildRecordTypeIds: [ recordTypes[0]._id ] }});
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: [ recordTypes[1]._id.toString() ] } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(200);
+            let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: recordTypes[0]._id }) as RecordType;
+            expect(recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds.length).to.equal(1);
+            expect(recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds[0].toString()).to.equal(recordTypes[1]._id.toString());
         });
 
-        xit('Stores the ids of the allowed children as ObjectId and not as string', async() => {
-
+        it('Stores the ids of the allowed children as ObjectId and not as string', async() => {
+            let recordTypes = await TestHelper.prepareRecordTypes();
+            let recordTypeIds = recordTypes.map(rt => rt._id.toString());
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds } as RecordType;
+            await TestHelper.post('/api/RecordType').send(updateSet).expect(200);
+            let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: recordTypes[0]._id }) as RecordType;
+            expect(recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds.length).to.equal(recordTypeIds.length);
+            recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds.forEach(rtId => {
+                expect(rtId).to.be.instanceof(ObjectId);
+            });
         });
         
     });
@@ -218,7 +262,7 @@ describe('API RecordType', () => {
             await TestHelper.del('/api/RecordType/999999999999999999999999').expect(404);
         });
         
-        it('Deletes the table(s) of the recordtype', async () => {
+        it('Deletes the table of the recordtype', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
             // Check whether the table exists before
@@ -235,9 +279,15 @@ describe('API RecordType', () => {
             expect(recordTypeFromDatabaseAfterDeletion).to.be.null;
         });
 
-        xit('Deletes the corresponding entries in Field table', async () => {});
-
-        xit('Deletes all custom objects of the record type', async () => {});
+        it('Deletes the corresponding entries in Field table', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareFields();
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            // Check before
+            expect(await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordTypeFromDatabase._id }).toArray()).not.to.be.empty;
+            await TestHelper.del('/api/RecordType/' + recordTypeFromDatabase._id.toString()).expect(200);
+            expect(await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordTypeFromDatabase._id }).toArray()).to.be.empty;
+        });
 
         xit('Deletes all allowed child definitions to the deleted record type', async () => {});
         
