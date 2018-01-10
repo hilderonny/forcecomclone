@@ -103,14 +103,27 @@ export default (app: App): void => {
 
     app.router.delete('/RecordType/:id', async (req: UserRequest, res) => {
         if (!ObjectID.isValid(req.params.id)) { res.sendStatus(400); return; }
-        let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectID(req.params.id) });
+        let recordTypeCollection = Utils.getRecordTypeCollection(req)
+        let recordTypeFromDatabase = await recordTypeCollection.findOne({ _id: new ObjectID(req.params.id) });
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
+        let id = recordTypeFromDatabase!._id as ObjectID;
         // Delete table
         await req.user!.db.dropCollection(recordTypeFromDatabase.name);
         // Delete fields
-        await Utils.getFieldCollection(req).deleteMany({ recordTypeId: recordTypeFromDatabase._id });
+        await Utils.getFieldCollection(req).deleteMany({ recordTypeId: id });
+        // Delete allowed child definitions in other record types
+        await recordTypeCollection.updateMany({}, { $pull: { allowedChildRecordTypeIds: id } });
+        let otherRecordTypes = (await recordTypeCollection.find({ }).toArray()).filter(rt => !(rt._id as ObjectID).equals(id));
+        for (let i = 0; i < otherRecordTypes.length; i++) {
+            let ort = otherRecordTypes[i];
+            // Delete parent relations in objects of other record type
+            let customObjectCollection = Utils.getCustomObjectCollection(req, ort.name);
+            await customObjectCollection.updateMany({ "parent.recordTypeId" : id }, { $unset: { parent: "" } });
+            // Delete child relations which refer to objects of the deleted record type
+            await customObjectCollection.updateMany({}, { $pull: { children: { recordTypeId: id } } });
+        }
         // Delete entry in database
-        await Utils.getRecordTypeCollection(req).deleteOne({ _id: recordTypeFromDatabase._id });
+        await recordTypeCollection.deleteOne({ _id: recordTypeFromDatabase._id });
         res.sendStatus(200);
     })
 

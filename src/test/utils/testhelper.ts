@@ -119,6 +119,19 @@ export class TestHelper {
         await TestHelper.db.collection('Document').insertMany(records);
         await TestHelper.db.collection('FM_Object').insertMany(records);
     }
+    
+    static async prepareRecordChilds() {
+        let documentRecordType = await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+        let fmObjectRecordType = await TestHelper.db.collection(RecordType.name).findOne({ name: 'FM_Object' }) as RecordType;
+        let documents = await TestHelper.db.collection('Document').find({}).toArray() as CustomObject[];
+        let fmObjects = await TestHelper.db.collection('FM_Object').find({}).toArray() as CustomObject[];
+        let parentFmObject = await TestHelper.db.collection('FM_Object').findOne({ Name: 'first one' }) as CustomObject;
+        // Only one parent allowed, so add all elements to FM_Object
+        await TestHelper.addChildToParent(documentRecordType, documents[0], fmObjectRecordType, parentFmObject);
+        await TestHelper.addChildToParent(documentRecordType, documents[1], fmObjectRecordType, parentFmObject);
+        await TestHelper.addChildToParent(fmObjectRecordType, fmObjects[0], fmObjectRecordType, parentFmObject);
+        await TestHelper.addChildToParent(fmObjectRecordType, fmObjects[1], fmObjectRecordType, parentFmObject);
+    }
 
     static async addChildToParent(childRecordType: RecordType, childObject: CustomObject, parentRecordType: RecordType, parentObject: CustomObject) {
         let childUpdateSet = { $set: {

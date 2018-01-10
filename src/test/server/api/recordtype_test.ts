@@ -4,6 +4,7 @@ import { default as BaseModule } from "../../../server/modules/base";
 import { expect } from "chai";
 import { ObjectID } from "bson";
 import { Field } from "../../../common/types/field";
+import { CustomObject } from "../../../common/types/customobject";
 
 describe('API RecordType', () => {
 
@@ -293,11 +294,56 @@ describe('API RecordType', () => {
             expect(await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordTypeFromDatabase._id }).toArray()).to.be.empty;
         });
 
-        xit('Deletes all allowed child definitions to the deleted record type', async () => {});
+        it('Deletes all allowed child definitions to the deleted record type', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareFields();
+            await TestHelper.prepareRecordTypeAllowedChildren();
+            let recordTypesFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).find({ }).toArray() as RecordType[];
+            let recordTypeToDelete = recordTypesFromDatabase[0];
+            let recordTypeToCheckBefore = recordTypesFromDatabase[1];
+            // Check before
+            expect(recordTypeToCheckBefore.allowedChildRecordTypeIds.length).equals(2);
+            await TestHelper.del('/api/RecordType/' + recordTypeToDelete._id.toString()).expect(200);
+            // Check after
+            let recordTypeToCheckBeforeAfter = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: recordTypeToCheckBefore._id });
+            expect(recordTypeToCheckBeforeAfter!.allowedChildRecordTypeIds.length).equals(1);
+        });
 
-        xit('Deletes all parent relations to a parent of the deleted record type', async () => {});
+        it('Deletes all parent relations to a parent of the deleted record type', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareFields();
+            await TestHelper.prepareRecordTypeAllowedChildren();
+            await TestHelper.prepareRecords();
+            await TestHelper.prepareRecordChilds();
+            let documentRecordType = await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let fmObjectRecordType = await TestHelper.db.collection(RecordType.name).findOne({ name: 'FM_Object' }) as RecordType;
+            let id = fmObjectRecordType._id as ObjectID;
+            // Check before
+            let objectsWithMatchingParentRelationsBefore = await TestHelper.db.collection<CustomObject>(documentRecordType.name).find({ "parent.recordTypeId" : id}).toArray();
+            expect(objectsWithMatchingParentRelationsBefore.length).equals(2);
+            await TestHelper.del('/api/RecordType/' + id.toString()).expect(200);
+            // Check after
+            let objectsWithMatchingParentRelationsAfter = await TestHelper.db.collection<CustomObject>(documentRecordType.name).find({ "parent.recordTypeId" : id}).toArray();
+            expect(objectsWithMatchingParentRelationsAfter.length).equals(0);
+        });
 
-        xit('Deletes all child relations to a child of the deleted record type', async () => {});
+        it('Deletes all child relations to a child of the deleted record type', async () => {
+            await TestHelper.prepareRecordTypes();
+            await TestHelper.prepareFields();
+            await TestHelper.prepareRecordTypeAllowedChildren();
+            await TestHelper.prepareRecords();
+            await TestHelper.prepareRecordChilds();
+            let documentRecordType = await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' }) as RecordType;
+            let fmObjectRecordType = await TestHelper.db.collection(RecordType.name).findOne({ name: 'FM_Object' }) as RecordType;
+            let id = documentRecordType._id as ObjectID;
+            // Check before
+            let objectsWithMatchingChildRelationsBefore = await TestHelper.db.collection<CustomObject>(fmObjectRecordType.name).find({ children: { $elemMatch: { recordTypeId: id } } }).toArray();
+            expect(objectsWithMatchingChildRelationsBefore.length).gt(0);
+            await TestHelper.del('/api/RecordType/' + id.toString()).expect(200);
+            // Check after
+            let objectsWithMatchingChildRelationsAfter = await TestHelper.db.collection<CustomObject>(fmObjectRecordType.name).find({ children: { $elemMatch: { recordTypeId: id } } }).toArray();
+            expect(objectsWithMatchingChildRelationsAfter.length).equals(0);
+        });
         
     })
 
