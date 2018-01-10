@@ -59,7 +59,7 @@ describe('Custom object APIs', () => {
             });
         });
 
-        it.only('Returns only elements which have no parents', async() => {
+        it('Returns only elements which have no parents', async() => {
             let recordType = (await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' })) as RecordType;
             let documentWitParent = await TestHelper.db.collection('Document').findOne({}) as CustomObject;
             await TestHelper.addChildToParent(recordType, documentWitParent, recordType, documentWitParent);
