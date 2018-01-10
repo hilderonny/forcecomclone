@@ -51,7 +51,7 @@ export class CustomObjectController extends Controller {
         };
 
         let list = new List();
-        let recordTypes = await new GenericApi("RecordType/children/").getAll(parentRecordType._id) as RecordType[];
+        let recordTypes = await new GenericApi("RecordType/children/").getAll(parentRecordType._id as string) as RecordType[];
         recordTypes.forEach((rt) => {
             let button = new Button(rt.label, undefined, rt.name);
             button.HtmlElement.addEventListener("click", () => {
@@ -71,7 +71,7 @@ export class CustomObjectController extends Controller {
         let subUrl = recordType.name + "/" + (id ? id : "");
         self.customObjectDetailsCard = new Card(self.webApp, "", subUrl);
         self.customObjectDetailsCard.HtmlElement.classList.add("detailscard");
-        let fieldsOfRecordType = fieldMap[recordType._id];
+        let fieldsOfRecordType = fieldMap[recordType._id as string];
         let titleField = fieldsOfRecordType.find((f) => f.isTitle);
         let title: string;
         let propertyElements: PropertyElement[];
@@ -203,7 +203,7 @@ export class CustomObjectController extends Controller {
         let self = this;
         let childDetailsCard = new Card(self.webApp, "");
         childDetailsCard.HtmlElement.classList.add("detailscard");
-        let childFields = fieldMap[childRecordType._id];
+        let childFields = fieldMap[childRecordType._id as string];
         let titleField = childFields.find((f) => f.isTitle);
         let title: string;
 
@@ -247,12 +247,12 @@ export class CustomObjectController extends Controller {
         let allFields = await new Api(Field).getAll();
         let fieldMap: { [key: string]: Field[] } = { };
         allFields.forEach(f => {
-            if (!fieldMap[f.recordTypeId]) {
-                fieldMap[f.recordTypeId] = [];
+            if (!fieldMap[f.recordTypeId as string]) {
+                fieldMap[f.recordTypeId as string] = [];
             }
-            fieldMap[f.recordTypeId].push(f);
+            fieldMap[f.recordTypeId as string].push(f);
         });
-        let fieldsOfRecordType = fieldMap[recordType._id];
+        let fieldsOfRecordType = fieldMap[recordType._id as string];
         self.customObjectsListCard = new Card(self.webApp, recordType.label, recordType.name + "/");
         self.customObjectsListCard.HtmlElement.classList.add("listcard");
 
@@ -270,7 +270,7 @@ export class CustomObjectController extends Controller {
 
             onSelect: async (listElement) => {
                 self.webApp.cardStack.closeCardsRightTo(self.customObjectsListCard);
-                self.showCustomObjectDetailsCard(recordType, fieldMap, listElement.entity._id);
+                self.showCustomObjectDetailsCard(recordType, fieldMap, listElement.entity._id as string);
             },
 
             loadListElements: async () => {

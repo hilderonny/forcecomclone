@@ -2,7 +2,7 @@ import { RecordType } from "../../common/types/recordtype";
 import { App } from "../core/app";
 import { UserRequest } from "../../common/types/user";
 import { Collection } from "mongodb";
-import { ObjectId, ObjectID } from "bson";
+import { ObjectID } from "bson";
 import Utils from "../core/utils";
 import { Response } from "express-serve-static-core";
 
@@ -19,11 +19,11 @@ export default (app: App): void => {
      * Normally each logged in user should be able to read this API.
      */
     app.router.get('/RecordType/children/:id', async (req: UserRequest, res) => {
-        if (!ObjectId.isValid(req.params.id)) {
+        if (!ObjectID.isValid(req.params.id)) {
             res.sendStatus(400);
             return;
         }
-        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectID(req.params.id) });
         if (!recordType) {
             res.sendStatus(404);
             return;
@@ -37,11 +37,11 @@ export default (app: App): void => {
     });
 
     app.router.get('/RecordType/:id', async (req: UserRequest, res) => {
-        if (!ObjectId.isValid(req.params.id)) {
+        if (!ObjectID.isValid(req.params.id)) {
             res.sendStatus(400);
             return;
         }
-        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectID(req.params.id) });
         if (!recordType) {
             res.sendStatus(404);
             return;
@@ -60,7 +60,7 @@ export default (app: App): void => {
         let existingRecordType = await Utils.getRecordTypeCollection(req).findOne({ name: recordType.name });
         if (existingRecordType) { res.sendStatus(409); return; } // Record type with this name already exists
         // Create entry in RecordType table
-        recordType._id = (await Utils.getRecordTypeCollection(req).insertOne(recordType)).insertedId.toHexString();
+        (recordType as any)._id = (await Utils.getRecordTypeCollection(req).insertOne(recordType)).insertedId.toHexString();
         // Create table
         await req.user!.db.createCollection(recordType.name);
         res.send(recordType);
@@ -70,8 +70,8 @@ export default (app: App): void => {
         let recordType = req.body as RecordType;
         if (Object.keys(recordType).length < 2) { res.sendStatus(400); return; }
         if (recordType.name) { res.sendStatus(400); return; } // Attribute name cannot be changed
-        if (!ObjectId.isValid(recordType._id)) { res.sendStatus(400); return; }
-        let id = new ObjectId(recordType._id);
+        if (!ObjectID.isValid(recordType._id)) { res.sendStatus(400); return; }
+        let id = new ObjectID(recordType._id);
         delete recordType._id;
         let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: id });
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
@@ -80,12 +80,12 @@ export default (app: App): void => {
             let allRecordTypes = await Utils.getRecordTypeCollection(req).find({ }).toArray();
             let childIds = [];
             for (let i = 0; i < recordType.allowedChildRecordTypeIds.length; i++) {
-                let childId = recordType.allowedChildRecordTypeIds[i];
-                if (!ObjectId.isValid(childId)) { res.sendStatus(400); return; }
+                let childId = (recordType.allowedChildRecordTypeIds as any[])[i];
+                if (!ObjectID.isValid(childId)) { res.sendStatus(400); return; }
                 if (!allRecordTypes.find(rt => rt._id.toString() === childId)) { res.sendStatus(404); return; }
-                childIds.push(new ObjectId(childId));
+                childIds.push(new ObjectID(childId));
             }
-            recordType.allowedChildRecordTypeIds = childIds as any as string[];
+            (recordType.allowedChildRecordTypeIds as any[]) = childIds;
         }
         // Update entry in database
         await Utils.getRecordTypeCollection(req).updateOne({ _id: recordTypeFromDatabase._id }, { $set: recordType });
@@ -102,8 +102,8 @@ export default (app: App): void => {
     })
 
     app.router.delete('/RecordType/:id', async (req: UserRequest, res) => {
-        if (!ObjectId.isValid(req.params.id)) { res.sendStatus(400); return; }
-        let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        if (!ObjectID.isValid(req.params.id)) { res.sendStatus(400); return; }
+        let recordTypeFromDatabase = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectID(req.params.id) });
         if (!recordTypeFromDatabase) { res.sendStatus(404); return; }
         // Delete table
         await req.user!.db.dropCollection(recordTypeFromDatabase.name);

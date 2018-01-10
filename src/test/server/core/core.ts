@@ -1,7 +1,6 @@
 import { expect } from 'chai'
 import { App } from '../../../server/core/app';
 import { TestHelper } from '../../utils/testhelper';
-import { DatabaseMock } from '../../utils/databasemock';
 import { Type } from '../../../server/core/type';
 import { Module } from '../../../server/core/module';
 import { Request, Response } from "express"

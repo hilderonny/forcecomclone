@@ -1,4 +1,5 @@
 import { Type } from "../../server/core/type";
+import { ObjectID } from "bson";
 
 
 export class RecordType extends Type {
@@ -6,6 +7,6 @@ export class RecordType extends Type {
     name: string;
     label: string; // TODO Distinguish between singular and plural
     showInMenu: boolean;
-    allowedChildRecordTypeIds: string[];
+    allowedChildRecordTypeIds: ObjectID[] | string[];
     
 }

@@ -1,11 +1,12 @@
 import * as supertest from 'supertest'
 import * as path from 'path'
-import { DatabaseMock } from './databasemock'
 import { App } from '../../server/core/app';
 import { Database } from '../../server/core/database';
 import { RecordType } from '../../common/types/recordtype';
 import { Db } from 'mongodb';
 import { Field } from '../../common/types/field';
+import { CustomObject } from '../../common/types/customobject';
+import { ObjectID } from 'bson';
 
 /**
  * Helper class providing several static test helper functions
@@ -117,6 +118,32 @@ export class TestHelper {
         ];
         await TestHelper.db.collection('Document').insertMany(records);
         await TestHelper.db.collection('FM_Object').insertMany(records);
+    }
+
+    static async addChildToParent(childRecordType: RecordType, childObject: CustomObject, parentRecordType: RecordType, parentObject: CustomObject) {
+        let childUpdateSet = { $set: {
+            parent: {
+                recordTypeId: parentRecordType._id,
+                parentId: parentObject._id
+            }
+        }};
+        await TestHelper.db.collection(childRecordType.name).updateOne({ _id: childObject._id }, childUpdateSet);
+        if (!parentObject.children) {
+            parentObject.children = [];
+        }
+        let rtc = parentObject.children.find(e => (e.recordTypeId as ObjectID).equals(childRecordType._id as ObjectID));
+        if (!rtc) {
+            rtc = {
+                recordTypeId: childRecordType._id,
+                children: []
+            }
+            parentObject.children.push(rtc);
+        }
+        (rtc.children as ObjectID[]).push(childObject._id as ObjectID);
+        let parentUpdateSet = { $set: {
+            children: parentObject.children
+        }};
+        await TestHelper.db.collection(parentRecordType.name).updateOne({ _id: parentObject._id }, parentUpdateSet);
     }
     
 }

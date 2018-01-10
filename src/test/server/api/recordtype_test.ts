@@ -2,7 +2,7 @@ import { RecordType } from "../../../common/types/recordtype";
 import { TestHelper } from "../../utils/testhelper";
 import { default as BaseModule } from "../../../server/modules/base";
 import { expect } from "chai";
-import { ObjectId } from "bson";
+import { ObjectID } from "bson";
 import { Field } from "../../../common/types/field";
 
 describe('API RecordType', () => {
@@ -56,8 +56,10 @@ describe('API RecordType', () => {
         it('Returns the record type with the given id', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({}) as RecordType;
-            recordTypeFromDatabase._id = recordTypeFromDatabase._id.toString();
             let recordTypeFromApi = (await TestHelper.get('/api/RecordType/' + recordTypeFromDatabase._id).expect(200)).body as RecordType;
+            expect(recordTypeFromApi._id as string).equal((recordTypeFromDatabase._id as ObjectID).toHexString());
+            delete recordTypeFromApi._id;
+            delete recordTypeFromDatabase._id;
             expect(recordTypeFromApi).to.deep.equal(recordTypeFromDatabase);
         });
         
@@ -78,11 +80,11 @@ describe('API RecordType', () => {
         it('Returns an empty list when the record type has no allowed children', async() => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({}) as RecordType;
-            let childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as string[];
+            let childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as ObjectID[];
             expect(childrenFromApi).to.be.empty;
             // Check when allowedChildRecordTypeIds is empty
             await TestHelper.db.collection<RecordType>(RecordType.name).updateOne({ _id: recordTypeFromDatabase._id}, { $set: { allowedChildRecordTypeIds: [] }});
-            childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as string[];
+            childrenFromApi = (await TestHelper.get('/api/RecordType/children/' + recordTypeFromDatabase._id).expect(200)).body as ObjectID[];
             expect(childrenFromApi).to.be.empty;
         });
 
@@ -153,9 +155,11 @@ describe('API RecordType', () => {
             let recordType = { name: 'TestObjectName' } as RecordType;
             let recordTypeFromApi = (await TestHelper.post('/api/RecordType').send(recordType).expect(200)).body as RecordType;
             expect(recordTypeFromApi).not.to.be.undefined;
-            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: new ObjectId(recordTypeFromApi._id) }) as RecordType;
+            let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: new ObjectID(recordTypeFromApi._id) }) as RecordType;
             expect(recordTypeFromDatabase).not.to.be.undefined;
-            recordTypeFromDatabase._id = recordTypeFromDatabase._id.toString();
+            expect(recordTypeFromApi._id as string).equal((recordTypeFromDatabase._id as ObjectID).toHexString());
+            delete recordTypeFromApi._id;
+            delete recordTypeFromDatabase._id;
             expect(recordTypeFromApi).to.deep.equal(recordTypeFromDatabase);
         });
 
@@ -172,35 +176,35 @@ describe('API RecordType', () => {
         it('Returns 400 when _id is given and no content is sent', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { _id: recordTypeFromDatabase._id.toString() } as RecordType;
+            let updateSet = { _id: recordTypeFromDatabase._id.toString() };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
         it('Returns 400 when _id is given and request contains property "name" (name is not changeable afterwards)', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { _id: recordTypeFromDatabase._id.toString(), name: 'UpdatedName' } as RecordType;
+            let updateSet = { _id: recordTypeFromDatabase._id.toString(), name: 'UpdatedName' };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
         it('Returns 400 when given id is invalid', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { _id: "invalidId", label: 'NewLabel' } as RecordType;
+            let updateSet = { _id: "invalidId", label: 'NewLabel' };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
         it('Returns 404 when no custom recordtype of given id exists', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabase = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { _id: "999999999999999999999999", label: 'NewLabel' } as RecordType;
+            let updateSet = { _id: "999999999999999999999999", label: 'NewLabel' };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(404);
         });
         
         it('Updates the meta information of the record type when _id is given', async () => {
             await TestHelper.prepareRecordTypes();
             let recordTypeFromDatabaseBeforeUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
-            let updateSet = { _id: recordTypeFromDatabaseBeforeUpdate._id.toString(), label: 'NewLabel' } as RecordType;
+            let updateSet = { _id: recordTypeFromDatabaseBeforeUpdate._id.toString(), label: 'NewLabel' };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(200);
             let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' }) as RecordType;
             expect(recordTypeFromDatabaseAfterUpdate.label).to.equal(updateSet.label);
@@ -210,7 +214,7 @@ describe('API RecordType', () => {
             let recordTypes = await TestHelper.prepareRecordTypes();
             let recordTypeIds = recordTypes.map(rt => rt._id.toString());
             recordTypeIds.push("invalidId");
-            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds } as RecordType;
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(400);
         });
 
@@ -218,29 +222,29 @@ describe('API RecordType', () => {
             let recordTypes = await TestHelper.prepareRecordTypes();
             let recordTypeIds = recordTypes.map(rt => rt._id.toString());
             recordTypeIds.push("999999999999999999999999");
-            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds } as RecordType;
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(404);
         });
 
         it('Replaces the existing definition of allowed children with the given ones', async() => {
             let recordTypes = await TestHelper.prepareRecordTypes();
             await TestHelper.db.collection<RecordType>(RecordType.name).updateOne({ _id: recordTypes[0]._id}, { $set: { allowedChildRecordTypeIds: [ recordTypes[0]._id ] }});
-            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: [ recordTypes[1]._id.toString() ] } as RecordType;
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: [ recordTypes[1]._id.toString() ] };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(200);
             let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: recordTypes[0]._id }) as RecordType;
             expect(recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds.length).to.equal(1);
             expect(recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds[0].toString()).to.equal(recordTypes[1]._id.toString());
         });
 
-        it('Stores the ids of the allowed children as ObjectId and not as string', async() => {
+        it('Stores the ids of the allowed children as ObjectID and not as string', async() => {
             let recordTypes = await TestHelper.prepareRecordTypes();
             let recordTypeIds = recordTypes.map(rt => rt._id.toString());
-            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds } as RecordType;
+            let updateSet = { _id: recordTypes[0]._id.toString(), allowedChildRecordTypeIds: recordTypeIds };
             await TestHelper.post('/api/RecordType').send(updateSet).expect(200);
             let recordTypeFromDatabaseAfterUpdate = await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ _id: recordTypes[0]._id }) as RecordType;
             expect(recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds.length).to.equal(recordTypeIds.length);
-            recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds.forEach(rtId => {
-                expect(rtId).to.be.instanceof(ObjectId);
+            (recordTypeFromDatabaseAfterUpdate.allowedChildRecordTypeIds as any[]).forEach(rtId => {
+                expect(rtId).to.be.instanceof(ObjectID);
             });
         });
         
@@ -290,6 +294,10 @@ describe('API RecordType', () => {
         });
 
         xit('Deletes all allowed child definitions to the deleted record type', async () => {});
+
+        xit('Deletes all parent relations to a parent of the deleted record type', async () => {});
+
+        xit('Deletes all child relations to a child of the deleted record type', async () => {});
         
     })
 

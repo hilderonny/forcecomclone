@@ -95,8 +95,8 @@ export class RecordTypeController extends Controller {
                     self.webApp.toast.show("Der RecordType '" + namePropertyElement.value + "' wurde erstellt.");
                     await self.recordTypesListCardListSection.add(self.createRecordTypeListElement(createdRecordType));
                     self.recordTypeDetailsCard.close();
-                    await self.showRecordTypeDetailsCard(createdRecordType._id);
-                    self.recordTypesListCardListSection.select(createdRecordType._id);
+                    await self.showRecordTypeDetailsCard(createdRecordType._id as string);
+                    self.recordTypesListCardListSection.select(createdRecordType._id as string);
                     if (createdRecordType.showInMenu) {
                         await self.webApp.mainMenu.load();
                         self.recordTypeMenuItem.select!();
@@ -140,7 +140,7 @@ export class RecordTypeController extends Controller {
                 },
                 onSelect: async (listElement) => {
                     self.webApp.cardStack.closeCardsRightTo(self.recordTypeDetailsCard);
-                    self.showFieldDetailsCard(id, listElement.entity._id);
+                    self.showFieldDetailsCard(id, listElement.entity._id as string);
                 },
                 loadListElements: async () => {
                     let fields = await this.webApp.api(Field).getAll('/forRecordType/' + id);
@@ -160,20 +160,20 @@ export class RecordTypeController extends Controller {
                     return recordTypes.map((recordType) => { 
                         return {
                             entity: recordType,
-                            checked: originalRecordType.allowedChildRecordTypeIds && originalRecordType.allowedChildRecordTypeIds.includes(recordType._id),
+                            checked: originalRecordType.allowedChildRecordTypeIds && (originalRecordType.allowedChildRecordTypeIds as string[]).includes(recordType._id as string),
                             label: recordType.label,
                             onChange: async (newValue) => {
                                 let updateSet = {
                                     _id: originalRecordType._id,
                                     allowedChildRecordTypeIds: originalRecordType.allowedChildRecordTypeIds
                                 } as RecordType;
-                                if(newValue && !(updateSet.allowedChildRecordTypeIds && updateSet.allowedChildRecordTypeIds.includes(recordType._id))) {
+                                if(newValue && !(updateSet.allowedChildRecordTypeIds && (updateSet.allowedChildRecordTypeIds as string[]).includes(recordType._id as string))) {
                                     if (!updateSet.allowedChildRecordTypeIds) updateSet.allowedChildRecordTypeIds = [];
-                                    updateSet.allowedChildRecordTypeIds.push(recordType._id);
+                                    (updateSet.allowedChildRecordTypeIds as string[]).push(recordType._id as string);
                                 }
-                                else if(!newValue && (updateSet.allowedChildRecordTypeIds && updateSet.allowedChildRecordTypeIds.includes(recordType._id))) updateSet.allowedChildRecordTypeIds.splice(updateSet.allowedChildRecordTypeIds.indexOf(recordType._id), 1);
+                                else if(!newValue && (updateSet.allowedChildRecordTypeIds && (updateSet.allowedChildRecordTypeIds as string[]).includes(recordType._id as string))) updateSet.allowedChildRecordTypeIds.splice((updateSet.allowedChildRecordTypeIds as string[]).indexOf(recordType._id as string), 1);
                                 let changedRecordType = await this.webApp.api(RecordType).save(updateSet);
-                                return changedRecordType.allowedChildRecordTypeIds && changedRecordType.allowedChildRecordTypeIds.includes(recordType._id);
+                                return changedRecordType.allowedChildRecordTypeIds && (changedRecordType.allowedChildRecordTypeIds as string[]).includes(recordType._id as string);
                             }
                         } as CheckBoxListElement<RecordType>;
                     });
@@ -257,8 +257,8 @@ export class RecordTypeController extends Controller {
                     self.webApp.toast.show("Das Feld '" + namePropertyElement.value + "' wurde erstellt.");
                     await self.fieldsListSection.add(self.createFieldListElement(createdField));
                     self.fieldDetailsCard.close();
-                    await self.showFieldDetailsCard(recordTypeId, createdField._id);
-                    self.fieldsListSection.select(createdField._id);
+                    await self.showFieldDetailsCard(recordTypeId, createdField._id as string);
+                    self.fieldsListSection.select(createdField._id as string);
                 }, (statusCode: number) => {
                     if (statusCode === 409) {
                         namePropertyElement.property!.setErrorMessage("Dieser Name ist bereits vergeben und kann nicht verwendet werden.");
@@ -340,7 +340,7 @@ export class RecordTypeController extends Controller {
 
             onSelect: async (listElement) => {
                 self.webApp.cardStack.closeCardsRightTo(self.recordTypesListCard);
-                self.showRecordTypeDetailsCard(listElement.entity._id);
+                self.showRecordTypeDetailsCard(listElement.entity._id as string);
             },
 
             loadListElements: async () => {

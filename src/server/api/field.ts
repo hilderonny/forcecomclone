@@ -3,7 +3,7 @@ import { Field, FieldType } from "../../common/types/field";
 import { App } from "../core/app";
 import { UserRequest } from "../../common/types/user";
 import { Collection } from "mongodb";
-import { ObjectId } from "bson";
+import { ObjectID } from "bson";
 import Utils from "../core/utils";
 import { Response } from "express-serve-static-core";
 
@@ -15,11 +15,11 @@ export default (app: App): void => {
     })
 
     app.router.get('/Field/forRecordType/:id', async (req: UserRequest, res) => {
-        if (!ObjectId.isValid(req.params.id)) {
+        if (!ObjectID.isValid(req.params.id)) {
             res.sendStatus(400);
             return;
         }
-        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectID(req.params.id) });
         if (!recordType) {
             res.sendStatus(404);
             return;
@@ -29,11 +29,11 @@ export default (app: App): void => {
     })
 
     app.router.get('/Field/:id', async (req: UserRequest, res) => {
-        if (!ObjectId.isValid(req.params.id)) {
+        if (!ObjectID.isValid(req.params.id)) {
             res.sendStatus(400);
             return;
         }
-        let field = await Utils.getFieldCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        let field = await Utils.getFieldCollection(req).findOne({ _id: new ObjectID(req.params.id) });
         if (!field) {
             res.sendStatus(404);
             return;
@@ -49,15 +49,15 @@ export default (app: App): void => {
         if (field.name.match(/[\W]/)) { res.sendStatus(400); return; } // name contains special characters
         if (!field.name.match(/^[A-Za-z]/)) { res.sendStatus(400); return; } // name does not start with letter (also checks for "_id")
         if (!field.recordTypeId) { res.sendStatus(400); return; } // Attribute recordTypeId not given
-        if (!ObjectId.isValid(field.recordTypeId)) { res.sendStatus(400); return; }
-        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectId(field.recordTypeId) });
+        if (!ObjectID.isValid(field.recordTypeId)) { res.sendStatus(400); return; }
+        let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: new ObjectID(field.recordTypeId) });
         if (!recordType) { res.sendStatus(404); return; }
         field.recordTypeId = recordType._id;
         if (!field.type) { res.sendStatus(400); return; } // Attribute type not given
         if (!Object.keys(FieldType).includes(field.type)) { res.sendStatus(400); return; } // Invalid type
         let existingField = await Utils.getFieldCollection(req).findOne({ name: field.name, recordTypeId: field.recordTypeId });
         if (existingField) { res.sendStatus(409); return; } // Field with this name already exists
-        field._id = (await Utils.getFieldCollection(req).insertOne(field)).insertedId.toHexString();
+        (field as any)._id = (await Utils.getFieldCollection(req).insertOne(field)).insertedId.toHexString();
         res.send(field);
     }
 
@@ -67,8 +67,8 @@ export default (app: App): void => {
         if (field.name) { res.sendStatus(400); return; } // Attribute name cannot be changed
         if (field.type) { res.sendStatus(400); return; }
         if (field.recordTypeId) { res.sendStatus(400); return; }
-        if (!ObjectId.isValid(field._id)) { res.sendStatus(400); return; }
-        let id = new ObjectId(field._id);
+        if (!ObjectID.isValid(field._id)) { res.sendStatus(400); return; }
+        let id = new ObjectID(field._id);
         delete field._id;
         let fieldFromDatabase = await Utils.getFieldCollection(req).findOne({ _id: id });
         if (!fieldFromDatabase) { res.sendStatus(404); return; }
@@ -87,8 +87,8 @@ export default (app: App): void => {
     })
 
     app.router.delete('/Field/:id', async (req: UserRequest, res) => {
-        if (!ObjectId.isValid(req.params.id)) { res.sendStatus(400); return; }
-        let fieldFromDatabase = await Utils.getFieldCollection(req).findOne({ _id: new ObjectId(req.params.id) });
+        if (!ObjectID.isValid(req.params.id)) { res.sendStatus(400); return; }
+        let fieldFromDatabase = await Utils.getFieldCollection(req).findOne({ _id: new ObjectID(req.params.id) });
         if (!fieldFromDatabase) { res.sendStatus(404); return; }
         // Find corresponding custom objects table and delete the fields
         let recordType = await Utils.getRecordTypeCollection(req).findOne({ _id: fieldFromDatabase.recordTypeId }) as RecordType;
