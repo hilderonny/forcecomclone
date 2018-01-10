@@ -49,7 +49,7 @@ describe('Custom object APIs', () => {
         });
 
         it('Returns all records with _id field when no fields are configured for record type', async() => {
-            let recordType = (await TestHelper.db.collection<RecordType>(RecordType.name).findOne({ name: 'Document' })) as RecordType;
+            let recordType = (await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' })) as RecordType;
             await TestHelper.db.collection<Field>(Field.name).deleteMany({ recordTypeId: recordType._id });
             let recordsFromApi = (await TestHelper.get('/api/Document').expect(200)).body as CustomObject[];
             recordsFromApi.forEach(r => {
@@ -57,6 +57,15 @@ describe('Custom object APIs', () => {
                 expect(fieldsFromApi.length).equals(1);
                 expect(fieldsFromApi[0]).equals("_id");
             });
+        });
+
+        it.only('Returns only elements which have no parents', async() => {
+            let recordType = (await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' })) as RecordType;
+            let documentWitParent = await TestHelper.db.collection('Document').findOne({}) as CustomObject;
+            await TestHelper.addChildToParent(recordType, documentWitParent, recordType, documentWitParent);
+            let recordsFromApi = (await TestHelper.get('/api/Document').expect(200)).body as CustomObject[];
+            expect(recordsFromApi.length).equals(1);
+            expect(recordsFromApi[0].parent).to.be.undefined;
         });
 
     });

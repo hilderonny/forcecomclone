@@ -24,7 +24,10 @@ export default (app: App): void => {
         let fieldFilter:any = {};
         fieldFilter["_id"] = 1; // Always return the id
         fields.forEach(f => fieldFilter[f.name] = 1);
-        let records = await collection.aggregate([ { $project : fieldFilter } ]).toArray();
+        let records = await collection.aggregate([
+            { $match : { parent: { $exists: false } } },
+            { $project : fieldFilter }
+        ]).toArray();
         res.send(records);
     })
 
