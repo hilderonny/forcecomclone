@@ -2,6 +2,7 @@ import { AbstractElement } from "./abstractelement";
 import { Image } from "./image";
 import { Type } from "../../common/types/type";
 import { List } from "./list";
+import { CustomObject } from "../../common/types/customobject";
 
 export class Button extends AbstractElement {
 
@@ -88,58 +89,65 @@ export class RedActionButton extends ActionButton {
 
 }
 
-export class ChildListButton<T> extends ListButton<T> {
+export class ChildListButton<T extends CustomObject> extends ListButton<T> {
 
     toggleIcon: HTMLDivElement;
-    childElement?: AbstractElement;
+    childList: List;
+    childrenShown: boolean = false;
+    childrenLoaded: boolean = false;
+    childrenLoader: (list: List, parentObject?: CustomObject) => Promise<void>;
     
-    constructor(entity: T, childElement?: AbstractElement, label?: string, iconFileName?: string, secondLine?: string) {
+    constructor(entity: T, childList: List, childrenLoader: (list: List, parentObject?: CustomObject) => Promise<void>, label?: string, iconFileName?: string, secondLine?: string) {
         super(entity, label, iconFileName, secondLine);
         let self = this;
 
+        self.childrenLoader = childrenLoader;
+
         let firstLine = document.createElement("div");
+        firstLine.classList.add("firstline");
 
         self.toggleIcon = document.createElement("div");
         self.toggleIcon.classList.add("toggleicon");
+        self.toggleIcon.addEventListener("click", () => {
+            self.showChildren(!self.childrenShown);
+        });
         firstLine.appendChild(self.toggleIcon);
 
         firstLine.appendChild(self.HtmlElement); // Move the HTML representation to another div
+        self.HtmlElement = document.createElement("div");
+        self.HtmlElement.classList.add("listelement")
         self.HtmlElement.appendChild(firstLine);
 
-        if (childElement) {
-            self.childElement = childElement;
-            self.HtmlElement.appendChild(childElement.HtmlElement);
-        }
+        self.childList = childList;
+        self.HtmlElement.appendChild(childList.HtmlElement);
+
+        self.updateEntity(entity);
         
     }
 
+    updateEntity(newEntity: T) {
+        this.entity = newEntity;
+        if (newEntity.children && newEntity.children.length > 0) {
+            this.toggleIcon.classList.remove("invisible");
+        } else {
+            this.toggleIcon.classList.add("invisible");
+        }
+    }
+
+    async showChildren(show: boolean) {
+        if (show) {
+            if (!this.childrenLoaded) {
+                console.log("LOAD");
+                await this.childrenLoader(this.childList, this.entity);
+                this.childrenLoaded = true;
+            }
+            this.childList.HtmlElement.classList.add("visible");
+            this.toggleIcon.classList.add("open");
+        } else {
+            this.childList.HtmlElement.classList.remove("visible");
+            this.toggleIcon.classList.remove("open");
+        }
+        this.childrenShown = show;
+    }
+
 }
-
-// export class ChildButton extends AbstractElement {
-
-//     toggleIcon: HTMLDivElement;
-//     button: Button;
-//     childElement?: AbstractElement;
-    
-//     constructor(childElement?: AbstractElement, label?: string, iconFileName?: string, secondLine?: string) {
-//         super("div", "childbutton");
-//         let self = this;
-
-//         let firstLine = document.createElement("div");
-//         self.HtmlElement.appendChild(firstLine);
-
-//         self.toggleIcon = document.createElement("div");
-//         self.toggleIcon.classList.add("toggleicon");
-//         firstLine.appendChild(self.toggleIcon);
-
-//         self.button = new Button(label, iconFileName, secondLine);
-//         firstLine.appendChild(self.button.HtmlElement);
-
-//         if (childElement) {
-//             self.childElement = childElement;
-//             self.HtmlElement.appendChild(childElement.HtmlElement);
-//         }
-        
-//     }
-
-// }

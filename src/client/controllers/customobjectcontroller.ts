@@ -3,28 +3,33 @@ import { WebApp } from "../webapp";
 import { MenuItem } from "../elements/mainmenu";
 import { RecordType } from "../../common/types/recordtype";
 import { Card } from "../elements/card";
-import { ListSection, ListElement, DetailsSectionConfig, DetailsSection, PropertyElement } from "../elements/section";
+import { ListSection, ListElement, DetailsSectionConfig, DetailsSection, PropertyElement, HierarchySection } from "../elements/section";
 import { Type } from "../../common/types/type";
 import { Api, GenericApi } from "../api";
 import { Field } from "../../common/types/field";
 import { Dialog } from "../elements/dialogs";
-import { Button, AccentButton, ActionButton } from "../elements/button";
+import { Button, AccentButton, ActionButton, ChildListButton } from "../elements/button";
 import { List } from "../elements/list";
+import { CustomObject } from "../../common/types/customobject";
 
 export class CustomObjectController extends Controller {
     
     webApp: WebApp;
     customObjectsListCard: Card;
     customObjectDetailsCard: Card;
-    customObjectsListCardListSection: ListSection<any>;
+    customObjectsListCardHierarchySection: HierarchySection<any>;
     childrenListSection: ListSection<any>;
+
+    getLabel(fields: Field[], obj: any): string {
+        let titleField = fields.find((f) => f.isTitle);
+        return titleField && obj[titleField.name] ? obj[titleField.name] : obj._id;
+    }
 
     createListElement(fields: Field[], obj: any): ListElement<Type> {
         let titleField = fields.find((f) => f.isTitle);
-        console.log(titleField, obj);
         return {
             entity: obj as Type,
-            firstLine: titleField && obj[titleField.name] ? obj[titleField.name] : obj._id
+            firstLine: this.getLabel(fields, obj)
         }
     }
 
@@ -92,13 +97,13 @@ export class CustomObjectController extends Controller {
                 if (titleField && updatedObject[titleField.name] !== originalObject[titleField.name]) {
                     title = updatedObject[titleField.name];
                     self.customObjectDetailsCard.Title.HtmlElement.innerHTML = title;
-                    let listElement = self.customObjectsListCardListSection.listElements.find((el) => { return el.entity._id === id; });
-                    if (listElement) {
-                        self.customObjectsListCardListSection.remove(listElement);
-                        listElement.firstLine = title;
-                        self.customObjectsListCardListSection.add(listElement);
-                        self.customObjectsListCardListSection.select(id);
-                    }
+                    // let listElement = self.customObjectsListCardHierarchySection.listElements.find((el) => { return el.entity._id === id; });
+                    // if (listElement) {
+                    //     self.customObjectsListCardHierarchySection.remove(listElement);
+                    //     listElement.firstLine = title;
+                    //     self.customObjectsListCardHierarchySection.add(listElement);
+                    //     self.customObjectsListCardHierarchySection.select(id);
+                    // }
                 }
                 originalObject = updatedObject;
             };
@@ -107,8 +112,8 @@ export class CustomObjectController extends Controller {
                     await new GenericApi(recordType.name).delete(id);
                     self.customObjectDetailsCard.close();
                     self.webApp.toast.show('"' + title + '" wurde gelöscht.');
-                    let listElement = self.customObjectsListCardListSection.listElements.find((el) => { return el.entity._id === id; });
-                    if (listElement) self.customObjectsListCardListSection.remove(listElement);
+                    // let listElement = self.customObjectsListCardHierarchySection.listElements.find((el) => { return el.entity._id === id; });
+                    // if (listElement) self.customObjectsListCardHierarchySection.remove(listElement);
                     self.webApp.setSubUrl(recordType.name + "/");
                 }
             };
@@ -144,10 +149,10 @@ export class CustomObjectController extends Controller {
                 let createdObject = await new GenericApi(recordType.name).save(obj);
                 let title = titleField ? createdObject[titleField.name] : "";
                 self.webApp.toast.show("Das Objekt '" + title + "' wurde erstellt.");
-                await self.customObjectsListCardListSection.add(self.createListElement(fieldsOfRecordType, createdObject));
+                // await self.customObjectsListCardHierarchySection.add(self.createListElement(fieldsOfRecordType, createdObject));
                 self.customObjectDetailsCard.close();
                 await self.showCustomObjectDetailsCard(recordType, fieldMap, createdObject._id);
-                self.customObjectsListCardListSection.select(createdObject._id);
+                // self.customObjectsListCardHierarchySection.select(createdObject._id);
             };
             detailsSectionConfig.loadProperties = async () => {
                 self.customObjectDetailsCard.Title.HtmlElement.innerHTML = "Neues DINGSBUMS"; // TODO: Update label depending on record type name (pluralName, sex, etc.)
@@ -191,7 +196,7 @@ export class CustomObjectController extends Controller {
         
 
         self.customObjectDetailsCard.onClose = () => {
-            self.customObjectsListCardListSection.select();
+            // self.customObjectsListCardHierarchySection.select();
             self.webApp.setSubUrl(recordType.name + "/");
         };
 
@@ -261,32 +266,41 @@ export class CustomObjectController extends Controller {
             self.webApp.setSubUrl("");
         }
 
-        self.customObjectsListCardListSection = new ListSection({
+        let loader = async (list: List, parentObject?: CustomObject) => {
+            // TODO: Distinguish root and children
+            console.log(list, parentObject, "TODO: Distinguish root and children");
+            let self = this;
+            let objects = await new GenericApi(recordType.name).getAll() as CustomObject[];
+            objects.forEach(o => {
+                let childElement = new List();
+                let button = new ChildListButton(o, childElement, loader, self.getLabel(fieldsOfRecordType, o));
+                list.add(button);
+            });
+        };
+
+        self.customObjectsListCardHierarchySection = new HierarchySection({
 
             onAdd: async () => {
                 self.webApp.cardStack.closeCardsRightTo(self.customObjectsListCard);
                 self.showCustomObjectDetailsCard(recordType, fieldMap);
             },
 
-            onSelect: async (listElement) => {
-                self.webApp.cardStack.closeCardsRightTo(self.customObjectsListCard);
-                self.showCustomObjectDetailsCard(recordType, fieldMap, listElement.entity._id as string);
-            },
+            // onSelect: async (listElement) => {
+            //     self.webApp.cardStack.closeCardsRightTo(self.customObjectsListCard);
+            //     self.showCustomObjectDetailsCard(recordType, fieldMap, listElement.entity._id as string);
+            // },
 
-            loadListElements: async () => {
-                let objects = await new GenericApi(recordType.name).getAll();
-                return objects.map((o) => { return self.createListElement(fieldsOfRecordType, o); });
-            }
+            load: loader
 
         });
-        self.customObjectsListCard.addSection(self.customObjectsListCardListSection);
-        await self.customObjectsListCardListSection.load();
+        self.customObjectsListCard.addSection(self.customObjectsListCardHierarchySection);
+        await self.customObjectsListCardHierarchySection.load();
 
         self.webApp.cardStack.setSingleCard(self.customObjectsListCard);
 
         if (subUrl && subUrl.length > recordType.name.length + 1) {
             let id = subUrl.substring(recordType.name.length + 1);
-            self.customObjectsListCardListSection.select(id);
+            // self.customObjectsListCardHierarchySection.select(id);
             self.showCustomObjectDetailsCard(recordType, fieldMap, id);
         }
     }

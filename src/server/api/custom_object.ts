@@ -23,6 +23,7 @@ export default (app: App): void => {
         let collection = Utils.getCustomObjectCollection(req, recordType.name);
         let fieldFilter:any = {};
         fieldFilter["_id"] = 1; // Always return the id
+        fieldFilter["children"] = { $ifNull: [ "$children", [] ] }; // Always return the children
         fields.forEach(f => fieldFilter[f.name] = 1);
         let records = await collection.aggregate([
             { $match : { parent: { $exists: false } } },

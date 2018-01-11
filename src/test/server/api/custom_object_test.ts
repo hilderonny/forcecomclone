@@ -38,6 +38,7 @@ describe('Custom object APIs', () => {
             let configuredFields = await TestHelper.db.collection<Field>(Field.name).find({ recordTypeId: recordType._id }).toArray();
             let configuredFieldNames = configuredFields.map(f => f.name);
             configuredFieldNames.push('_id');
+            configuredFieldNames.push('children');
             let recordsFromApi = (await TestHelper.get('/api/Document').expect(200)).body as CustomObject[];
             recordsFromApi.forEach(r => {
                 let fieldsFromApi = Object.keys(r);
@@ -48,14 +49,15 @@ describe('Custom object APIs', () => {
             });
         });
 
-        it('Returns all records with _id field when no fields are configured for record type', async() => {
+        it('Returns all records with _id and children fields when no fields are configured for record type', async() => {
             let recordType = (await TestHelper.db.collection(RecordType.name).findOne({ name: 'Document' })) as RecordType;
             await TestHelper.db.collection<Field>(Field.name).deleteMany({ recordTypeId: recordType._id });
             let recordsFromApi = (await TestHelper.get('/api/Document').expect(200)).body as CustomObject[];
             recordsFromApi.forEach(r => {
                 let fieldsFromApi = Object.keys(r);
-                expect(fieldsFromApi.length).equals(1);
-                expect(fieldsFromApi[0]).equals("_id");
+                expect(fieldsFromApi.length).equals(2);
+                expect(fieldsFromApi).includes("_id");
+                expect(fieldsFromApi).includes("children");
             });
         });
 

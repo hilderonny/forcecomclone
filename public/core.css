@@ -415,6 +415,10 @@ html {
     padding: 4px 16px;
 }
 
+.hierarchysection > .list {
+    padding: 0 6px 6px 6px;
+}
+
 .list {
     display: flex;
     flex-direction: column;
@@ -422,13 +426,49 @@ html {
     overflow-y: auto;
 }
 
-.list > .button {
+.list > .button, .list > .listelement > .firstline > .button {
     align-items: center;
     border: none;
     display: flex;
     min-height: 32px;
     padding: 4px 6px;
     width: 100%;
+}
+
+.list > .listelement > .firstline {
+    display: flex;
+}
+
+.list > .listelement > .firstline > .button {
+    flex: 1;
+}
+
+.list > .listelement > .firstline > .toggleicon {
+    background-image: url('/icons/material/Sort Right.svg');
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    min-width: 24px;
+    opacity: 0.6;
+    width: 24px;
+}
+
+.list > .listelement > .firstline > .toggleicon.invisible {
+    visibility: hidden;
+}
+
+.list > .listelement > .firstline > .toggleicon.open {
+    background-image: url('/icons/material/Sort Down.svg');
+}
+
+.list > .listelement > .list {
+    display: none;
+    margin-left: 24px;
+    overflow-y: unset;
+}
+
+.list > .listelement > .list.visible {
+    display: flex;
 }
 
 .listcard {

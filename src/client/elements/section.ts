@@ -157,7 +157,7 @@ export class DetailsSection<T extends Type> extends Section {
 }
 
 export class HierarchySectionConfig<T extends CustomObject> extends SectionConfig {
-    load?: (list: List) => Promise<void>;
+    load?: (list: List, parentObject?: CustomObject) => Promise<void>;
     onAdd?: () => Promise<void>;
     // onSelect?: (listElement: ListElement<T>) => Promise<void>;
 }
