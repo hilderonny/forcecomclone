@@ -1,4 +1,4 @@
-import { Type } from "./type"
+import { Type } from "../../common/types/type"
 import { MongoClient, Db } from "mongodb";
 
 export class Database {

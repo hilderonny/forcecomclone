@@ -1,13 +1,13 @@
 import { AbstractElement } from "./abstractelement";
 import { Image } from "./image";
-import { Type } from "../../server/core/type";
+import { Type } from "../../common/types/type";
 import { List } from "./list";
 
 export class Button extends AbstractElement {
 
-    private iconImage?: Image;
+    iconImage?: Image;
     labelSpan?: HTMLSpanElement;
-    private secondLineSpan?: HTMLSpanElement;
+    secondLineSpan?: HTMLSpanElement;
     
     constructor(label?: string, iconFileName?: string, secondLine?: string) {
         super("button", "button");
@@ -87,3 +87,59 @@ export class RedActionButton extends ActionButton {
     }
 
 }
+
+export class ChildListButton<T> extends ListButton<T> {
+
+    toggleIcon: HTMLDivElement;
+    childElement?: AbstractElement;
+    
+    constructor(entity: T, childElement?: AbstractElement, label?: string, iconFileName?: string, secondLine?: string) {
+        super(entity, label, iconFileName, secondLine);
+        let self = this;
+
+        let firstLine = document.createElement("div");
+
+        self.toggleIcon = document.createElement("div");
+        self.toggleIcon.classList.add("toggleicon");
+        firstLine.appendChild(self.toggleIcon);
+
+        firstLine.appendChild(self.HtmlElement); // Move the HTML representation to another div
+        self.HtmlElement.appendChild(firstLine);
+
+        if (childElement) {
+            self.childElement = childElement;
+            self.HtmlElement.appendChild(childElement.HtmlElement);
+        }
+        
+    }
+
+}
+
+// export class ChildButton extends AbstractElement {
+
+//     toggleIcon: HTMLDivElement;
+//     button: Button;
+//     childElement?: AbstractElement;
+    
+//     constructor(childElement?: AbstractElement, label?: string, iconFileName?: string, secondLine?: string) {
+//         super("div", "childbutton");
+//         let self = this;
+
+//         let firstLine = document.createElement("div");
+//         self.HtmlElement.appendChild(firstLine);
+
+//         self.toggleIcon = document.createElement("div");
+//         self.toggleIcon.classList.add("toggleicon");
+//         firstLine.appendChild(self.toggleIcon);
+
+//         self.button = new Button(label, iconFileName, secondLine);
+//         firstLine.appendChild(self.button.HtmlElement);
+
+//         if (childElement) {
+//             self.childElement = childElement;
+//             self.HtmlElement.appendChild(childElement.HtmlElement);
+//         }
+        
+//     }
+
+// }

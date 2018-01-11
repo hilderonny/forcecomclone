@@ -6,7 +6,7 @@ import { Collection } from "mongodb";
 import { ObjectID } from "bson";
 import Utils from "../core/utils";
 import { Response } from "express-serve-static-core";
-import { Type } from "../core/type";
+import { Type } from "../../common/types/type";
 import { CustomObject, CustomObjectChild } from "../../common/types/customobject";
 
 export default (app: App): void => {

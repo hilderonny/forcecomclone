@@ -1,5 +1,5 @@
 import * as express from "express";
-import { Type } from "./type";
+import { Type } from "../../common/types/type";
 
 /**
  * Options for defining APIs

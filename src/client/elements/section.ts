@@ -1,4 +1,3 @@
-import { Type } from "../../server/core/type";
 import { AbstractElement } from "./abstractelement";
 import { List } from "./list";
 import { ListButton, ActionButton,RedActionButton } from "./button";
@@ -11,6 +10,8 @@ import { CheckBoxProperty } from "./checkboxproperty";
 import { Title } from "./title";
 import { SelectBoxProperty } from "./selectboxproperty";
 import { TextAreaProperty } from "./textareaproperty";
+import { CustomObject } from "../../common/types/customobject";
+import { Type } from "../../common/types/type";
 
 export abstract class SectionConfig {
     sectionTitle?: string;
@@ -152,7 +153,44 @@ export class DetailsSection<T extends Type> extends Section {
             }
         });
     }
+    
+}
 
+export class HierarchySectionConfig<T extends CustomObject> extends SectionConfig {
+    load?: (list: List) => Promise<void>;
+    onAdd?: () => Promise<void>;
+    // onSelect?: (listElement: ListElement<T>) => Promise<void>;
+}
+
+export class HierarchySection<T extends CustomObject> extends Section {
+
+    list: List;
+    hierarchySectionConfig: HierarchySectionConfig<T>;
+
+    constructor(cfg: HierarchySectionConfig<T>) {
+        super(cfg);
+        let self = this;
+        self.HtmlElement.classList.add("hierarchysection");
+        self.hierarchySectionConfig = cfg;
+
+        if (cfg.onAdd) {
+            let buttonRow = new ButtonRow();
+            let addButton = new ActionButton("Neu");
+            addButton.HtmlElement.addEventListener("click", (evt) => {
+                cfg.onAdd!();
+            });
+            buttonRow.HtmlElement.appendChild(addButton.HtmlElement);
+            self.HtmlElement.appendChild(buttonRow.HtmlElement);
+        }
+
+        self.list = new List();
+        self.HtmlElement.appendChild(self.list.HtmlElement);
+    }
+
+    async load(): Promise<void> {
+        if (!this.hierarchySectionConfig.load) return;
+        this.hierarchySectionConfig.load(this.list);
+    }
     
 }
 

@@ -4,7 +4,7 @@ import { MenuItem } from "../elements/mainmenu";
 import { RecordType } from "../../common/types/recordtype";
 import { Card } from "../elements/card";
 import { ListSection, ListElement, DetailsSectionConfig, DetailsSection, PropertyElement } from "../elements/section";
-import { Type } from "../../server/core/type";
+import { Type } from "../../common/types/type";
 import { Api, GenericApi } from "../api";
 import { Field } from "../../common/types/field";
 import { Dialog } from "../elements/dialogs";

@@ -4,7 +4,7 @@ import * as path from 'path'
 import { Database } from './database'
 import { InitOptions } from './initoptions'
 import { Server } from 'http'
-import { Type } from './type'
+import { Type } from '../../common/types/type'
 import { ApiOptions } from './apioptions'
 import { verify } from "jsonwebtoken";
 import { TokenContent } from "../../common/types/token";

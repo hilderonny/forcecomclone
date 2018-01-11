@@ -1,4 +1,4 @@
-import { Type } from "../../../../server/core/type";
+import { Type } from "../../../../common/types/type";
 import { Module } from "../../../../server/core/module";
 
 class TestModule2 extends Type {}

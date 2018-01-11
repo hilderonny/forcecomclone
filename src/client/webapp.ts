@@ -1,7 +1,7 @@
 import { Card } from "./elements/card";
 import { CardStack, CardStackType } from "./elements/cardstack";
 import { Rest } from "./rest";
-import { Type } from "../server/core/type";
+import { Type } from "../common/types/type";
 import { Api } from "./api";
 import { ToolBar } from "./elements/toolbar";
 import { MainMenu } from "./elements/mainmenu";

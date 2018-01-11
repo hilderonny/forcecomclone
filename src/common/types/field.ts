@@ -1,4 +1,4 @@
-import { Type } from "../../server/core/type";
+import { Type } from "./type";
 import { RecordType } from "./recordtype";
 import { ObjectID } from "bson";
 

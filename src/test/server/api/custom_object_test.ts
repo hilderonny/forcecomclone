@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { default as BaseModule } from "../../../server/modules/base";
 import { RecordType } from "../../../common/types/recordtype";
 import { Field } from "../../../common/types/field";
-import { Type } from "../../../server/core/type";
+import { Type } from "../../../common/types/type";
 import { ObjectID } from "bson";
 import { CustomObject, CustomObjectChild } from "../../../common/types/customobject";
 
