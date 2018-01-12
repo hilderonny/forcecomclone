@@ -96,12 +96,14 @@ export class ChildListButton<T extends CustomObject> extends ListButton<T> {
     childrenShown: boolean = false;
     childrenLoaded: boolean = false;
     childrenLoader: (list: List, parentObject?: CustomObject) => Promise<void>;
+    entityRecordTypeName: string;
     
-    constructor(entity: T, childList: List, childrenLoader: (list: List, parentObject?: CustomObject) => Promise<void>, label?: string, iconFileName?: string, secondLine?: string) {
+    constructor(entity: T, entityRecordTypeName: string, childList: List, childrenLoader: (list: List, parentObject?: CustomObject) => Promise<void>, label?: string, iconFileName?: string, secondLine?: string) {
         super(entity, label, iconFileName, secondLine);
         let self = this;
 
         self.childrenLoader = childrenLoader;
+        self.entityRecordTypeName = entityRecordTypeName;
 
         let firstLine = document.createElement("div");
         firstLine.classList.add("firstline");
@@ -127,7 +129,11 @@ export class ChildListButton<T extends CustomObject> extends ListButton<T> {
 
     updateEntity(newEntity: T) {
         this.entity = newEntity;
-        if (newEntity.children && newEntity.children.length > 0) {
+        let childCount = 0;
+        if (newEntity.children) {
+            newEntity.children.forEach(c => childCount += c.children.length);
+        }
+        if (childCount > 0) {
             this.toggleIcon.classList.remove("invisible");
         } else {
             this.toggleIcon.classList.add("invisible");
@@ -137,7 +143,6 @@ export class ChildListButton<T extends CustomObject> extends ListButton<T> {
     async showChildren(show: boolean) {
         if (show) {
             if (!this.childrenLoaded) {
-                console.log("LOAD");
                 await this.childrenLoader(this.childList, this.entity);
                 this.childrenLoaded = true;
             }

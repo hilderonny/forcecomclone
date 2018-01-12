@@ -4,6 +4,7 @@ import { ObjectID } from "bson";
 
 export class CustomObjectChild {
     recordTypeId: ObjectID | string
+    recordTypeName?: string
     children: ObjectID[] | string[] | CustomObject[]
 }
 

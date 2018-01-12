@@ -66,6 +66,7 @@ export default (app: App): void => {
             for (let i = 0; i < children.length; i++) {
                 let child = children[i];
                 let childRecordType = allRecordTypes.find(rt => rt._id.toString() === child.recordTypeId.toString());
+                child.recordTypeName = childRecordType!.name;
                 child.children = await Utils.getCustomObjectCollection(req, childRecordType!.name).find({ _id: { $in: child.children } }).toArray();
             }
         }

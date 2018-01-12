@@ -179,10 +179,11 @@ export class CustomObjectController extends Controller {
                 },
                 loadListElements: async () => {
                     let listElements : ListElement<any>[] = [];
-                    if (originalObject.children) {
-                        (originalObject.children as any[]).forEach((childRecordType) => {
-                            let childFields = fieldMap[childRecordType.recordTypeId];
-                            (childRecordType.children as any[]).forEach((childObject) => {
+                    let customObject = originalObject as CustomObject;
+                    if (customObject.children) {
+                        (customObject.children).forEach((childRecordType) => {
+                            let childFields = fieldMap[childRecordType.recordTypeId as any as string];
+                            (childRecordType.children as CustomObject[]).forEach((childObject) => {
                                 listElements.push(self.createListElement(childFields, childObject));
                             });
                         });
@@ -267,15 +268,25 @@ export class CustomObjectController extends Controller {
         }
 
         let loader = async (list: List, parentObject?: CustomObject) => {
-            // TODO: Distinguish root and children
-            console.log(list, parentObject, "TODO: Distinguish root and children");
             let self = this;
-            let objects = await new GenericApi(recordType.name).getAll() as CustomObject[];
-            objects.forEach(o => {
-                let childElement = new List();
-                let button = new ChildListButton(o, childElement, loader, self.getLabel(fieldsOfRecordType, o));
-                list.add(button);
-            });
+            if (parentObject) {
+                let parentObjectFromServer = await new GenericApi(recordType.name).getOne(parentObject._id as string) as CustomObject;
+                (parentObjectFromServer.children).forEach((childRecordType) => {
+                    let childFields = fieldMap[childRecordType.recordTypeId as string];
+                    (childRecordType.children as CustomObject[]).forEach((childObject) => {
+                        let childElement = new List();
+                        let button = new ChildListButton(childObject, childRecordType.recordTypeName!, childElement, loader, self.getLabel(fieldMap[childRecordType.recordTypeId as string], childObject));
+                        list.add(button);
+                    });
+                });
+            } else {
+                let objects = await new GenericApi(recordType.name).getAll() as CustomObject[];
+                objects.forEach(o => {
+                    let childElement = new List();
+                    let button = new ChildListButton(o, recordType.name, childElement, loader, self.getLabel(fieldsOfRecordType, o));
+                    list.add(button);
+                });
+            }
         };
 
         self.customObjectsListCardHierarchySection = new HierarchySection({
