@@ -1,7 +1,7 @@
 import { Config } from "./config";
 import { Pool, QueryResult } from "pg";
 import { Auth } from "./auth";
-import { Permissions } from "./permissions";
+import { Permissions, getPermissionName } from "./permissions";
 
 /**
  * Database layer. On instanziation it reads the config
@@ -42,10 +42,11 @@ export class Db {
     private static async prepareTables(databaseName: string) {
         await Db.preparePermissionTable(databaseName);
         await Db.query(databaseName, "CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
-        await Db.query(databaseName, "CREATE TABLE usergrouppermissions (usergroup text REFERENCES usergroups, permission text REFERENCES permissions)");
+        await Db.query(databaseName, "CREATE TABLE usergrouppermissions (usergroup text REFERENCES usergroups, permission text REFERENCES permissions, write boolean DEFAULT false)");
         await Db.query(databaseName, "CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
         let name = databaseName + "-admin";
         await Auth.createUserGroup(databaseName, name);
+        await Db.query(databaseName, "INSERT INTO usergrouppermissions (usergroup, permission, write) VALUES ('" + name + "', '" + getPermissionName(Permissions.Usergroups)  + "', TRUE), ('" + name + "', '" + getPermissionName(Permissions.Users)  + "', TRUE)");
         await Auth.createUser(databaseName, name, name, name);
     }
 
