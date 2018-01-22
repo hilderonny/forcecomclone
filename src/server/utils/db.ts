@@ -1,6 +1,7 @@
 import { Config } from "./config";
 import { Pool, QueryResult } from "pg";
 import { Auth } from "./auth";
+import { Permissions } from "./permissions";
 
 /**
  * Database layer. On instanziation it reads the config
@@ -17,19 +18,21 @@ export class Db {
      * Schould be called oce at application startup
      */
     static async init() {
-        let pool = Db.open("postgres");
-        let result = await pool.query("SELECT 1 FROM pg_database WHERE datname = 'portal';");
-        await pool.end();
+        let result = await Db.query("postgres", "SELECT 1 FROM pg_database WHERE datname = 'portal';");
         if (result.rowCount === 0) {
             await Db.createDatabase("portal");
             await Db.prepareTables("portal");
+            await Db.query("portal", "CREATE TABLE clientpermissions (client text, permission text REFERENCES permissions)"); // Definition which client can assign which permissions to their user groups
         }
     }
 
     private static async createDatabase(databaseName: string) {
-        let pool = Db.open("postgres");
-        await pool.query("CREATE DATABASE " + databaseName + ";");
-        await pool.end();
+        await Db.query("postgres", "CREATE DATABASE " + databaseName + ";");
+    }
+
+    private static async preparePermissionTable(databaseName: string) {
+        await Db.query(databaseName, "CREATE TABLE permissions (name text NOT NULL PRIMARY KEY)");
+        await Db.query(databaseName, "INSERT INTO permissions (name) VALUES " + Object.keys(Permissions).map(p => "('" + p + "')").join(","));
     }
 
     /**
@@ -37,10 +40,10 @@ export class Db {
      * Creates an admin user with name "<database_name>-admin".
      */
     private static async prepareTables(databaseName: string) {
-        let pool = Db.open(databaseName);
-        await pool.query("CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
-        await pool.query("CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
-        await pool.end();
+        await Db.preparePermissionTable(databaseName);
+        await Db.query(databaseName, "CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
+        await Db.query(databaseName, "CREATE TABLE usergrouppermissions (usergroup text REFERENCES usergroups, permission text REFERENCES permissions)");
+        await Db.query(databaseName, "CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
         let name = databaseName + "-admin";
         await Auth.createUserGroup(databaseName, name);
         await Auth.createUser(databaseName, name, name, name);
@@ -61,9 +64,7 @@ export class Db {
     static async deleteClientDatabase(clientName: string) {
         let index = Db._clientNames.indexOf(clientName);
         if (index >= 0) {
-            let pool = Db.open("postgres");
-            await pool.query("DROP DATABASE " + clientName + ";");
-            await pool.end();
+            await Db.query("postgres", "DROP DATABASE " + clientName + ";");
             Db._clientNames.splice(index, 1);
         }
     }
@@ -97,9 +98,7 @@ export class Db {
      */
     static async getClientNames(): Promise<string[]> {
         if (!Db._clientNames) {
-            let pool = Db.open("postgres");
-            let result = await pool.query("SELECT datname FROM pg_database WHERE datistemplate = false AND NOT datname = 'postgres' AND NOT datname = 'portal';");
-            await pool.end();
+            let result = await Db.query("postgres", "SELECT datname FROM pg_database WHERE datistemplate = false AND NOT datname = 'postgres' AND NOT datname = 'portal';");
             Db._clientNames = result.rows.map(r => r.datname);
         }
         return Db._clientNames.slice(0); // Copy the array to prevent changing the original one

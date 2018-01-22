@@ -7,6 +7,9 @@ import { hashSync, compareSync } from "bcryptjs";
  */
 export class Auth {
 
+    /**
+     * Tries to login an user with a given password
+     */
     static async login(username: string, password: string): Promise<boolean> {
         let databaseName = await Auth.findUser(username);
         if (!databaseName) return false;
@@ -17,7 +20,7 @@ export class Auth {
         return true;
     }
 
-    static async findUser(userName: string): Promise<string | undefined> {
+    private static async findUser(userName: string): Promise<string | undefined> {
         let databaseNames = await Db.getClientNames();
         databaseNames.push("portal");
         let query = "SELECT 1 FROM users WHERE name = '" + userName + "'";
