@@ -1,5 +1,6 @@
 import { Config } from "./config";
 import { Pool, QueryResult } from "pg";
+import { Auth } from "./auth";
 
 /**
  * Database layer. On instanziation it reads the config
@@ -37,9 +38,9 @@ export class Db {
      */
     private static async prepareTables(databaseName: string) {
         let pool = Db.open(databaseName);
-        await pool.query("CREATE TABLE users (name text NOT NULL PRIMARY KEY)");
-        await pool.query("INSERT INTO users (name) VALUES ('" + databaseName + "-admin')");
+        await pool.query("CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text)");
         await pool.end();
+        await Auth.createUser(databaseName, databaseName + "-admin", databaseName + "-admin");
     }
 
     /**

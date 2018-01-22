@@ -9,8 +9,10 @@ async function start() {
     console.log(clientNames);
     console.log(await Auth.findUser("portal-admin"));
     console.log(await Auth.findUser("wursthusten"));
-    console.log(await Auth.createUser("portal", "portal-admin"));
-    console.log(await Auth.createUser("portal", "wursthusten"));
+    console.log(await Auth.createUser("portal", "portal-admin", "portal-admin"));
+    console.log(await Auth.createUser("portal", "wursthusten", "wursthusten"));
+    console.log(await Auth.login("wursthusten", "wursthusten"));
+    console.log(await Auth.login("wursthusten", "happa"));
 }
 
 start();

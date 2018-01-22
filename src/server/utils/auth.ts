@@ -1,4 +1,5 @@
 import { Db } from "./db";
+import { hashSync, compareSync } from "bcryptjs";
 
 
 /**
@@ -6,9 +7,15 @@ import { Db } from "./db";
  */
 export class Auth {
 
-    // static async login(userName: string) {
-
-    // }
+    static async login(username: string, password: string): Promise<boolean> {
+        let databaseName = await Auth.findUser(username);
+        if (!databaseName) return false;
+        let result = await Db.query(databaseName, "SELECT password FROM users WHERE name = '" + username + "'");
+        if (result.rowCount !== 1) return false;
+        let passwordFromDatabase = result.rows[0].password as string;
+        if (!compareSync(password, passwordFromDatabase)) return false;
+        return true;
+    }
 
     static async findUser(userName: string): Promise<string | undefined> {
         let databaseNames = await Db.getClientNames();
@@ -24,11 +31,11 @@ export class Auth {
     /**
      * Creates an user in the given database when his name is not already in use
      */
-    static async createUser(databaseName: string, userName: string): Promise<boolean> {
-        if (await Auth.findUser(userName)) {
+    static async createUser(databaseName: string, username: string, password: string): Promise<boolean> {
+        if (await Auth.findUser(username)) {
             return false;
         } else {
-            await Db.query(databaseName, "INSERT INTO users (name) VALUES ('" + userName + "')");
+            await Db.query(databaseName, "INSERT INTO users (name, password) VALUES ('" + username + "', '" + hashSync(password) + "')");
             return true;
         }
     }
