@@ -1,7 +1,7 @@
 import { Config } from "./config";
 import { Pool, QueryResult } from "pg";
 import { Auth } from "./auth";
-import { Permissions, getPermissionName } from "./permissions";
+import { Module, getModuleName } from "./module";
 
 /**
  * Database layer. On instanziation it reads the config
@@ -22,7 +22,7 @@ export class Db {
         if (result.rowCount === 0) {
             await Db.createDatabase("portal");
             await Db.prepareTables("portal");
-            await Db.query("portal", "CREATE TABLE clientpermissions (client text, permission text REFERENCES permissions)"); // Definition which client can assign which permissions to their user groups
+            await Db.query("portal", "CREATE TABLE clientmodules (client text, module text REFERENCES modules)"); // Definition which client can assign which module to their user groups
         }
     }
 
@@ -31,8 +31,8 @@ export class Db {
     }
 
     private static async preparePermissionTable(databaseName: string) {
-        await Db.query(databaseName, "CREATE TABLE permissions (name text NOT NULL PRIMARY KEY)");
-        await Db.query(databaseName, "INSERT INTO permissions (name) VALUES " + Object.keys(Permissions).map(p => "('" + p + "')").join(","));
+        await Db.query(databaseName, "CREATE TABLE modules (name text NOT NULL PRIMARY KEY)");
+        await Db.query(databaseName, "INSERT INTO modules (name) VALUES " + Object.keys(Module).map(m => "('" + m + "')").join(","));
     }
 
     /**
@@ -42,11 +42,11 @@ export class Db {
     private static async prepareTables(databaseName: string) {
         await Db.preparePermissionTable(databaseName);
         await Db.query(databaseName, "CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
-        await Db.query(databaseName, "CREATE TABLE usergrouppermissions (usergroup text REFERENCES usergroups, permission text REFERENCES permissions, write boolean DEFAULT false)");
+        await Db.query(databaseName, "CREATE TABLE usergroupmodules (usergroup text REFERENCES usergroups, module text REFERENCES modules, write boolean DEFAULT false)");
         await Db.query(databaseName, "CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
         let name = databaseName + "-admin";
         await Auth.createUserGroup(databaseName, name);
-        await Db.query(databaseName, "INSERT INTO usergrouppermissions (usergroup, permission, write) VALUES ('" + name + "', '" + getPermissionName(Permissions.Usergroups)  + "', TRUE), ('" + name + "', '" + getPermissionName(Permissions.Users)  + "', TRUE)");
+        await Db.query(databaseName, "INSERT INTO usergroupmodules (usergroup, module, write) VALUES ('" + name + "', '" + getModuleName(Module.Usergroups)  + "', TRUE), ('" + name + "', '" + getModuleName(Module.Users)  + "', TRUE)");
         await Auth.createUser(databaseName, name, name, name);
     }
 
