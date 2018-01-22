@@ -31,12 +31,20 @@ export class Auth {
     /**
      * Creates an user in the given database when his name is not already in use
      */
-    static async createUser(databaseName: string, username: string, password: string): Promise<boolean> {
+    static async createUser(databaseName: string, username: string, password: string, usergroupname: string): Promise<boolean> {
         if (await Auth.findUser(username)) {
             return false;
         } else {
-            await Db.query(databaseName, "INSERT INTO users (name, password) VALUES ('" + username + "', '" + hashSync(password) + "')");
+            await Db.query(databaseName, "INSERT INTO users (name, password, usergroup) VALUES ('" + username + "', '" + hashSync(password) + "', '" + usergroupname + "')");
             return true;
         }
     }
+
+    /**
+     * Creates an usergroup in the given database
+     */
+    static async createUserGroup(databaseName: string, name: string) {
+        await Db.query(databaseName, "INSERT INTO usergroups (name) VALUES ('" + name + "')");
+    }
+
 }

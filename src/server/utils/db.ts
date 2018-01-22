@@ -38,9 +38,12 @@ export class Db {
      */
     private static async prepareTables(databaseName: string) {
         let pool = Db.open(databaseName);
-        await pool.query("CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text)");
+        await pool.query("CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
+        await pool.query("CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
         await pool.end();
-        await Auth.createUser(databaseName, databaseName + "-admin", databaseName + "-admin");
+        let name = databaseName + "-admin";
+        await Auth.createUserGroup(databaseName, name);
+        await Auth.createUser(databaseName, name, name, name);
     }
 
     /**
