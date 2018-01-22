@@ -1,5 +1,5 @@
 import { Config } from "./config";
-import { Pool } from "pg";
+import { Pool, QueryResult } from "pg";
 
 /**
  * Database layer. On instanziation it reads the config
@@ -32,11 +32,13 @@ export class Db {
     }
 
     /**
-     * Prepare default tables for a newly created database (users)
+     * Prepare default tables for a newly created database (users).
+     * Creates an admin user with name "<database_name>-admin".
      */
     private static async prepareTables(databaseName: string) {
         let pool = Db.open(databaseName);
         await pool.query("CREATE TABLE users (name text NOT NULL PRIMARY KEY)");
+        await pool.query("INSERT INTO users (name) VALUES ('" + databaseName + "-admin')");
         await pool.end();
     }
 
@@ -65,7 +67,7 @@ export class Db {
     /**
      * Opens a pool connection to the given database
      */
-    static open(databaseName: string) : Pool {
+    static open(databaseName: string): Pool {
         let config = Config.load();
         return new Pool({
             host: config.db.host,
@@ -77,16 +79,26 @@ export class Db {
     }
 
     /**
+     * Runs a query against a database and returns the result
+     */
+    static async query(databaseName: string, query: string): Promise<QueryResult> {
+        let pool = Db.open(databaseName);
+        let result = await pool.query(query);
+        await pool.end();
+        return result;
+    }
+
+    /**
      * Returns a list of all client databases (which are not "postgres" or "portal" or any template database)
      */
-    static async getClientNames() : Promise<string[]> {
+    static async getClientNames(): Promise<string[]> {
         if (!Db._clientNames) {
             let pool = Db.open("postgres");
             let result = await pool.query("SELECT datname FROM pg_database WHERE datistemplate = false AND NOT datname = 'postgres' AND NOT datname = 'portal';");
             await pool.end();
             Db._clientNames = result.rows.map(r => r.datname);
         }
-        return Db._clientNames;
+        return Db._clientNames.slice(0); // Copy the array to prevent changing the original one
     }
 
 }
