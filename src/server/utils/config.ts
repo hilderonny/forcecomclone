@@ -7,6 +7,10 @@ export class Config_Db {
     password: string;
 }
 
+export class Config_Server {
+    http_port: number;
+}
+
 /**
  * TypeScript wrapper for reading and writing configuration
  * data to /config.json
@@ -14,6 +18,7 @@ export class Config_Db {
 export class Config {
 
     db: Config_Db;
+    server: Config_Server;
 
     private static _config: Config;
 

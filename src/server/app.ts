@@ -1,12 +1,40 @@
-import { Config } from "./utils/config";
 import { Db } from "./utils/db";
-import { Auth } from "./utils/auth";
+import * as express from "express";
+import { Config } from "./utils/config";
 
+/**
+ * Main entry point for application. Instanziate the singleton
+ * with App.start();
+ */
+export class App {
 
-async function start() {
-    await Db.init();
-    let clientNames = await Db.getClientNames();
-    console.log(clientNames);
+    /**
+     * For defining API routes
+     */
+    static router: express.Router;
+
+    /**
+     * Start the application by calling this function
+     */
+    static async start() {
+        let config = Config.load();
+        // Database
+        await Db.init();
+        // Express framework
+        App.router = express.Router();
+        let server = express();
+        server.use(express.json());
+        server.use(express.urlencoded({ extended:true }));
+        server.use(express.static('./public')); // static content
+        server.use('/js', express.static('./dist/client')); // Compiled client side JS
+        server.use('/api', App.router); // API routing
+        // Start the server
+        return new Promise((resolve, reject) => {
+            server.listen(config.server.http_port, () => {
+                console.log("Server listening on HTTP port " + config.server.http_port);
+                resolve();
+            });
+        });
+    }
+    
 }
-
-start();

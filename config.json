@@ -4,5 +4,8 @@
         "port": 5432,
         "user": "postgres",
         "password": "postgres"
+    },
+    "server": {
+        "http_port": 80
     }
 }
