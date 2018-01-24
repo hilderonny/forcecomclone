@@ -1,6 +1,8 @@
 import { Db } from "./utils/db";
 import * as express from "express";
 import { Config } from "./utils/config";
+import { readdirSync } from "fs";
+import { join } from "path";
 
 /**
  * Main entry point for application. Instanziate the singleton
@@ -28,6 +30,13 @@ export class App {
         server.use(express.static('./public')); // static content
         server.use('/js', express.static('./dist/client')); // Compiled client side JS
         server.use('/api', App.router); // API routing
+        // APIs
+        let files = readdirSync(join(__dirname, 'api'));
+        files.forEach((file) => {
+            let api = require("./api/" + file.substr(0, file.indexOf('.')));
+            api.default();
+        });
+
         // Start the server
         return new Promise((resolve, reject) => {
             server.listen(config.server.http_port, () => {
