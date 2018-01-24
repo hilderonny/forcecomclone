@@ -1,3 +1,9 @@
+import { App } from "../app";
+import { Auth, LoggedInUserRequest } from "../utils/auth";
+import { Module } from "../utils/module";
+import { Db } from "../utils/db";
+import { Datatype } from "../../common/types/datatype";
+
 // import { RecordType } from "../../common/types/recordtype";
 // import { App } from "../core/app";
 // import { UserRequest } from "../../common/types/user";
@@ -128,4 +134,48 @@
 //     })
 
 // }
-export default () => {}
+/**
+ * https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+ */
+export default () => {
+
+    // TODO: POST must create table with field "name", POSTING fields must create column in this table.
+    // TODO: datatypes and fields for __users and __usergroups must be created at db init. Also tables users and usergroups must be renamed at init.
+    // TODO: datatypes starting with __ must not be deleteable, field name must not be deleteable.
+    // TODO: Changing field names must result in renaming the corresponding column in the corresponding table
+
+    App.router.get('/datatypes', Auth.authenticate(Module.Datatypes, false), async (req: LoggedInUserRequest, res) => {
+        let datatype = req.body as Datatype;
+        res.send((await Db.query(req.loggedInUser!.databaseName, "select name, label from datatypes")).rows);
+        res.sendStatus(200);
+    });
+
+    App.router.get('/datatypes/:name', Auth.authenticate(Module.Datatypes, false), async (req: LoggedInUserRequest, res) => {
+        let result = await Db.query(req.loggedInUser!.databaseName, "select name, label, showinmenu from datatypes where name='" + req.params.name + "'");
+        if (result.rowCount < 1) return res.sendStatus(404);
+        res.send(result.rows[0]);
+    });
+
+    App.router.post('/datatypes', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
+        let datatype = req.body as Datatype;
+        await Db.query(req.loggedInUser!.databaseName, "insert into datatypes (name, label, showinmenu) values ('" + datatype.name + "', '" + datatype.label + "', " + datatype.showinmenu + ")");
+        res.sendStatus(200);
+    });
+
+    App.router.put('/datatypes/:name', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
+        let datatype = req.body as Datatype;
+        let existing = await Db.query(req.loggedInUser!.databaseName, "select 1 from datatypes where name='" + req.params.name + "'");
+        if (existing.rowCount < 1) return res.sendStatus(404);
+        await Db.query(req.loggedInUser!.databaseName, "update datatypes set name='" + datatype.name + "', label='" + datatype.label + "', showinmenu=" + datatype.showinmenu + " where name='" + req.params.name + "'");
+        res.sendStatus(200);
+    });
+
+    App.router.delete('/datatypes/:name', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
+        let datatype = req.body as Datatype;
+        let existing = await Db.query(req.loggedInUser!.databaseName, "select 1 from datatypes where name='" + req.params.name + "'");
+        if (existing.rowCount < 1) return res.sendStatus(404);
+        await Db.query(req.loggedInUser!.databaseName, "delete from datatypes where name='" + req.params.name + "'");
+        res.sendStatus(200);
+    });
+
+}

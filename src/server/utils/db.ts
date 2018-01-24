@@ -42,11 +42,13 @@ export class Db {
     private static async prepareTables(databaseName: string) {
         await Db.preparePermissionTable(databaseName);
         await Db.query(databaseName, "CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
-        await Db.query(databaseName, "CREATE TABLE usergroupmodules (usergroup text REFERENCES usergroups, module text REFERENCES modules, write boolean DEFAULT false)");
+        await Db.query(databaseName, "CREATE TABLE usergroupmodules (usergroup text REFERENCES usergroups, module text REFERENCES modules, write boolean)");
         await Db.query(databaseName, "CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
+        await Db.query(databaseName, "CREATE TABLE datatypes (name text NOT NULL PRIMARY KEY, label text, showinmenu boolean)");
+        await Db.query(databaseName, "CREATE TABLE datatypefields (name text NOT NULL PRIMARY KEY, label text, datatype text REFERENCES datatypes, fieldtype text, istitle boolean)");
         let name = databaseName + "-admin";
         await Auth.createUserGroup(databaseName, name);
-        await Db.query(databaseName, "INSERT INTO usergroupmodules (usergroup, module, write) VALUES ('" + name + "', '" + getModuleName(Module.Usergroups)  + "', TRUE), ('" + name + "', '" + getModuleName(Module.Users)  + "', TRUE)");
+        await Db.query(databaseName, "INSERT INTO usergroupmodules (usergroup, module, write) VALUES ('" + name + "', '" + getModuleName(Module.Usergroups)  + "', TRUE), ('" + name + "', '" + getModuleName(Module.Users)  + "', TRUE), ('" + name + "', '" + getModuleName(Module.Datatypes)  + "', TRUE)");
         await Auth.createUser(databaseName, name, name, name);
     }
 

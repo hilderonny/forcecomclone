@@ -14,7 +14,7 @@ export interface LoggedInUser extends AuthenticatedUser {
 }
 
 export interface LoggedInUserPermission {
-    permission: string;
+    module: string;
     write: boolean;
 }
 
@@ -40,10 +40,10 @@ export class Auth {
                 delete (decoded as any).iat;
                 delete (decoded as any).exp;
                 let user = decoded as LoggedInUser;
-                user.permissions = (await Db.query(user.databaseName, "select usergrouppermissions.permission, usergrouppermissions.write from users join usergroups on users.usergroup = usergroups.name join usergrouppermissions on usergrouppermissions.usergroup = usergroups.name where users.name = '" + user.username + "'")).rows as LoggedInUserPermission[];
+                user.permissions = (await Db.query(user.databaseName, "select usergroupmodules.module, usergroupmodules.write from users join usergroups on users.usergroup = usergroups.name join usergroupmodules on usergroupmodules.usergroup = usergroups.name where users.name = '" + user.username + "'")).rows as LoggedInUserPermission[];
                 if (module) {
                     let moduleName = getModuleName(module);
-                    if (!user.permissions.find(p => p.permission === moduleName && (!needWrite || p.write))) return res.sendStatus(403);
+                    if (!user.permissions.find(p => p.module === moduleName && (!needWrite || p.write))) return res.sendStatus(403);
                 }
                 req.loggedInUser = user;
                 next();

@@ -15,8 +15,10 @@ export enum Module {
     Documents = "Dokumente",
 
     // FM Objekte
-    FM_Objects = "FM Objekte"
+    FM_Objects = "FM Objekte",
 
+    Datatypes = "Datentypen"
+    
 }
 
 /**
