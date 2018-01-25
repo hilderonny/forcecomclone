@@ -38,6 +38,7 @@ export class App {
         });
 
         // Start the server
+        // For running as normal user under linux, see https://stackoverflow.com/a/23281401
         return new Promise((resolve, reject) => {
             server.listen(config.server.http_port, () => {
                 console.log("Server listening on HTTP port " + config.server.http_port);
