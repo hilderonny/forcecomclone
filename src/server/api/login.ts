@@ -1,14 +1,11 @@
 import { App } from "../app";
 import { Auth } from "../utils/auth";
 import { sign } from "jsonwebtoken";
+import { Token } from "../../common/types/token";
 
 interface LoginUser {
     username: string;
     password: string;
-}
-
-interface Token {
-    token: string;
 }
 
 export default () => {

@@ -7,7 +7,7 @@ import { Server } from 'http'
 import { Type } from '../../common/types/type'
 import { ApiOptions } from './apioptions'
 import { verify } from "jsonwebtoken";
-import { TokenContent } from "../../common/types/token";
+// import { TokenContent } from "../../common/types/token";
 import { User, UserRequest } from "../../common/types/user";
 import { MongoClient } from "mongodb";
 

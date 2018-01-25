@@ -148,7 +148,6 @@ export default () => {
     App.router.get('/datatypes', Auth.authenticate(Module.Datatypes, false), async (req: LoggedInUserRequest, res) => {
         let datatype = req.body as Datatype;
         res.send((await Db.query(req.loggedInUser!.databaseName, "SELECT name, label FROM datatypes")).rows);
-        res.sendStatus(200);
     });
 
     App.router.get('/datatypes/:name', Auth.authenticate(Module.Datatypes, false), async (req: LoggedInUserRequest, res) => {

@@ -3,7 +3,7 @@ import { User, UserRequest } from "../../common/types/user";
 import { Request, Response, RequestHandler, NextFunction} from "express"
 import { hashSync, compareSync } from "bcryptjs"
 import { sign, verify } from "jsonwebtoken"
-import { Token, TokenContent } from "../../common/types/token";
+// import { Token, TokenContent } from "../../common/types/token";
 import { Type } from "../../common/types/type";
 import { isNullOrUndefined } from "util";
 // import * as RecordTypeApi from "../api/recordtype";

@@ -1,4 +1,21 @@
-* {
+
+input[name="error"] {
+    display: none;
+}
+
+form[name="loginForm"] {
+    display: none;
+}
+
+ol > li {
+    cursor: pointer;
+}
+
+.visible {
+    display: unset !important;
+}
+
+/* * {
     box-sizing: border-box;
     font-family: Roboto,Helvetica Neue,sans-serif;
     margin: 0; 
@@ -592,4 +609,4 @@ html {
     .toolbar > .mainmenubutton {
         display: initial;
     }
-}
+} */
