@@ -3,14 +3,15 @@ import { Auth, LoggedInUserRequest } from "../utils/auth";
 import { Module } from "../utils/module";
 import { Db } from "../utils/db";
 import { Datatype } from "../../common/types/datatype";
+import { createDatatype, deleteDatatype } from "../utils/datatypehelper";
 
-// import { RecordType } from "../../common/types/recordtype";
-// import { App } from "../core/app";
-// import { UserRequest } from "../../common/types/user";
-// import { Collection } from "mongodb";
-// import { ObjectID } from "bson";
-// import Utils from "../core/utils";
-// import { Response } from "express-serve-static-core";
+// import { RecordType } FROM "../../common/types/recordtype";
+// import { App } FROM "../core/app";
+// import { UserRequest } FROM "../../common/types/user";
+// import { Collection } FROM "mongodb";
+// import { ObjectID } FROM "bson";
+// import Utils FROM "../core/utils";
+// import { Response } FROM "express-serve-static-core";
 
 // export default (app: App): void => {
 
@@ -21,7 +22,7 @@ import { Datatype } from "../../common/types/datatype";
 
 //     /**
 //      * Get list if allowed children record types of a specific record type.
-//      * Used for showing record type selection dialog when creating child objects.
+//      * Used for showing record type SELECTion dialog when creating child objects.
 //      * Normally each logged in user should be able to read this API.
 //      */
 //     app.router.get('/RecordType/children/:id', async (req: UserRequest, res) => {
@@ -146,35 +147,35 @@ export default () => {
 
     App.router.get('/datatypes', Auth.authenticate(Module.Datatypes, false), async (req: LoggedInUserRequest, res) => {
         let datatype = req.body as Datatype;
-        res.send((await Db.query(req.loggedInUser!.databaseName, "select name, label from datatypes")).rows);
+        res.send((await Db.query(req.loggedInUser!.databaseName, "SELECT name, label FROM datatypes")).rows);
         res.sendStatus(200);
     });
 
     App.router.get('/datatypes/:name', Auth.authenticate(Module.Datatypes, false), async (req: LoggedInUserRequest, res) => {
-        let result = await Db.query(req.loggedInUser!.databaseName, "select name, label, showinmenu from datatypes where name='" + req.params.name + "'");
+        let result = await Db.query(req.loggedInUser!.databaseName, "SELECT name, label, showinmenu FROM datatypes WHERE name='" + req.params.name + "'");
         if (result.rowCount < 1) return res.sendStatus(404);
         res.send(result.rows[0]);
     });
 
     App.router.post('/datatypes', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
         let datatype = req.body as Datatype;
-        await Db.query(req.loggedInUser!.databaseName, "insert into datatypes (name, label, showinmenu) values ('" + datatype.name + "', '" + datatype.label + "', " + datatype.showinmenu + ")");
+        await createDatatype(req.loggedInUser!.databaseName, datatype.name, datatype.label, datatype.plurallabel, datatype.showinmenu);
         res.sendStatus(200);
     });
 
-    App.router.put('/datatypes/:name', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
-        let datatype = req.body as Datatype;
-        let existing = await Db.query(req.loggedInUser!.databaseName, "select 1 from datatypes where name='" + req.params.name + "'");
-        if (existing.rowCount < 1) return res.sendStatus(404);
-        await Db.query(req.loggedInUser!.databaseName, "update datatypes set name='" + datatype.name + "', label='" + datatype.label + "', showinmenu=" + datatype.showinmenu + " where name='" + req.params.name + "'");
-        res.sendStatus(200);
-    });
+    // App.router.put('/datatypes/:name', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
+    //     let datatype = req.body as Datatype;
+    //     let existing = await Db.query(req.loggedInUser!.databaseName, "SELECT 1 FROM datatypes WHERE name='" + req.params.name + "'");
+    //     if (existing.rowCount < 1) return res.sendStatus(404);
+    //     await Db.query(req.loggedInUser!.databaseName, "update datatypes set name='" + datatype.name + "', label='" + datatype.label + "', showinmenu=" + datatype.showinmenu + " WHERE name='" + req.params.name + "'");
+    //     res.sendStatus(200);
+    // });
 
     App.router.delete('/datatypes/:name', Auth.authenticate(Module.Datatypes, true), async (req: LoggedInUserRequest, res) => {
         let datatype = req.body as Datatype;
-        let existing = await Db.query(req.loggedInUser!.databaseName, "select 1 from datatypes where name='" + req.params.name + "'");
+        let existing = await Db.query(req.loggedInUser!.databaseName, "SELECT 1 FROM datatypes WHERE name='" + req.params.name + "'");
         if (existing.rowCount < 1) return res.sendStatus(404);
-        await Db.query(req.loggedInUser!.databaseName, "delete from datatypes where name='" + req.params.name + "'");
+        await deleteDatatype(req.loggedInUser!.databaseName, req.params.name);
         res.sendStatus(200);
     });
 

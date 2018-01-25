@@ -2,6 +2,7 @@ import { Config } from "./config";
 import { Pool, QueryResult } from "pg";
 import { Auth } from "./auth";
 import { Module, getModuleName } from "./module";
+import { createDatatype, createDatatypeField } from "./datatypehelper";
 
 /**
  * Database layer. On instanziation it reads the config
@@ -19,11 +20,12 @@ export class Db {
      */
     static async init() {
         let result = await Db.query("postgres", "SELECT 1 FROM pg_database WHERE datname = 'portal';");
-        if (result.rowCount === 0) {
-            await Db.createDatabase("portal");
-            await Db.prepareTables("portal");
-            await Db.query("portal", "CREATE TABLE clientmodules (client text, module text REFERENCES modules)"); // Definition which client can assign which module to their user groups
+        if (result.rowCount !== 0) {
+            await Db.query("postgres", "DROP DATABASE portal;"); // TODO: Remove!
         }
+        await Db.createDatabase("portal");
+        await Db.prepareTables("portal");
+        await Db.query("portal", "CREATE TABLE clientmodules (client text, module text REFERENCES modules)"); // Definition which client can assign which module to their user groups
     }
 
     private static async createDatabase(databaseName: string) {
@@ -41,11 +43,13 @@ export class Db {
      */
     private static async prepareTables(databaseName: string) {
         await Db.preparePermissionTable(databaseName);
-        await Db.query(databaseName, "CREATE TABLE usergroups (name text NOT NULL PRIMARY KEY)");
+        await Db.query(databaseName, "CREATE TABLE datatypes (name text NOT NULL PRIMARY KEY, label text, plurallabel text, showinmenu boolean)");
+        await Db.query(databaseName, "CREATE TABLE datatypefields (name text, label text, datatype text REFERENCES datatypes, fieldtype text, istitle boolean, PRIMARY KEY (name, datatype))");
+        await createDatatype(databaseName, "usergroups", "Benutzergruppe", "Benutzergruppen", true);
+        await createDatatype(databaseName, "users", "Benutzer", "Benutzer", true);
+        await createDatatypeField(databaseName, "users", "password", "Passwort", "TEXT", false);
+        await createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", "TEXT REFERENCES usergroups", false);
         await Db.query(databaseName, "CREATE TABLE usergroupmodules (usergroup text REFERENCES usergroups, module text REFERENCES modules, write boolean)");
-        await Db.query(databaseName, "CREATE TABLE users (name text NOT NULL PRIMARY KEY, password text, usergroup text REFERENCES usergroups)");
-        await Db.query(databaseName, "CREATE TABLE datatypes (name text NOT NULL PRIMARY KEY, label text, showinmenu boolean)");
-        await Db.query(databaseName, "CREATE TABLE datatypefields (name text NOT NULL PRIMARY KEY, label text, datatype text REFERENCES datatypes, fieldtype text, istitle boolean)");
         let name = databaseName + "-admin";
         await Auth.createUserGroup(databaseName, name);
         await Db.query(databaseName, "INSERT INTO usergroupmodules (usergroup, module, write) VALUES ('" + name + "', '" + getModuleName(Module.Usergroups)  + "', TRUE), ('" + name + "', '" + getModuleName(Module.Users)  + "', TRUE), ('" + name + "', '" + getModuleName(Module.Datatypes)  + "', TRUE)");
@@ -91,6 +95,7 @@ export class Db {
      */
     static async query(databaseName: string, query: string): Promise<QueryResult> {
         let pool = Db.open(databaseName);
+        console.log("\x1b[1:36m%s\x1b[0m", query); // Color: https://stackoverflow.com/a/41407246, http://bluesock.org/~willkg/dev/ansi.html
         let result = await pool.query(query);
         await pool.end();
         return result;
