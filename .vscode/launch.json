@@ -19,6 +19,21 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Server only",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run-script",
+                "debug:server"
+            ],
+            "timeout": 30000,
+            "env": {
+                "TOKENSECRET": "hampfpampe"
+            },
+            "port": 9229
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Mocha Tests",
             "preLaunchTask": "compile",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",

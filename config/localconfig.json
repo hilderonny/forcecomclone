@@ -1,0 +1,25 @@
+{
+    "dbprefix": "arrange_",
+    "dbhost": "localhost",
+    "dbport": 5432,
+    "dbuser": "postgres",
+    "dbpassword": "postgres",
+
+    "httpport": 80,
+    "httpsport": 443,
+    "usehttp": true,
+    "usehttps": true,
+    "httpskeyfile": "config/priv.key",
+    "httpscertfile": "config/pub.cert",
+    "redirecthttptohttps": true,
+
+    "documentspath": "documents/",
+    "tokensecret": "schnullibulli",
+    "licenseserverurl": "https://localhost",
+    "licensekey": "deknh6higlfblo4v9sd1ld56f9qhdp9jcao7mtp9ojb3m9anlpbj8jh4d2deicvr1s76fodkbci4ncv0sn5ipfg3hl4ub3n4urqmj3b6ruubc6n92cmadl8hra49i6cthfqpkeg2u11s95pqa1scvk0e7juq5m084nkact52df8drrng1g9ihelfvuqmkrb92o4jd1s83cj0b",
+    "portallogo": "css/logo_avorium_komplett.svg",
+    "portalname": "AVT FacilityManagement",
+    "npminstallcommand": "\"C:\\Program Files\\nodejs\\npm.cmd\" install",
+    "recreateportaladmin": false,
+    "updateextractpath": "./temp/"
+}
