@@ -3,6 +3,7 @@ import * as http from "http";
 import * as https from "https";
 import { LocalConfig } from "./localconfig";
 import { readFileSync } from "fs";
+import { postHeartBeat } from "./update";
 
 export class App {
 
@@ -10,6 +11,8 @@ export class App {
 
     static async start() {
         let config = LocalConfig.load();
+        // Database
+        // TODO
         // Express framework
         App.router = express.Router();
         let expressApp = express();
@@ -51,6 +54,8 @@ export class App {
                 resolve();
             });
         });
+        // beim Lizenzserver melden
+        postHeartBeat();
     }
 
 }
