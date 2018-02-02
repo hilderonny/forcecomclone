@@ -4,6 +4,7 @@ import * as https from "https";
 import { LocalConfig } from "./localconfig";
 import { readFileSync } from "fs";
 import { postHeartBeat } from "./update";
+import { Db } from "./db";
 
 export class App {
 
@@ -12,7 +13,7 @@ export class App {
     static async start() {
         let config = LocalConfig.load();
         // Database
-        // TODO
+        await Db.init(true); // TODO: Make false
         // Express framework
         App.router = express.Router();
         let expressApp = express();

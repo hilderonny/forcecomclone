@@ -7,6 +7,6 @@
       "strict": true
     },
     "exclude": [
-      "src/**/__*",
+      "src/**/__*"
     ]
 }

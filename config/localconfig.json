@@ -1,5 +1,5 @@
 {
-    "dbprefix": "arrange_",
+    "dbprefix": "arrange",
     "dbhost": "localhost",
     "dbport": 5432,
     "dbuser": "postgres",
