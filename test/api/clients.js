@@ -7,7 +7,7 @@ var Db = require("../../server/tools/db").Db;
 
 describe('API clients', () => {
 
-    describe('GET/', () => {
+    describe.only('GET/', () => {
 
         th.apiTests.get("clients", modules.clients, permissions.clients);
 

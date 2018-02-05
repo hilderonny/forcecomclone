@@ -84,15 +84,27 @@ var Db = {
         await Db.query(clientName, `DELETE FROM permissions WHERE usergroup = '${userGroupName}' AND permission = '${permission}';`);
     },
 
+    // TODO: Auf getDynamic...() umstellen
     getClient: async(clientName) => {
         var result = await Db.query(Db.PortalDatabaseName, `SELECT name FROM clients WHERE name = '${clientName}';`);
         return result.rowCount > 0 ? result.rows[0] : undefined;
     },
 
+    // TODO: Auf getDynamic...() umstellen
     getClients: async() => {
         return (await Db.query(Db.PortalDatabaseName, "SELECT name FROM clients ORDER BY name;")).rows;
     },
 
+    getDynamicObject: async(clientname, objecttype, name) => {
+        var result = await Db.query(clientname, `SELECT * FROM ${objecttype} WHERE name = '${name}';`);
+        return result.rowCount > 0 ? result.rows[0] : undefined;
+    },
+
+    getDynamicObjects: async(clientname, objecttype) => {
+        return (await Db.query(clientname, `SELECT * FROM ${objecttype} ORDER BY name;`)).rows;
+    },
+
+    // TODO: Auf getDynamic...() umstellen
     getUser: async(username, clientname) => {
         var result = await Db.query(clientname, `SELECT name, usergroup FROM users WHERE name = '${username}';`);
         return result.rowCount > 0 ? result.rows[0] : undefined;
