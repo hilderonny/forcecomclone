@@ -1,7 +1,5 @@
-import { TestHelper } from "../testhelper";
-import { Db } from "../../server/tools/db";
-import { Client } from "../../common/types";
-
+var TestHelper = require("../testhelper").TestHelper;
+var Db = require("../../server/tools/db").Db;
 
 describe('API clients', () => {
 
@@ -27,7 +25,7 @@ describe('API clients', () => {
             // });
         // });
 
-        it('responds with 403 without read permission', function() {
+        it('responds with 403 without read permission', () => {
             // // Remove the corresponding permission
             // return th.removeReadPermission('1_0_0', 'PERMISSION_ADMINISTRATION_CLIENT').then(() => {
             //     return th.doLoginAndGetToken('1_0_0', 'test').then((token) => {
@@ -37,8 +35,8 @@ describe('API clients', () => {
         });
 
         it('responds with list of all clients containing all details', async() => {
-            let allClientsFromDatabase = (await Db.query(Db.PortalDatabaseName, `SELECT name FROM clients`)).rows as Client[];
-            let token = await TestHelper.doLoginAndGetToken('portal_0_ADMIN0', 'test');
+            var allClientsFromDatabase = (await Db.query(Db.PortalDatabaseName, `SELECT name FROM clients`)).rows;
+            var token = await TestHelper.doLoginAndGetToken('portal_0_ADMIN0', 'test');
             // db.get('clients').find().then((allClientsFromDatabase) => {
             //     th.doLoginAndGetToken('_0_ADMIN0', 'test').then((token) => {
             //         th.get(`/api/clients?token=${token}`).expect(200).end(function(err, res) {
