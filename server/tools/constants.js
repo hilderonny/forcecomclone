@@ -1,7 +1,9 @@
 module.exports.modules = {
 
-    clients: "clients"
-    
+    base: "base",
+    clients: "clients",
+    doc: "doc"
+
 }
 
 module.exports.permissions = {

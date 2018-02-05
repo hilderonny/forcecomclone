@@ -69,12 +69,24 @@ var Db = {
         await Db.query(databasename, "ALTER TABLE " + datatypename + " ADD COLUMN " + fieldname + " " + fieldtype);
     },
 
+    deleteClient: async(clientName) => {
+        var localConfig = LocalConfig.load();
+        var clientDatabaseName = `${localConfig.dbprefix}_${clientName}`;
+        await Db.query(Db.PortalDatabaseName, `DELETE FROM clients WHERE name = '${clientName}';`);
+        await Db.queryDirect("postgres", `DROP DATABASE IF EXISTS ${clientDatabaseName};`);
+    },
+
     deleteClientModule: async(clientName, moduleName) => {
         await Db.query(Db.PortalDatabaseName, `DELETE FROM clientmodules WHERE client = '${clientName}' AND module = '${moduleName}';`);
     },
 
     deletePermission: async(userGroupName, clientName, permission) => {
         await Db.query(clientName, `DELETE FROM permissions WHERE usergroup = '${userGroupName}' AND permission = '${permission}';`);
+    },
+
+    getClient: async(clientName) => {
+        var result = await Db.query(Db.PortalDatabaseName, `SELECT name FROM clients WHERE name = '${clientName}';`);
+        return result.rowCount > 0 ? result.rows[0] : undefined;
     },
 
     getClients: async() => {

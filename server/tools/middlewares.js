@@ -34,43 +34,11 @@ module.exports.canAccess = async(username, clientname, permission, needWritePerm
     // Portal users have access to all modules
     var clientCanAccess = clientname === Db.PortalDatabaseName || (await Db.query(Db.PortalDatabaseName, `SELECT 1 FROM clients JOIN clientmodules on clientmodules.client = clients.name WHERE clients.name = '${clientname}' AND clientmodules.module = '${moduleName}';`)).rowCount > 0;
     if (!clientCanAccess) return false;
-    var result = await Db.query(clientname, `SELECT canwrite FROM users LEFT JOIN permissions on permissions.usergroup = users.usergroup WHERE users.name = '${username}' AND (users.isadmin = true OR NOT permissions.permission IS NULL);`);
+    var result = await Db.query(clientname, `SELECT isadmin, canwrite FROM users LEFT JOIN permissions on permissions.usergroup = users.usergroup WHERE users.name = '${username}' AND (users.isadmin = true OR NOT permissions.permission IS NULL);`);
     if (result.rowCount < 1) return false;
-    if (needWritePermission && !result.rows[0].canwrite) return false;
+    var user = result.rows[0];
+    if (needWritePermission && !user.isadmin && !user.canwrite) return false;
     return true;
-
-
-
-    // return new Promise(function(resolve, reject) {
-    //     // Check user against database
-    //     db.get('users').findOne(username).then((userInDatabase) => {
-    //         if (!userInDatabase) { // User not found
-    //             return resolve(false);
-    //         }
-    //         // Check whether module is available for the client of the user, ignore portal users
-    //         if (userInDatabase.clientId && moduleName) {
-    //             db.get('clientmodules').findOne({ clientId: userInDatabase.clientId, module: moduleName }).then(function(clientmodule) {
-    //                 // Ignore check for portal users
-    //                 if (userInDatabase.clientId !== null && !clientmodule) { // Client has no access to the module
-    //                     return resolve(false);
-    //                 }
-    //                 return checkUser(userInDatabase, permission, readWrite, db);
-    //             }).then(function(userHasAccess) {
-    //                 if (!userHasAccess) {
-    //                     return resolve(false);
-    //                 }
-    //                 return resolve(userInDatabase);
-    //             });
-    //         } else {
-    //             checkUser(userInDatabase, permission, readWrite, db).then(function(userHasAccess) {
-    //                 if (!userHasAccess) {
-    //                     return resolve(false);
-    //                 }
-    //                 return resolve(userInDatabase);
-    //             });
-    //         }
-    //     });
-    // });
 };
 
 /**

@@ -12,32 +12,63 @@ var TestHelper = {
 
     apiTests: {
 
-        get: {
-            permissions: function(api, moduleName, permission) {
-                it('responds without authentication with 403', async() => {
+        get: function(api, moduleName, permission) {
+            it('responds without authentication with 403', async() => {
+                await TestHelper.get(`/api/${api}`).expect(403);
+            });
+            it('responds without read permission with 403', async() => {
+                // Remove the corresponding permission
+                await Db.deletePermission("0_0", "0", permission);
+                await TestHelper.doLogin("0_0_0", "test");
+                await TestHelper.get(`/api/${api}`).expect(403);
+            });
+            function checkForUser(username, clientname) {
+                return async() => {
+                    await Db.deleteClientModule(clientname, moduleName);
+                    await TestHelper.doLogin(username, "test");
                     await TestHelper.get(`/api/${api}`).expect(403);
-                });
-                it('responds without read permission with 403', async() => {
-                    // Remove the corresponding permission
-                    await Db.deletePermission("0_0", "0", permission);
-                    await TestHelper.doLogin("0_0_0", "test");
-                    await TestHelper.get(`/api/${api}`).expect(403);
-                });
-                function checkForUser(username, clientname) {
-                    return async() => {
-                        await Db.deleteClientModule(clientname, moduleName);
-                        await TestHelper.doLogin(username, "test");
-                        await TestHelper.get(`/api/${api}`).expect(403);
-                    }
                 }
-                it('responds when the logged in user\'s (normal user) client has no access to this module, with 403', checkForUser("0_0_0", "0"));
-                it('responds when the logged in user\'s (administrator) client has no access to this module, with 403', checkForUser("0_0_ADMIN0", "0"));
-                it('responds with 200 when the user is administrator but does not have read permission', async() => {
-                    await Db.deletePermission("0_0", "0", permission);
-                    await TestHelper.doLogin("0_0_ADMIN0", "test");
-                    await TestHelper.get(`/api/${api}`).expect(200);
-                });
             }
+            it('responds when the logged in user\'s (normal user) client has no access to this module, with 403', checkForUser("0_0_0", "0"));
+            it('responds when the logged in user\'s (administrator) client has no access to this module, with 403', checkForUser("0_0_ADMIN0", "0"));
+            it('responds with 200 when the user is administrator but does not have read permission', async() => {
+                await Db.deletePermission("0_0", "0", permission);
+                await TestHelper.doLogin("0_0_ADMIN0", "test");
+                await TestHelper.get(`/api/${api}`).expect(200);
+            });
+        },
+
+        getName: function(api, name, moduleName, permission) {
+            TestHelper.apiTests.get(`${api}/${name}`, moduleName, permission);
+            it('responds with 404 when no client exists for given name', async() => {
+                await TestHelper.doLogin("0_0_0", "test");
+                await TestHelper.get(`/api/${api}/unknownname`).expect(404);
+            });
+        },
+
+        post: function(api, moduleName, permission, data) {
+            it('responds without authentication with 403', async() => {
+                await TestHelper.post(`/api/${api}`, data).expect(403);
+            });
+            it('responds without write permission with 403', async() => {
+                await Db.createPermission("0_0", "0", permission, false);
+                await TestHelper.doLogin("0_0_0", "test");
+                await TestHelper.post(`/api/${api}`, data).expect(403);
+            });
+            function checkForUser(username, clientname) {
+                return async() => {
+                    await Db.deleteClientModule(clientname, moduleName);
+                    await TestHelper.doLogin(username, "test");
+                    await TestHelper.post(`/api/${api}`, data).expect(403);
+                }
+            }
+            it('responds when the logged in user\'s (normal user) client has no access to this module, with 403', checkForUser("0_0_0", "0"));
+            it('responds when the logged in user\'s (administrator) client has no access to this module, with 403', checkForUser("0_0_ADMIN0", "0"));
+            it('responds with 200 when the user is administrator but does not have write permission', async() => {
+                await Db.createPermission("0_0", "0", permission, false);
+                await TestHelper.doLogin("0_0_ADMIN0", "test");
+                await TestHelper.post(`/api/${api}`, data).expect(200);
+            });
         }
 
     },
@@ -138,6 +169,7 @@ beforeEach(async() => {
     // Permissions are overwritten in several tests
     await TestHelper.prepareClientModules();
     await TestHelper.preparePermissions();
+    TestHelper.token = undefined; // Force logout
 });
 
 after(async() => {
