@@ -5,13 +5,6 @@ import { Client } from "../../common/types";
 
 describe('API clients', () => {
 
-    before(async() => {
-        await TestHelper.init();
-        await TestHelper.prepareClients();
-        await TestHelper.prepareUserGroups();
-        await TestHelper.prepareUsers();
-    });
-
     describe('GET/', () => {
 
         // it('responds with 403 without authentication', function() {
@@ -34,18 +27,18 @@ describe('API clients', () => {
             // });
         // });
 
-        // it('responds with 403 without read permission', function() {
+        it('responds with 403 without read permission', function() {
             // // Remove the corresponding permission
             // return th.removeReadPermission('1_0_0', 'PERMISSION_ADMINISTRATION_CLIENT').then(() => {
             //     return th.doLoginAndGetToken('1_0_0', 'test').then((token) => {
             //         return th.get('/api/clients?token=' + token).expect(403);
             //     });
             // });
-        // });
+        });
 
         it('responds with list of all clients containing all details', async() => {
             let allClientsFromDatabase = (await Db.query(Db.PortalDatabaseName, `SELECT name FROM clients`)).rows as Client[];
-            console.log(allClientsFromDatabase);
+            let token = await TestHelper.doLoginAndGetToken('portal_0_ADMIN0', 'test');
             // db.get('clients').find().then((allClientsFromDatabase) => {
             //     th.doLoginAndGetToken('_0_ADMIN0', 'test').then((token) => {
             //         th.get(`/api/clients?token=${token}`).expect(200).end(function(err, res) {
