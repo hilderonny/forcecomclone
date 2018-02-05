@@ -1,56 +1,53 @@
-import { Db } from "../server/tools/db";
-import * as supertest from "supertest";
-import { Server } from "net";
-import { App } from "../server/tools/app";
-import { Test } from "supertest";
-import { TokenResponse } from "../common/types";
+var Db = require("../server/tools/db").Db;
+var supertest = require("supertest");
+var App = require("../server/tools/app").App;
 
-export class TestHelper {
+var TestHelper = {
 
-    static app: Server;
+    app: undefined,
 
-    static delete(url: string): Test {
+    delete: (url) => {
         return supertest(TestHelper.app).delete(url);
-    }
+    },
 
-    static async doLoginAndGetToken(username: string, password: string): Promise<string> {
-        let tokenResponse = (await TestHelper.post("/api/login", { 'username' : username, 'password' : password }).expect(200)).body as TokenResponse;
+    doLoginAndGetToken: async(username, password) => {
+        var tokenResponse = (await TestHelper.post("/api/login", { 'username' : username, 'password' : password }).expect(200)).body;
         return tokenResponse.token;
-    }
+    },
 
-    static get(url: string): Test {
+    get: (url) => {
         return supertest(TestHelper.app).get(url);
-    }
+    },
 
-    static async init() {
+    init: async() => {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Ignore self signed certificates
         await Db.init(true); // Drop all
         await TestHelper.prepareClients();
         await TestHelper.prepareUserGroups();
         await TestHelper.prepareUsers();
-        TestHelper.app = (await App.start())!;
-    }
+        TestHelper.app = await App.start();
+    },
 
-    static post(url: string, data: object): Test {
+    post: (url, data) => {
         return supertest(TestHelper.app).post(url).send(data);
-    }
+    },
 
-    private static async prepareClients() {
+    prepareClients: async() => {
         await Db.createClient('0');
         await Db.createClient('1');
-    }
+    },
 
-    private static async prepareUserGroups() {
+    prepareUserGroups: async() => {
         await Db.createUserGroup('portal_0', 'portal');
         await Db.createUserGroup('portal_1', 'portal');
         await Db.createUserGroup('0_0', '0');
         await Db.createUserGroup('0_1', '0');
         await Db.createUserGroup('1_0', '1');
         await Db.createUserGroup('1_1', '1');
-    }
+    },
 
-    private static async prepareUsers() {
-        let hashedPassword = '$2a$10$mH67nsfTbmAFqhNo85Mz4.SuQ3kyZbiYslNdRDHhaSO8FbMuNH75S'; // Encrypted version of 'test'. Because bryptjs is very slow in tests.
+    prepareUsers: async() => {
+        var hashedPassword = '$2a$10$mH67nsfTbmAFqhNo85Mz4.SuQ3kyZbiYslNdRDHhaSO8FbMuNH75S'; // Encrypted version of 'test'. Because bryptjs is very slow in tests.
         await Db.createUser('portal_0_0', hashedPassword, 'portal_0', 'portal');
         await Db.createUser('portal_0_ADMIN0', hashedPassword, 'portal_0', 'portal');
         await Db.createUser('portal_1_0', hashedPassword, 'portal_1', 'portal');
@@ -63,18 +60,20 @@ export class TestHelper {
         await Db.createUser('1_0_ADMIN0', hashedPassword, '1_0', '1');
         await Db.createUser('1_1_0', hashedPassword, '1_1', '1');
         await Db.createUser('1_1_ADMIN0', hashedPassword, '1_1', '1');
-    }
+    },
 
-    static put(url: string, data: object): Test {
+    put: (url, data) => {
         return supertest(TestHelper.app).put(url).send(data);
     }
 
 }
 
 before(async() => {
-    await TestHelper.init(); // Inititlize database once before all tests
+    await TestHelper.init(); // Initialize database once before all tests
 });
 
 after(async() => {
     await App.stop();
 });
+
+module.exports.TestHelper = TestHelper;

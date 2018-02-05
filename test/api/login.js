@@ -1,6 +1,5 @@
-import { TestHelper } from "../testhelper";
-import { LoginUser } from "../../common/types";
-import { assert } from "chai";
+var assert = require("assert");
+var TestHelper = require("../testhelper").TestHelper;
 
 describe('API login', () => {
 
@@ -21,15 +20,15 @@ describe('API login', () => {
     });
 
     it('responds to POST with wrong username with 401', async() => {
-        await TestHelper.post('/api/login', { username : 'wrong', password : 'test' } as LoginUser).expect(401);
+        await TestHelper.post('/api/login', { username : 'wrong', password : 'test' }).expect(401);
     });
 
     it('responds to POST with wrong password with 401', async() => {
-        await TestHelper.post('/api/login', { username : '0_0_0', password : 'wrong' } as LoginUser).expect(401);
+        await TestHelper.post('/api/login', { username : '0_0_0', password : 'wrong' }).expect(401);
     });
     
     it('responds to POST with 0_0_0/test with 200 and token', async() => { // The testhelper creates an 0_0_0/test user
-        let result = await TestHelper.post('/api/login', { username : '0_0_0', password : 'test' } as LoginUser).expect(200);
+        var result = await TestHelper.post('/api/login', { username : '0_0_0', password : 'test' }).expect(200);
         assert.ok(result.body.token, 'no token in response');
     });
     

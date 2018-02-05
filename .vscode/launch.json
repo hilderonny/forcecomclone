@@ -19,36 +19,14 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Server only",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run-script",
-                "debug:server"
-            ],
-            "timeout": 30000,
-            "env": {
-                "TOKENSECRET": "hampfpampe"
-            },
-            "port": 9229
-        },
-        {
-            "type": "node",
-            "request": "launch",
             "name": "Mocha Tests",
-            "preLaunchTask": "compile",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "-u",
-                "tdd",
                 "--timeout",
                 "999999",
                 "--colors",
-                "--require",
-                "ts-node/register",
-                "--require",
-                "source-map-support/register",
                 "--recursive",
-                "${workspaceFolder}/src/test/**/*.ts"
+                "${workspaceFolder}/test/**/*.js"
             ],
             "env": {
                 "TOKENSECRET": "hampfpampe"
