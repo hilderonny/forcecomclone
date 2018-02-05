@@ -25,8 +25,9 @@ var App = {
         expressApp.use(express.urlencoded({ extended:true }));
         expressApp.use(express.static('./public')); // static content
         expressApp.use('/js', express.static('./dist/client')); // Compiled client side JS
-        expressApp.use('/api', App.router); // API routing
+        expressApp.use(require('./middlewares').extracttoken); // Create req.user
         // APIs
+        expressApp.use('/api', App.router); // API routing
         var files = readdirSync(join(__dirname, '../api'));
         files.forEach((file) => {
             require("../api/" + file.substr(0, file.indexOf('.')))();

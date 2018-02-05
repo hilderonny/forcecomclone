@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "debug": "node --nolazy --inspect-brk=9229 server/index.js",
-    "test": "cross-env TOKENSECRET=testsecret ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --async-only --slow 500 --timeout 10000 --recursive -R spec ./test/**/*.js"
+    "test": "cross-env TOKENSECRET=testsecret ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --async-only --slow 500 --timeout 10000 --recursive -R spec ./test/**/*.js",
+    "watch:test": "cross-env TOKENSECRET=testsecret ./node_modules/mocha/bin/_mocha --watch --async-only --slow 500 --timeout 10000 --recursive -R spec ./test/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +30,7 @@
   },
   "devDependencies": {
     "cross-env": "^5.1.1",
-    "istanbul": "^0.4.5",
+    "istanbul": "^1.0.0-alpha.2",
     "mocha": "^4.0.1",
     "mocha-teamcity-reporter": "^1.1.1",
     "supertest": "^3.0.0"

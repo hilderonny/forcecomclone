@@ -10,7 +10,7 @@ module.exports = () => {
         var loginUser = req.body;
         var authenticatedUser = await Db.loginUser(loginUser.username, loginUser.password);
         if (!authenticatedUser) return res.sendStatus(401);
-        // Send token with infos about username and databaseName
+        // Send token with infos about username and databaseName (clientname)
         var token = sign(authenticatedUser, localConfig.tokensecret, { expiresIn: "24h" });
         res.send({ token: token });
     });
