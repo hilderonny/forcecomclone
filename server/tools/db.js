@@ -104,7 +104,7 @@ var Db = {
         if ((await Db.queryDirect("postgres", `SELECT 1 FROM pg_database WHERE datname = '${portalDatabaseName}';`)).rowCount === 0) {
             await Db.queryDirect("postgres", `CREATE DATABASE ${portalDatabaseName};`);
             await Db.createDefaultTables(Db.PortalDatabaseName);
-            await Db.queryDirect(portalDatabaseName, "CREATE TABLE clients (name TEXT NOT NULL PRIMARY KEY);");
+            await Db.createDatatype(Db.PortalDatabaseName, "clients", "Mandant", "Mandanten", true);
             await Db.queryDirect(portalDatabaseName, "CREATE TABLE allusers (name TEXT NOT NULL PRIMARY KEY, password TEXT, clientname TEXT NOT NULL);");
             await Db.queryDirect(portalDatabaseName, "CREATE TABLE clientmodules (client TEXT NOT NULL, module TEXT NOT NULL, PRIMARY KEY (client, module));");
         }
