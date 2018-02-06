@@ -16,6 +16,9 @@ var TestHelper = {
     },
 
     compare: (actual, expected) => {
+
+        // TODO: Sollte nicht mehr notwendig sein!
+
         // Go over JSON to convert dates correctly
         var actual1 = JSON.parse(JSON.stringify(actual));
         var expected1 = JSON.parse(JSON.stringify(expected));
