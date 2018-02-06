@@ -79,11 +79,9 @@ var Db = {
         if (!doNotAddColumn) await Db.query(databaseNameWithoutPrefix, `ALTER TABLE ${datatypename} ADD COLUMN ${fieldname} ${columntype};`);
     },
 
-    deleteClient: async(clientName) => {
-        var localConfig = LocalConfig.load();
-        var clientDatabaseName = `${localConfig.dbprefix}_${clientName}`;
-        await Db.query(Db.PortalDatabaseName, `DELETE FROM clients WHERE name = '${clientName}';`);
-        await Db.queryDirect("postgres", `DROP DATABASE IF EXISTS ${clientDatabaseName};`);
+    deleteDynamicObject: async(clientname, datatype, elementname) => {
+        var statement = `DELETE FROM ${datatype} WHERE name='${elementname}';`;
+        return Db.query(clientname, statement);
     },
 
     deletePermission: async(userGroupName, clientName, datatype) => {
@@ -224,7 +222,7 @@ var Db = {
         });
         var statement = `UPDATE ${datatype} SET ${values.join(',')} WHERE name='${elementname}';`;
         return Db.query(clientname, statement);
-    },
+    }
     
 }
 

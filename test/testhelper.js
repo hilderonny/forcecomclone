@@ -239,6 +239,54 @@ var TestHelper = {
                 assert.strictEqual(elementFromDatabase.fieldthree, newElement.fieldthree);
                 assert.strictEqual(elementFromDatabase.fieldfour, element.fieldfour);
             });
+        },
+
+        delete: function(datatype, clientname, elementname, element) {
+
+            beforeEach(async() => {
+                await Db.query(clientname, `DELETE FROM ${datatype} WHERE name = '${elementname}';`);
+                var newElement = TestHelper.clone(element);
+                newElement.name = elementname;
+                await Db.insertDynamicObject(clientname, datatype, newElement);
+            });
+
+            it('responds without authentication with 403', async() => {
+                await TestHelper.delete(`/api/dynamic/${datatype}/${elementname}`).expect(403);
+            });
+            it('responds without any permission with 403', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.delete(`/api/dynamic/${datatype}/${elementname}`).expect(403);
+            });
+            it('responds with only read permission with 403', async() => {
+                await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.delete(`/api/dynamic/${datatype}/${elementname}`).expect(403);
+            });
+            it('responds with 204 when the user is administrator but does not have any permission', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.delete(`/api/dynamic/${datatype}/${elementname}`).expect(204);
+            });
+            it('responds with 204 when the user is administrator but does only have read permission', async() => {
+                await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.delete(`/api/dynamic/${datatype}/${elementname}`).expect(204);
+            });
+            it('responds with 404 when datatype does not exist', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.delete(`/api/dynamic/unknowndatatype/${elementname}`).expect(404);
+            });
+            it('responds with 404 when no element exists for given name', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.delete(`/api/dynamic/${datatype}/unknownname`).expect(404);
+            });
+            it('responds with 204 and deletes element from database when all is correct', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.delete(`/api/dynamic/${datatype}/${elementname}`).expect(204);
+                var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, elementname);
+                assert.ok(!elementFromDatabase);
+            });
         }
 
     },

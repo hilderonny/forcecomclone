@@ -39,5 +39,16 @@ module.exports = () => {
             res.sendStatus(400);
         }
     });
+
+    App.router.delete('/dynamic/:datatype/:name', auth, async (req, res) => {
+        var existingDynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
+        if (!existingDynamicObject) return res.sendStatus(404);
+        try {
+            await Db.deleteDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
+            res.sendStatus(204);
+        } catch(error) {
+            res.sendStatus(400);
+        }
+    });
     
 }
