@@ -7,36 +7,30 @@ describe.only('Dynamic API', () => {
 
     typename = "dynamictype";
     clientname = "0";
-
-    describe('GET/', () => {
-
-        th.apiTests.get(typename, clientname);
-
-    });
-
-    elementname = "name1";
-
-    describe('GET/:name', () => {
-
-        th.apiTests.getName(typename, clientname, elementname);
-
-    });
-
-    element = {
+    getelementname = "name1";
+    postelement = {
         name: "newname",
         fieldone: "f1c",
         fieldtwo: true,
-        fieldthree: 4711,
-        fieldfour: new Date('2015-12-17T03:24:00')
-    }
+        fieldthree: 4711.0815,
+        fieldfour: new Date('2015-12-17T03:24:00.000Z')
+    };
 
-    describe.only('POST/', () => {
-
-        th.apiTests.post(typename, clientname, element);
-
+    describe('GET/', () => {
+        th.apiTests.get(typename, clientname);
     });
 
-    describe('PUT/:name', () => {});
+    describe('GET/:name', () => {
+        th.apiTests.getName(typename, clientname, getelementname);
+    });
+
+    describe('POST/', () => {
+        th.apiTests.post(typename, clientname, postelement);
+    });
+
+    describe.only('PUT/:name', () => {
+        
+    });
 
     describe('DELETE/:name', () => {});
 

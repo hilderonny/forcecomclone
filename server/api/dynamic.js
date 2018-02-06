@@ -16,12 +16,15 @@ module.exports = () => {
     });
 
     App.router.post('/dynamic/:datatype', auth, async (req, res) => {
-        console.log("TODO");
-        var client = req.body;
-        if (!client || !client.name) return res.sendStatus(400);
-        if (await Db.getClient(client.name)) return res.sendStatus(409);
-        await Db.createClient(client.name);
-        res.sendStatus(200);
+        var element = req.body;
+        if (!element || !element.name) return res.sendStatus(400);
+        if (await Db.getDynamicObject(req.user.clientname, req.params.datatype, element.name)) return res.sendStatus(409);
+        try {
+            await Db.insertDynamicObject(req.user.clientname, req.params.datatype, element);
+            res.sendStatus(200);
+        } catch(error) {
+            res.sendStatus(400);
+        }
     });
     
 }

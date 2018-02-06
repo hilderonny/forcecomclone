@@ -113,7 +113,7 @@ var Db = {
         }
     },
 
-    insert: async(clientname, datatype, element) => {
+    insertDynamicObject: async(clientname, datatype, element) => {
         var keys = Object.keys(element);
         var values = keys.map((k) => {
             var value = element[k];
@@ -125,7 +125,7 @@ var Db = {
             return noescape ? value : `'${value}'`;
         });
         var statement = `INSERT INTO ${datatype} (${keys.join(',')}) VALUES (${values.join(',')});`;
-        Db.query(clientname, statement);
+        return Db.query(clientname, statement);
     },
 
     loginUser: async(username, password) => {

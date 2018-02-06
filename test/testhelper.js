@@ -8,6 +8,23 @@ var TestHelper = {
     app: undefined,
     token: undefined,
 
+    clone: (element) => {
+        var newElement = {};
+        Object.keys(element).forEach((k) => newElement[k] = element[k]);
+        return newElement;
+    },
+
+    compare: (actual, expected) => {
+        // Go over JSON to convert dates correctly
+        var actual1 = JSON.parse(JSON.stringify(actual));
+        var expected1 = JSON.parse(JSON.stringify(expected));
+        // Convert all to strings to correctly compare numerics
+        Object.keys(actual).forEach(((k) => {
+            actual1[k] = actual1[k].toString();
+            expected1[k] = expected1[k].toString();
+        }));
+        assert.strictEqual(JSON.stringify(actual1), JSON.stringify(expected1));
+    },
 
     apiTests: {
 
@@ -35,7 +52,7 @@ var TestHelper = {
                 var elementsFromApi = (await TestHelper.get(`/api/dynamic/${datatype}`).expect(200)).body;
                 assert.strictEqual(elementsFromApi.length, allElementsFromDatabase.length);
                 for (var i = 0; i < allElementsFromDatabase.length; i++) {
-                    assert.strictEqual(JSON.stringify(elementsFromApi[i]), JSON.stringify(allElementsFromDatabase[i])); // Most efficient way to compare several datatypes
+                    TestHelper.compare(elementsFromApi[i], allElementsFromDatabase[i]); // Most efficient way to compare several datatypes
                 }
             });
         },
@@ -66,38 +83,82 @@ var TestHelper = {
                 var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, elementname);
                 await TestHelper.doLogin(`${clientname}_0_0`, "test");
                 var elementFromApi = (await TestHelper.get(`/api/dynamic/${datatype}/${elementname}`).expect(200)).body;
-                assert.strictEqual(JSON.stringify(elementFromApi), JSON.stringify(elementFromDatabase));
+                TestHelper.compare(elementFromApi, elementFromDatabase);
             });
         },
 
         post: function(datatype, clientname, element) {
-            /*
-            - no auth 403
-            - no permission at all 403
-            - only read permission 403
-            - no permission but admin 200
-            - only read permission but admin 200
-            - no data 400
-            - no name 400
-            - no datatype 404
-            - name existing in datatype 409
-            - missing required fields 400
-            - unknown fields 400
-            - wrong value type for field 400
-            - correct written into database
-            */
-            it('responds without authentication with 403', async() => {
-                await TestHelper.post(`/api/dynamic/${api}`, data).expect(403);
+
+            beforeEach(async() => {
+                await Db.query(clientname, `DELETE FROM ${datatype} WHERE name = '${element.name}';`);
             });
-            it('responds without write permission with 403', async() => {
+
+            it('responds without authentication with 403', async() => {
+                await TestHelper.post(`/api/dynamic/${datatype}`, element).expect(403);
+            });
+            it('responds without any permission with 403', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.post(`/api/dynamic/${datatype}`, element).expect(403);
+            });
+            it('responds with only read permission with 403', async() => {
                 await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
                 await TestHelper.doLogin(`${clientname}_0_0`, "test");
-                await TestHelper.post(`/api/dynamic/${api}`, data).expect(403);
+                await TestHelper.post(`/api/dynamic/${datatype}`, element).expect(403);
             });
-            it('responds with 200 when the user is administrator but does not have write permission', async() => {
+            it('responds with 200 when the user is administrator but does not have any permission', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.post(`/api/dynamic/${datatype}`, element).expect(200);
+            });
+            it('responds with 200 when the user is administrator but does only have read permission', async() => {
                 await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
                 await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
-                await TestHelper.post(`/api/dynamic/${api}`, data).expect(200);
+                await TestHelper.post(`/api/dynamic/${datatype}`, element).expect(200);
+            });
+            it('responds with 400 when no data was sent', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.post(`/api/dynamic/${datatype}`).expect(400);
+            });
+            it('responds with 400 when no name was given', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                delete newElement.name;
+                await TestHelper.post(`/api/dynamic/${datatype}`, newElement).expect(400);
+            });
+            it('responds with 404 when datatype does not exist', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.post(`/api/dynamic/unknowndatatype`, element).expect(404);
+            });
+            it('responds with 409 when name is already taken by another element of same datatype', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                newElement.name = "name1";
+                await TestHelper.post(`/api/dynamic/${datatype}`, newElement).expect(409);
+            });
+            it('responds with 400 when required fields are missing', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                delete newElement.fieldone;
+                await TestHelper.post(`/api/dynamic/${datatype}`, newElement).expect(400);
+            });
+            it('responds with 400 when unknown fields are given', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                newElement.unknownfield = "Trallala";
+                await TestHelper.post(`/api/dynamic/${datatype}`, newElement).expect(400);
+            });
+            it('responds with 400 when field value has wrong type', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                newElement.fieldtwo = 4711;
+                await TestHelper.post(`/api/dynamic/${datatype}`, newElement).expect(400);
+            });
+            it('creates element in database when all is correct', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.post(`/api/dynamic/${datatype}`, element).expect(200);
+                var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, element.name);
+                TestHelper.compare(elementFromDatabase, element);
             });
         }
 
@@ -146,12 +207,12 @@ var TestHelper = {
         for (var i = 0; i < databases.length; i++) {
             var database = databases[i];
             await Db.createDatatype(database, "dynamictype", "Dynamic Type", "Dynamic Types", true);
-            await Db.createDatatypeField(database, "dynamictype", "fieldone", "Text", "TEXT", true);
+            await Db.createDatatypeField(database, "dynamictype", "fieldone", "Text", "TEXT NOT NULL", true);
             await Db.createDatatypeField(database, "dynamictype", "fieldtwo", "Boolean", "BOOLEAN", false);
             await Db.createDatatypeField(database, "dynamictype", "fieldthree", "Numeric", "NUMERIC", false);
-            await Db.createDatatypeField(database, "dynamictype", "fieldfour", "Time stamp", "TIMESTAMP", false);
-            await Db.insert(database, "dynamictype", { name: "name1", fieldone: "f1a", fieldtwo: true, fieldthree: 1234.5678, fieldfour: new Date('1995-12-17T03:24:00') });
-            await Db.insert(database, "dynamictype", { name: "name2", fieldone: "f1b", fieldtwo: false, fieldthree: 8765.4321, fieldfour: new Date('2005-12-17T03:24:00') });
+            await Db.createDatatypeField(database, "dynamictype", "fieldfour", "Time stamp", "TIMESTAMP WITH TIME ZONE", false);
+            await Db.insertDynamicObject(database, "dynamictype", { name: "name1", fieldone: "f1a", fieldtwo: true, fieldthree: 1234.5678, fieldfour: new Date('1995-12-17T03:24:00.000Z') });
+            await Db.insertDynamicObject(database, "dynamictype", { name: "name2", fieldone: "f1b", fieldtwo: false, fieldthree: 8765.4321, fieldfour: new Date('2005-12-17T03:24:00.000Z') });
         }
     },
 
