@@ -7,6 +7,7 @@ var Db = {
 
     PortalDatabaseName: "portal",
 
+    pools: {},
     isInitialized: false,
 
     init: async(dropDatabase) => {
@@ -109,6 +110,22 @@ var Db = {
         return (await Db.query(clientname, `SELECT * FROM ${datatype} ORDER BY name;`)).rows;
     },
 
+    getPool: (databasename) => {
+        var pool = Db.pools[databasename];
+        if (!pool) {
+            var localConfig = LocalConfig.load();
+            pool = new Pool({
+                host: localConfig.dbhost,
+                port: localConfig.dbport,
+                database: databasename,
+                user: localConfig.dbuser,
+                password: localConfig.dbpassword
+            });
+            Db.pools[databasename] = pool;
+        }
+        return pool;
+    },
+
     // TODO: Auf getDynamic...() umstellen
     getUser: async(username, clientname) => {
         var result = await Db.query(clientname, `SELECT name, usergroup FROM users WHERE name = '${username}';`);
@@ -170,18 +187,17 @@ var Db = {
         return Db.queryDirect(`${localConfig.dbprefix}_${databaseNameWithoutPrefix}`, query);
     },
 
-    queryDirect: async(databaseName, query) => {
+    queryDirect: async(databasename, query) => {
         var localConfig = LocalConfig.load();
-        var pool = new Pool({
-            host: localConfig.dbhost,
-            port: localConfig.dbport,
-            database: databaseName,
-            user: localConfig.dbuser,
-            password: localConfig.dbpassword
-        });
-        // console.log("\x1b[1:36m%s\x1b[0m", databaseName + ": " + query); // Color: https://stackoverflow.com/a/41407246, http://bluesock.org/~willkg/dev/ansi.html
-        var result = await pool.query(query);
-        await pool.end();
+        var pool = Db.getPool(databasename);
+        var client = await pool.connect();
+        var result = undefined;
+        try {
+            // console.log("\x1b[1:36m%s\x1b[0m", databasename + ": " + query); // Color: https://stackoverflow.com/a/41407246, http://bluesock.org/~willkg/dev/ansi.html
+            result = await client.query(query);
+        } finally {
+            client.release();
+        }
         return result;
     },
 

@@ -267,11 +267,17 @@ var TestHelper = {
 
     init: async() => {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Ignore self signed certificates
-        // await Db.init(true); // Drop all
-        // await TestHelper.prepareClients();
-        // await TestHelper.prepareUserGroups();
-        // await TestHelper.prepareUsers();
-        // await TestHelper.prepareDynamicTypes();
+        process.stdout.write("Preparing database 1/5\r");
+        await Db.init(true); // Drop all
+        process.stdout.write("Preparing database 2/5\r");
+        await TestHelper.prepareClients();
+        process.stdout.write("Preparing database 3/5\r");
+        await TestHelper.prepareUserGroups();
+        process.stdout.write("Preparing database 4/5\r");
+        await TestHelper.prepareUsers();
+        process.stdout.write("Preparing database 5/5\r");
+        await TestHelper.prepareDynamicTypes();
+        console.log("Database ready.               ");
         TestHelper.app = await App.start();
     },
 
