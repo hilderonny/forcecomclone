@@ -153,7 +153,7 @@ var Db = {
             user: localConfig.dbuser,
             password: localConfig.dbpassword
         });
-        console.log("\x1b[1:36m%s\x1b[0m", databaseName + ": " + query); // Color: https://stackoverflow.com/a/41407246, http://bluesock.org/~willkg/dev/ansi.html
+        // console.log("\x1b[1:36m%s\x1b[0m", databaseName + ": " + query); // Color: https://stackoverflow.com/a/41407246, http://bluesock.org/~willkg/dev/ansi.html
         var result = await pool.query(query);
         await pool.end();
         return result;

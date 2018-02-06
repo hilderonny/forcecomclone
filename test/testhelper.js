@@ -16,7 +16,6 @@ var TestHelper = {
                 await TestHelper.get(`/api/dynamic/${datatype}`).expect(403);
             });
             it('responds without read permission with 403', async() => {
-                // Remove the corresponding permission
                 await Db.deletePermission(`${clientname}_0`, clientname, datatype);
                 await TestHelper.doLogin(`${clientname}_0_0`, "test");
                 await TestHelper.get(`/api/dynamic/${datatype}`).expect(403);
@@ -26,33 +25,67 @@ var TestHelper = {
                 await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
                 await TestHelper.get(`/api/dynamic/${datatype}`).expect(200);
             });
-            it.only('responds with list of all elements containing all details', async() => {
+            it('responds with 404 when datatype is not existing', async() => {
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.get("/api/dynamic/unknowndatatype").expect(404);
+            });
+            it('responds with list of all elements containing all details', async() => {
                 var allElementsFromDatabase = await Db.getDynamicObjects(clientname, datatype);
-                console.log(allElementsFromDatabase);
                 await TestHelper.doLogin(`${clientname}_0_0`, "test");
                 var elementsFromApi = (await TestHelper.get(`/api/dynamic/${datatype}`).expect(200)).body;
                 assert.strictEqual(elementsFromApi.length, allElementsFromDatabase.length);
                 for (var i = 0; i < allElementsFromDatabase.length; i++) {
-                    var elementFromDatabase = allElementsFromDatabase[i];
-                    var keys = Object.keys(elementFromDatabase);
-                    console.log(elementFromDatabase, keys);
-                    for (var j = 0; j < keys.length; j++) {
-
-                    }
-                    assert.strictEqual(elementsFromApi[i].name, allElementsFromDatabase[i].name);
+                    assert.strictEqual(JSON.stringify(elementsFromApi[i]), JSON.stringify(allElementsFromDatabase[i])); // Most efficient way to compare several datatypes
                 }
             });
         },
 
-        getName: function(api, clientname, name, datatype) {
-            TestHelper.apiTests.get(`${api}/${name}`, datatype);
-            it('responds with 404 when no client exists for given name', async() => {
+        getName: function(datatype, clientname, elementname) {
+            it('responds without authentication with 403', async() => {
+                await TestHelper.get(`/api/dynamic/${datatype}/${elementname}`).expect(403);
+            });
+            it('responds without read permission with 403', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
                 await TestHelper.doLogin(`${clientname}_0_0`, "test");
-                await TestHelper.get(`/api/dynamic/${api}/unknownname`).expect(404);
+                await TestHelper.get(`/api/dynamic/${datatype}/${elementname}`).expect(403);
+            });
+            it('responds with 200 when the user is administrator but does not have read permission', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.get(`/api/dynamic/${datatype}/${elementname}`).expect(200);
+            });
+            it('responds with 404 when datatype is not existing', async() => {
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.get(`/api/dynamic/unknowndatatype/${elementname}`).expect(404);
+            });
+            it('responds with 404 when no element exists for given name', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.get(`/api/dynamic/${datatype}/unknownname`).expect(404);
+            });
+            it('responds with the requested element containing all details', async() => {
+                var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, elementname);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var elementFromApi = (await TestHelper.get(`/api/dynamic/${datatype}/${elementname}`).expect(200)).body;
+                assert.strictEqual(JSON.stringify(elementFromApi), JSON.stringify(elementFromDatabase));
             });
         },
 
-        post: function(api, clientname, datatype, data) {
+        post: function(datatype, clientname, element) {
+            /*
+            - no auth 403
+            - no permission at all 403
+            - only read permission 403
+            - no permission but admin 200
+            - only read permission but admin 200
+            - no data 400
+            - no name 400
+            - no datatype 404
+            - name existing in datatype 409
+            - missing required fields 400
+            - unknown fields 400
+            - wrong value type for field 400
+            - correct written into database
+            */
             it('responds without authentication with 403', async() => {
                 await TestHelper.post(`/api/dynamic/${api}`, data).expect(403);
             });

@@ -10,14 +10,13 @@ module.exports = () => {
     });
 
     App.router.get('/dynamic/:datatype/:name', auth, async (req, res) => {
-        console.log("NEU");
-        var client = await Db.getClient(req.params.name);
-        if (!client) return res.sendStatus(404);
-        res.send(client);
+        var dynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
+        if (!dynamicObject) return res.sendStatus(404);
+        res.send(dynamicObject);
     });
 
     App.router.post('/dynamic/:datatype', auth, async (req, res) => {
-        console.log("NEU");
+        console.log("TODO");
         var client = req.body;
         if (!client || !client.name) return res.sendStatus(400);
         if (await Db.getClient(client.name)) return res.sendStatus(409);
