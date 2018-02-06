@@ -2,6 +2,7 @@ var Pool = require("pg").Pool;
 var LocalConfig = require("./localconfig").LocalConfig;
 var compareSync = require("bcryptjs").compareSync;
 var fieldtypes = require("./constants").fieldtypes;
+var types = require('pg').types;
 
 var Db = {
 
@@ -12,6 +13,9 @@ var Db = {
 
     init: async(dropDatabase) => {
         if (Db.isInitialized) return;
+        // Define type parsing, (SELECT typname, oid FROM pg_type order by typname)
+        types.setTypeParser(20, (val) => { return parseInt(val); }); // bigint / int8
+        types.setTypeParser(1700, (val) => { return parseFloat(val); }); // numeric
         var localConfig = LocalConfig.load();
         if (dropDatabase) {
             var portalDatabases = await Db.queryDirect("postgres", `SELECT datname FROM pg_database WHERE datname like '${localConfig.dbprefix}_%';`);
@@ -144,7 +148,6 @@ var Db = {
     },
 
     insertDynamicObject: async(clientname, datatype, element) => {
-        // TODO: Datentypen raussuchen
         var fields = await Db.getDataTypeFields(clientname, datatype);
         var fieldMap = {};
         var keys = Object.keys(element);
@@ -164,7 +167,6 @@ var Db = {
                 case fieldtypes.text:  result = `'${value}'`; break;
                 default: throw new Error(`Unknown field type '${field.fieldtype}'`);
             }
-            // TODO: Check other direction for required fields
             return result;
         });
         var statement = `INSERT INTO ${datatype} (${keys.join(',')}) VALUES (${values.join(',')});`;
@@ -202,19 +204,26 @@ var Db = {
     },
 
     updateDynamicObject: async(clientname, datatype, elementname, element) => {
+        var fields = await Db.getDataTypeFields(clientname, datatype);
+        var fieldMap = {};
+        fields.forEach((f) => { fieldMap[f.name] = f; });
         var keys = Object.keys(element);
         var values = keys.map((k) => {
             var value = element[k];
-            var noescape = [ 'boolean', 'number' ].indexOf(typeof(value)) >= 0;
-            if (value instanceof Date) {
-                noescape = true;
-                value = `to_timestamp(${value.getTime()/1000})`;
+            var field = fieldMap[k];
+            if (!field) throw new Error(`Unknown field '${k}'`);
+            var result;
+            switch (field.fieldtype) {
+                case fieldtypes.boolean: result = value; break;
+                case fieldtypes.datetime: result = value; break;
+                case fieldtypes.decimal: result = value; break;
+                case fieldtypes.text:  result = `'${value}'`; break;
+                default: throw new Error(`Unknown field type '${field.fieldtype}'`);
             }
-            return k + "=" + (noescape ? value : `'${value}'`);
+            return `${k}=${result}`;
         });
         var statement = `UPDATE ${datatype} SET ${values.join(',')} WHERE name='${elementname}';`;
-        console.log(statement);
-        // return Db.query(clientname, statement);
+        return Db.query(clientname, statement);
     },
     
 }

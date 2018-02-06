@@ -31,7 +31,7 @@ describe.only('Dynamic API', () => {
         th.apiTests.getName(typename, clientname, getelementname);
     });
 
-    describe.only('POST/', () => {
+    describe('POST/', () => {
         th.apiTests.post(typename, clientname, postelement);
     });
 

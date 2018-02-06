@@ -16,18 +16,7 @@ var TestHelper = {
     },
 
     compare: (actual, expected) => {
-
-        // TODO: Sollte nicht mehr notwendig sein!
-
-        // Go over JSON to convert dates correctly
-        var actual1 = JSON.parse(JSON.stringify(actual));
-        var expected1 = JSON.parse(JSON.stringify(expected));
-        // Convert all to strings to correctly compare numerics
-        Object.keys(actual).forEach(((k) => {
-            actual1[k] = actual1[k].toString();
-            expected1[k] = expected1[k].toString();
-        }));
-        assert.strictEqual(JSON.stringify(actual1), JSON.stringify(expected1));
+        assert.strictEqual(JSON.stringify(actual), JSON.stringify(expected));
     },
 
     apiTests: {
@@ -232,17 +221,23 @@ var TestHelper = {
                 newElement.fieldtwo = 4711;
                 await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, newElement).expect(400);
             });
-            xit('updates element in database when all is correct', async() => {
-                // await TestHelper.doLogin(`${clientname}_0_0`, "test");
-                // await TestHelper.put(`/api/dynamic/${datatype}`, element).expect(200);
-                // var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, element.name);
-                // TestHelper.compare(elementFromDatabase, element);
+            it('updates element in database when all is correct', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, element).expect(200);
+                var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, elementname);
+                Object.keys(element).forEach((k) => {
+                    assert.strictEqual(elementFromDatabase[k], element[k]);
+                });
             });
-            xit('updates only sent fields', async() => {
-                // await TestHelper.doLogin(`${clientname}_0_0`, "test");
-                // await TestHelper.put(`/api/dynamic/${datatype}`, element).expect(200);
-                // var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, element.name);
-                // TestHelper.compare(elementFromDatabase, element);
+            it('updates only sent fields', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = { fieldthree: 9999 };
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, newElement).expect(200);
+                var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, elementname);
+                assert.strictEqual(elementFromDatabase.fieldone, element.fieldone);
+                assert.strictEqual(elementFromDatabase.fieldtwo, element.fieldtwo);
+                assert.strictEqual(elementFromDatabase.fieldthree, newElement.fieldthree);
+                assert.strictEqual(elementFromDatabase.fieldfour, element.fieldfour);
             });
         }
 
