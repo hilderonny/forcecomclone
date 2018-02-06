@@ -1,8 +1,7 @@
 var Db = require("../server/tools/db").Db;
 var supertest = require("supertest");
 var App = require("../server/tools/app").App;
-var modules = require("../server/tools/constants").modules;
-var permissions = require("../server/tools/constants").permissions;
+var assert = require("assert");
 
 var TestHelper = {
 
@@ -12,62 +11,60 @@ var TestHelper = {
 
     apiTests: {
 
-        get: function(api, moduleName, permission) {
+        get: function(datatype, clientname) {
             it('responds without authentication with 403', async() => {
-                await TestHelper.get(`/api/${api}`).expect(403);
+                await TestHelper.get(`/api/dynamic/${datatype}`).expect(403);
             });
             it('responds without read permission with 403', async() => {
                 // Remove the corresponding permission
-                await Db.deletePermission("0_0", "0", permission);
-                await TestHelper.doLogin("0_0_0", "test");
-                await TestHelper.get(`/api/${api}`).expect(403);
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.get(`/api/dynamic/${datatype}`).expect(403);
             });
-            function checkForUser(username, clientname) {
-                return async() => {
-                    await Db.deleteClientModule(clientname, moduleName);
-                    await TestHelper.doLogin(username, "test");
-                    await TestHelper.get(`/api/${api}`).expect(403);
-                }
-            }
-            it('responds when the logged in user\'s (normal user) client has no access to this module, with 403', checkForUser("0_0_0", "0"));
-            it('responds when the logged in user\'s (administrator) client has no access to this module, with 403', checkForUser("0_0_ADMIN0", "0"));
             it('responds with 200 when the user is administrator but does not have read permission', async() => {
-                await Db.deletePermission("0_0", "0", permission);
-                await TestHelper.doLogin("0_0_ADMIN0", "test");
-                await TestHelper.get(`/api/${api}`).expect(200);
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.get(`/api/dynamic/${datatype}`).expect(200);
+            });
+            it.only('responds with list of all elements containing all details', async() => {
+                var allElementsFromDatabase = await Db.getDynamicObjects(clientname, datatype);
+                console.log(allElementsFromDatabase);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var elementsFromApi = (await TestHelper.get(`/api/dynamic/${datatype}`).expect(200)).body;
+                assert.strictEqual(elementsFromApi.length, allElementsFromDatabase.length);
+                for (var i = 0; i < allElementsFromDatabase.length; i++) {
+                    var elementFromDatabase = allElementsFromDatabase[i];
+                    var keys = Object.keys(elementFromDatabase);
+                    console.log(elementFromDatabase, keys);
+                    for (var j = 0; j < keys.length; j++) {
+
+                    }
+                    assert.strictEqual(elementsFromApi[i].name, allElementsFromDatabase[i].name);
+                }
             });
         },
 
-        getName: function(api, name, moduleName, permission) {
-            TestHelper.apiTests.get(`${api}/${name}`, moduleName, permission);
+        getName: function(api, clientname, name, datatype) {
+            TestHelper.apiTests.get(`${api}/${name}`, datatype);
             it('responds with 404 when no client exists for given name', async() => {
-                await TestHelper.doLogin("0_0_0", "test");
-                await TestHelper.get(`/api/${api}/unknownname`).expect(404);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.get(`/api/dynamic/${api}/unknownname`).expect(404);
             });
         },
 
-        post: function(api, moduleName, permission, data) {
+        post: function(api, clientname, datatype, data) {
             it('responds without authentication with 403', async() => {
-                await TestHelper.post(`/api/${api}`, data).expect(403);
+                await TestHelper.post(`/api/dynamic/${api}`, data).expect(403);
             });
             it('responds without write permission with 403', async() => {
-                await Db.createPermission("0_0", "0", permission, false);
-                await TestHelper.doLogin("0_0_0", "test");
-                await TestHelper.post(`/api/${api}`, data).expect(403);
+                await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.post(`/api/dynamic/${api}`, data).expect(403);
             });
-            function checkForUser(username, clientname) {
-                return async() => {
-                    await Db.deleteClientModule(clientname, moduleName);
-                    await TestHelper.doLogin(username, "test");
-                    await TestHelper.post(`/api/${api}`, data).expect(403);
-                }
-            }
-            it('responds when the logged in user\'s (normal user) client has no access to this module, with 403', checkForUser("0_0_0", "0"));
-            it('responds when the logged in user\'s (administrator) client has no access to this module, with 403', checkForUser("0_0_ADMIN0", "0"));
             it('responds with 200 when the user is administrator but does not have write permission', async() => {
-                await Db.createPermission("0_0", "0", permission, false);
-                await TestHelper.doLogin("0_0_ADMIN0", "test");
-                await TestHelper.post(`/api/${api}`, data).expect(200);
+                await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.post(`/api/dynamic/${api}`, data).expect(200);
             });
         }
 
@@ -96,6 +93,7 @@ var TestHelper = {
         // await TestHelper.prepareClients();
         // await TestHelper.prepareUserGroups();
         // await TestHelper.prepareUsers();
+        // await TestHelper.prepareDynamicTypes();
         TestHelper.app = await App.start();
     },
 
@@ -110,22 +108,32 @@ var TestHelper = {
         await Db.createClient('1');
     },
 
-    prepareClientModules: async() => {
-        var clients = [ '0', '1' ];
-        for (var i = 0; i < clients.length; i++) {
-            var client = clients[i];
-            await Db.createClientModule(client, modules.clients);
+    prepareDynamicTypes: async() => {
+        var databases = [ 'portal', '0', '1' ];
+        for (var i = 0; i < databases.length; i++) {
+            var database = databases[i];
+            await Db.createDatatype(database, "dynamictype", "Dynamic Type", "Dynamic Types", true);
+            await Db.createDatatypeField(database, "dynamictype", "fieldone", "Text", "TEXT", true);
+            await Db.createDatatypeField(database, "dynamictype", "fieldtwo", "Boolean", "BOOLEAN", false);
+            await Db.createDatatypeField(database, "dynamictype", "fieldthree", "Numeric", "NUMERIC", false);
+            await Db.createDatatypeField(database, "dynamictype", "fieldfour", "Time stamp", "TIMESTAMP", false);
+            await Db.insert(database, "dynamictype", { name: "name1", fieldone: "f1a", fieldtwo: true, fieldthree: 1234.5678, fieldfour: new Date('1995-12-17T03:24:00') });
+            await Db.insert(database, "dynamictype", { name: "name2", fieldone: "f1b", fieldtwo: false, fieldthree: 8765.4321, fieldfour: new Date('2005-12-17T03:24:00') });
         }
     },
 
     preparePermissions: async() => {
         var databases = [ 'portal', '0', '1' ];
         var usergroups = [ '0', '1' ];
+        var datatypes = [ 'clients', 'usergroups', 'users', 'dynamictype' ];
         for (var i = 0; i < databases.length; i++) {
             var database = databases[i];
             for (var j = 0; j < usergroups.length; j++) {
                 var usergroup = `${database}_${usergroups[j]}`;
-                await Db.createPermission(usergroup, database, permissions.clients, true);
+                for (var k = 0; k < datatypes.length; k++) {
+                    var datatype = datatypes[k];
+                    await Db.createPermission(usergroup, database, datatype, true);
+                }
             }
         }
     },
@@ -167,7 +175,6 @@ before(async() => {
 
 beforeEach(async() => {
     // Permissions are overwritten in several tests
-    await TestHelper.prepareClientModules();
     await TestHelper.preparePermissions();
     TestHelper.token = undefined; // Force logout
 });

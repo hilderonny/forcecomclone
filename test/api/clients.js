@@ -1,20 +1,18 @@
-var modules = require("../../server/tools/constants").modules;
-var permissions = require("../../server/tools/constants").permissions;
-
+/*
 var assert = require("assert");
 var th = require("../testhelper").TestHelper;
 var Db = require("../../server/tools/db").Db;
 
 describe('API clients', () => {
 
-    describe.only('GET/', () => {
+    describe('GET/', () => {
 
-        th.apiTests.get("clients", modules.clients, permissions.clients);
+        th.apiTests.get("clients", "portal", permissions.clients);
 
         it('responds with list of all clients containing all details', async() => {
             var allClientsFromDatabase = await Db.getClients();
             await th.doLogin('portal_0_ADMIN0', 'test');
-            var clientsFromApi = (await th.get("/api/clients").expect(200)).body;
+            var clientsFromApi = (await th.get("/api/dynamic/clients").expect(200)).body;
             assert.strictEqual(clientsFromApi.length, allClientsFromDatabase.length);
             for (var i = 0; i < clientsFromApi.length; i++) {
                 assert.strictEqual(clientsFromApi[0].name, allClientsFromDatabase[0].name);
@@ -41,7 +39,7 @@ describe('API clients', () => {
 
     describe('GET/:name', function() {
 
-        th.apiTests.getName("clients", "0", modules.clients, permissions.clients);
+        th.apiTests.getName("clients", "0", permissions.clients);
 
         it('responds with all details of the client', async() => {
             var clientFromDatabase = await Db.getClient("0");
@@ -60,7 +58,7 @@ describe('API clients', () => {
             await Db.deleteClient(data.name);
         });
 
-        th.apiTests.post("clients", modules.clients, permissions.clients, data);
+        th.apiTests.post("clients", permissions.clients, data);
 
         it('responds with 400 when no client is given', async() => {
             await th.doLogin('portal_0_ADMIN0', 'test');
@@ -84,15 +82,6 @@ describe('API clients', () => {
             var clientFromDatabase = await Db.getClient(data.name);
             assert.ok(clientFromDatabase);
             assert.strictEqual(clientFromDatabase.name, data.name);
-        });
-
-        it('creates client module assignments for modules "base" and "doc"', async function() {
-            await th.doLogin('portal_0_ADMIN0', 'test');
-            await th.post('/api/clients').send({name:data.name}).expect(200);
-            var result = await Db.query(Db.PortalDatabaseName, `SELECT module FROM clientmodules WHERE client = '${data.name}'`);
-            assert.strictEqual(result.rowCount, 2);
-            assert.ok(result.rows.find((m) => m.module === modules.base));
-            assert.ok(result.rows.find((m) => m.module === modules.doc));
         });
 
     });
@@ -173,36 +162,6 @@ describe('API clients', () => {
             });
         });
 
-        xit('responds with 403 when the logged in user\'s (normal user) client has no access to this module', function() {
-            return db.get('clients').findOne({name: '1'}).then(function(clientFromDatabase){
-                return th.removeClientModule('1', 'clients').then(function(){
-                    return th.doLoginAndGetToken('1_0_0', 'test').then(function(token){
-                        var newAdmin ={
-                            name: 'newAdmin',
-                            pass: 'parola',
-                            clientId: clientFromDatabase._id
-                        };
-                        return th.post(`/api/clients/newadmin?token=${token}`).send(newAdmin).expect(403);
-                    });
-                });
-            });
-        });
-
-        xit('responds with 403 when the logged in user\'s (administrator) client has no access to this module', function() {
-            return db.get('clients').findOne({name: '1'}).then(function(clientFromDatabase){
-                return th.removeClientModule('1', 'clients').then(function(){
-                    return th.doLoginAndGetToken('1_0_ADMIN0', 'test').then((token) => { // Has isAdmin flag
-                        var newAdmin ={
-                            name: 'newAdmin',
-                            pass: 'parola',
-                            clientId: clientFromDatabase._id
-                        };
-                        return th.post(`/api/clients/newadmin?token=${token}`).send(newAdmin).expect(403);
-                    });
-                });
-            });
-        });
-
         xit('responds with 403 without write permission', function() {
             return db.get('clients').findOne({name: '1'}).then(function(clientFromDatabase){
                 // Remove the corresponding permission
@@ -254,32 +213,6 @@ describe('API clients', () => {
                 return th.put('/api/clients/' + clientId)
                     .send({ name: 'OtherClientName' })
                     .expect(403);
-            });
-        });
-
-        xit('responds with 403 when the logged in user\'s (normal user) client has no access to this module', function() {
-            return db.get('clients').findOne({ name : '1' }).then((clientFromDatabase) => {
-                return th.removeClientModule('1', 'clients').then(function() {
-                    return th.doLoginAndGetToken('1_0_0', 'test').then((token) => {
-                        var updatedClient = {
-                            name: 'newName'
-                        };
-                        return th.put(`/api/clients/${clientFromDatabase._id}?token=${token}`).send(updatedClient).expect(403);
-                    });
-                });
-            });
-        });
-
-        xit('responds with 403 when the logged in user\'s (administrator) client has no access to this module', function() {
-            return db.get('clients').findOne({ name : '1' }).then((clientFromDatabase) => {
-                return th.removeClientModule('1', 'clients').then(function() {
-                    return th.doLoginAndGetToken('1_0_ADMIN0', 'test').then((token) => { // Has isAdmin flag
-                        var updatedClient = {
-                            name: 'newName'
-                        };
-                        return th.put(`/api/clients/${clientFromDatabase._id}?token=${token}`).send(updatedClient).expect(403);
-                    });
-                });
             });
         });
 
@@ -393,7 +326,7 @@ describe('API clients', () => {
         // th.apiTests.delete.defaultNegative(co.apis.clients, co.permissions.ADMINISTRATION_CLIENT, getDeleteClientId);
         // th.apiTests.delete.defaultPositive(co.apis.clients, co.collections.clients.name, getDeleteClientId);
 
-        xit('responds with 204 and deletes all dependent objects (activities, clientmodules, documents, fmobjects, folders, permissions, usergroups, users)', function() {
+        xit('responds with 204 and deletes all dependent objects (activities, documents, fmobjects, folders, permissions, usergroups, users)', function() {
             var clientIdToDelete;
             return getDeleteClientId().then(function(clientId) {
                 clientIdToDelete = clientId;
@@ -426,3 +359,4 @@ describe('API clients', () => {
     });
 
 });
+*/
