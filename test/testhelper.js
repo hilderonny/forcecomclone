@@ -160,6 +160,86 @@ var TestHelper = {
                 var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, element.name);
                 TestHelper.compare(elementFromDatabase, element);
             });
+        },
+
+        put: function(datatype, clientname, elementname, element) {
+
+            beforeEach(async() => {
+                await Db.query(clientname, `DELETE FROM ${datatype} WHERE name = '${elementname}';`);
+                var newElement = TestHelper.clone(element);
+                newElement.name = elementname;
+                await Db.insertDynamicObject(clientname, datatype, newElement);
+            });
+
+            it('responds without authentication with 403', async() => {
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, element).expect(403);
+            });
+            it('responds without any permission with 403', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, element).expect(403);
+            });
+            it('responds with only read permission with 403', async() => {
+                await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, element).expect(403);
+            });
+            it('responds with 200 when the user is administrator but does not have any permission', async() => {
+                await Db.deletePermission(`${clientname}_0`, clientname, datatype);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, element).expect(200);
+            });
+            it('responds with 200 when the user is administrator but does only have read permission', async() => {
+                await Db.createPermission(`${clientname}_0`, clientname, datatype, false);
+                await TestHelper.doLogin(`${clientname}_0_ADMIN0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, element).expect(200);
+            });
+            it('responds with 400 when no data was sent', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`).expect(400);
+            });
+            it('responds with 400 when a name was given', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                newElement.name = "newname";
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, newElement).expect(400);
+            });
+            it('responds with 404 when datatype does not exist', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.put(`/api/dynamic/unknowndatatype/${elementname}`, element).expect(404);
+            });
+            it('responds with 404 when no element exists for given name', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.get(`/api/dynamic/${datatype}/unknownname`, element).expect(404);
+            });
+            it('responds with 400 when no fields are given', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, {}).expect(400);
+            });
+            it('responds with 400 when unknown fields are given', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                newElement.unknownfield = "Trallala";
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, newElement).expect(400);
+            });
+            it('responds with 400 when field value has wrong type', async() => {
+                await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                var newElement = TestHelper.clone(element);
+                newElement.fieldtwo = 4711;
+                await TestHelper.put(`/api/dynamic/${datatype}/${elementname}`, newElement).expect(400);
+            });
+            xit('updates element in database when all is correct', async() => {
+                // await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                // await TestHelper.put(`/api/dynamic/${datatype}`, element).expect(200);
+                // var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, element.name);
+                // TestHelper.compare(elementFromDatabase, element);
+            });
+            xit('updates only sent fields', async() => {
+                // await TestHelper.doLogin(`${clientname}_0_0`, "test");
+                // await TestHelper.put(`/api/dynamic/${datatype}`, element).expect(200);
+                // var elementFromDatabase = await Db.getDynamicObject(clientname, datatype, element.name);
+                // TestHelper.compare(elementFromDatabase, element);
+            });
         }
 
     },

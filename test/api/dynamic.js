@@ -15,6 +15,13 @@ describe.only('Dynamic API', () => {
         fieldthree: 4711.0815,
         fieldfour: new Date('2015-12-17T03:24:00.000Z')
     };
+    putelementname = "putname";
+    putelement = {
+        fieldone: "f1d",
+        fieldtwo: false,
+        fieldthree: 34.67,
+        fieldfour: new Date('2017-12-17T03:24:00.000Z')
+    };
 
     describe('GET/', () => {
         th.apiTests.get(typename, clientname);
@@ -29,7 +36,7 @@ describe.only('Dynamic API', () => {
     });
 
     describe.only('PUT/:name', () => {
-        
+        th.apiTests.put(typename, clientname, putelementname, putelement);
     });
 
     describe('DELETE/:name', () => {});

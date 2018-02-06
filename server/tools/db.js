@@ -115,6 +115,7 @@ var Db = {
 
     insertDynamicObject: async(clientname, datatype, element) => {
         var keys = Object.keys(element);
+        // TODO: Datentypen raussuchen
         var values = keys.map((k) => {
             var value = element[k];
             var noescape = [ 'boolean', 'number' ].indexOf(typeof(value)) >= 0;
@@ -157,7 +158,23 @@ var Db = {
         var result = await pool.query(query);
         await pool.end();
         return result;
-    }
+    },
+
+    updateDynamicObject: async(clientname, datatype, elementname, element) => {
+        var keys = Object.keys(element);
+        var values = keys.map((k) => {
+            var value = element[k];
+            var noescape = [ 'boolean', 'number' ].indexOf(typeof(value)) >= 0;
+            if (value instanceof Date) {
+                noescape = true;
+                value = `to_timestamp(${value.getTime()/1000})`;
+            }
+            return k + "=" + (noescape ? value : `'${value}'`);
+        });
+        var statement = `UPDATE ${datatype} SET ${values.join(',')} WHERE name='${elementname}';`;
+        console.log(statement);
+        // return Db.query(clientname, statement);
+    },
     
 }
 

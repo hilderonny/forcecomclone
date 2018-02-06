@@ -26,5 +26,18 @@ module.exports = () => {
             res.sendStatus(400);
         }
     });
+
+    App.router.put('/dynamic/:datatype/:name', auth, async (req, res) => {
+        var element = req.body;
+        if (!element || element.name || Object.keys(element) < 1) return res.sendStatus(400);
+        var existingDynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
+        if (!existingDynamicObject) return res.sendStatus(404);
+        try {
+            await Db.updateDynamicObject(req.user.clientname, req.params.datatype, req.params.name, element);
+            res.sendStatus(200);
+        } catch(error) {
+            res.sendStatus(400);
+        }
+    });
     
 }
