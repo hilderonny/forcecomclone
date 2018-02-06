@@ -13,14 +13,14 @@ describe.only('Dynamic API', () => {
         fieldone: "f1c",
         fieldtwo: true,
         fieldthree: 4711.0815,
-        fieldfour: new Date('2015-12-17T03:24:00.000Z')
+        fieldfour: new Date('2015-12-17T03:24:00.000Z').getTime()
     };
     putelementname = "putname";
     putelement = {
         fieldone: "f1d",
         fieldtwo: false,
         fieldthree: 34.67,
-        fieldfour: new Date('2017-12-17T03:24:00.000Z')
+        fieldfour: new Date('2017-12-17T03:24:00.000Z').getTime()
     };
 
     describe('GET/', () => {
@@ -31,11 +31,11 @@ describe.only('Dynamic API', () => {
         th.apiTests.getName(typename, clientname, getelementname);
     });
 
-    describe('POST/', () => {
+    describe.only('POST/', () => {
         th.apiTests.post(typename, clientname, postelement);
     });
 
-    describe.only('PUT/:name', () => {
+    describe('PUT/:name', () => {
         th.apiTests.put(typename, clientname, putelementname, putelement);
     });
 

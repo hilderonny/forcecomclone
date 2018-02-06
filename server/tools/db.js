@@ -1,6 +1,7 @@
 var Pool = require("pg").Pool;
 var LocalConfig = require("./localconfig").LocalConfig;
 var compareSync = require("bcryptjs").compareSync;
+var fieldtypes = require("./constants").fieldtypes;
 
 var Db = {
 
@@ -32,12 +33,12 @@ var Db = {
 
     createDefaultTables: async(databaseName) => {
         await Db.query(databaseName, "CREATE TABLE datatypes (name TEXT NOT NULL PRIMARY KEY, label TEXT, plurallabel TEXT, showinmenu BOOLEAN);");
-        await Db.query(databaseName, "CREATE TABLE datatypefields (name TEXT, label TEXT, datatype TEXT REFERENCES datatypes, fieldtype TEXT, istitle BOOLEAN, PRIMARY KEY (name, datatype));");
+        await Db.query(databaseName, "CREATE TABLE datatypefields (name TEXT, label TEXT, datatype TEXT REFERENCES datatypes, fieldtype TEXT, istitle BOOLEAN, isrequired BOOLEAN, PRIMARY KEY (name, datatype));");
         await Db.createDatatype(databaseName, "usergroups", "Benutzergruppe", "Benutzergruppen", true);
         await Db.createDatatype(databaseName, "users", "Benutzer", "Benutzer", true);
-        await Db.createDatatypeField(databaseName, "users", "password", "Passwort", "TEXT", false);
-        await Db.createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", "TEXT REFERENCES usergroups", false);
-        await Db.createDatatypeField(databaseName, "users", "isadmin", "Administrator", "BOOLEAN", false);
+        await Db.createDatatypeField(databaseName, "users", "password", "Passwort", fieldtypes.text, false, false);
+        await Db.createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", fieldtypes.text, false, true);
+        await Db.createDatatypeField(databaseName, "users", "isadmin", "Administrator", fieldtypes.boolean, false, false);
         await Db.query(databaseName, "CREATE TABLE permissions (usergroup TEXT NOT NULL, datatype TEXT NOT NULL, canwrite BOOLEAN, PRIMARY KEY (usergroup, datatype));");
     },
 
@@ -56,13 +57,21 @@ var Db = {
 
     createDatatype: async(databaseNameWithoutPrefix, datatypename, label, plurallabel, showinmenu) => {
         await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypes (name, label, plurallabel, showinmenu) VALUES ('" + datatypename + "', '" + label + "', '" + plurallabel + "', " + showinmenu + ");");
-        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypefields (name, label, datatype, fieldtype, istitle) VALUES ('name', 'Name', '" + datatypename + "', 'TEXT', true);");
-        await Db.query(databaseNameWithoutPrefix, "CREATE TABLE " + datatypename + " (name TEXT PRIMARY KEY);");
+        await Db.query(databaseNameWithoutPrefix, `CREATE TABLE ${datatypename} (name TEXT PRIMARY KEY);`);
+        await Db.createDatatypeField(databaseNameWithoutPrefix, datatypename, "name", "Name", fieldtypes.text, false, true, true);
     },
 
-    createDatatypeField: async(databaseNameWithoutPrefix, datatypename, fieldname, label, fieldtype, istitle) => {
-        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypefields (name, label, datatype, fieldtype, istitle) VALUES ('" + fieldname + "', '" + label + "', '" + datatypename + "', '" + fieldtype + "', " + istitle + ")");
-        await Db.query(databaseNameWithoutPrefix, "ALTER TABLE " + datatypename + " ADD COLUMN " + fieldname + " " + fieldtype);
+    createDatatypeField: async(databaseNameWithoutPrefix, datatypename, fieldname, label, fieldtype, istitle, isrequired, doNotAddColumn) => {
+        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypefields (name, label, datatype, fieldtype, istitle, isrequired) VALUES ('" + fieldname + "', '" + label + "', '" + datatypename + "', '" + fieldtype + "', " + istitle + ", " + isrequired + ")");
+        var columntype;
+        switch(fieldtype) {
+            case fieldtypes.boolean: columntype = "BOOLEAN"; break;
+            case fieldtypes.datetime: columntype = "BIGINT"; break;
+            case fieldtypes.decimal: columntype = "NUMERIC"; break;
+            case fieldtypes.text: columntype = "TEXT"; break;
+            default: throw new Error(`Unknown field type '${fieldtype}'`);
+        }
+        if (!doNotAddColumn) await Db.query(databaseNameWithoutPrefix, `ALTER TABLE ${datatypename} ADD COLUMN ${fieldname} ${columntype};`);
     },
 
     deleteClient: async(clientName) => {
@@ -85,6 +94,10 @@ var Db = {
     // TODO: Auf getDynamic...() umstellen
     getClients: async() => {
         return (await Db.query(Db.PortalDatabaseName, "SELECT name FROM clients ORDER BY name;")).rows;
+    },
+
+    getDataTypeFields: async(databaseNameWithoutPrefix, datatypename) => {
+        return (await Db.query(databaseNameWithoutPrefix, `SELECT * FROM datatypefields WHERE datatype='${datatypename}' ORDER BY name;`)).rows;
     },
 
     getDynamicObject: async(clientname, datatype, name) => {
@@ -114,16 +127,28 @@ var Db = {
     },
 
     insertDynamicObject: async(clientname, datatype, element) => {
-        var keys = Object.keys(element);
         // TODO: Datentypen raussuchen
+        var fields = await Db.getDataTypeFields(clientname, datatype);
+        var fieldMap = {};
+        var keys = Object.keys(element);
+        fields.forEach((f) => { 
+            fieldMap[f.name] = f;
+            if (f.isrequired && keys.indexOf(f.name) < 0) throw new Error(`Required field '${f.name}' is missing`);
+        });
         var values = keys.map((k) => {
             var value = element[k];
-            var noescape = [ 'boolean', 'number' ].indexOf(typeof(value)) >= 0;
-            if (value instanceof Date) {
-                noescape = true;
-                value = `to_timestamp(${value.getTime()/1000})`;
+            var field = fieldMap[k];
+            if (!field) throw new Error(`Unknown field '${k}'`);
+            var result;
+            switch (field.fieldtype) {
+                case fieldtypes.boolean: result = value; break;
+                case fieldtypes.datetime: result = value; break;
+                case fieldtypes.decimal: result = value; break;
+                case fieldtypes.text:  result = `'${value}'`; break;
+                default: throw new Error(`Unknown field type '${field.fieldtype}'`);
             }
-            return noescape ? value : `'${value}'`;
+            // TODO: Check other direction for required fields
+            return result;
         });
         var statement = `INSERT INTO ${datatype} (${keys.join(',')}) VALUES (${values.join(',')});`;
         return Db.query(clientname, statement);

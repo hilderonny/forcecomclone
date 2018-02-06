@@ -2,6 +2,7 @@ var Db = require("../server/tools/db").Db;
 var supertest = require("supertest");
 var App = require("../server/tools/app").App;
 var assert = require("assert");
+var fieldtypes = require("../server/tools/constants").fieldtypes;
 
 var TestHelper = {
 
@@ -287,12 +288,12 @@ var TestHelper = {
         for (var i = 0; i < databases.length; i++) {
             var database = databases[i];
             await Db.createDatatype(database, "dynamictype", "Dynamic Type", "Dynamic Types", true);
-            await Db.createDatatypeField(database, "dynamictype", "fieldone", "Text", "TEXT NOT NULL", true);
-            await Db.createDatatypeField(database, "dynamictype", "fieldtwo", "Boolean", "BOOLEAN", false);
-            await Db.createDatatypeField(database, "dynamictype", "fieldthree", "Numeric", "NUMERIC", false);
-            await Db.createDatatypeField(database, "dynamictype", "fieldfour", "Time stamp", "TIMESTAMP WITH TIME ZONE", false);
-            await Db.insertDynamicObject(database, "dynamictype", { name: "name1", fieldone: "f1a", fieldtwo: true, fieldthree: 1234.5678, fieldfour: new Date('1995-12-17T03:24:00.000Z') });
-            await Db.insertDynamicObject(database, "dynamictype", { name: "name2", fieldone: "f1b", fieldtwo: false, fieldthree: 8765.4321, fieldfour: new Date('2005-12-17T03:24:00.000Z') });
+            await Db.createDatatypeField(database, "dynamictype", "fieldone", "Text", fieldtypes.text, true, true);
+            await Db.createDatatypeField(database, "dynamictype", "fieldtwo", "Boolean", fieldtypes.boolean, false, false);
+            await Db.createDatatypeField(database, "dynamictype", "fieldthree", "Numeric", fieldtypes.decimal, false, false);
+            await Db.createDatatypeField(database, "dynamictype", "fieldfour", "Time stamp", fieldtypes.datetime, false, false);
+            await Db.insertDynamicObject(database, "dynamictype", { name: "name1", fieldone: "f1a", fieldtwo: true, fieldthree: 1234.5678, fieldfour: new Date('1995-12-17T03:24:00.000Z').getTime() });
+            await Db.insertDynamicObject(database, "dynamictype", { name: "name2", fieldone: "f1b", fieldtwo: false, fieldthree: 8765.4321, fieldfour: new Date('2005-12-17T03:24:00.000Z').getTime() });
         }
     },
 
