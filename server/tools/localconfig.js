@@ -40,6 +40,9 @@ var LocalConfig = {
             Object.keys(LocalConfig).forEach(k => {
                 if (process.env[k]) LocalConfig[k] = process.env[k];
             });
+            // Append version from package.json
+            var packageJson = JSON.parse(readFileSync("./package.json"));
+            LocalConfig.version = packageJson.version;
         }
         return LocalConfig;
     },

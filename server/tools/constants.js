@@ -12,16 +12,16 @@ var menuitems = {
     activities: {},
     areas: {},
     businesspartners: {},
-    clients: {},
+    clients: { icon: "/css/icons/material/Briefcase.svg", title: "Mandanten" },
     clientsettings: {},
     documents: {},
     fmobjects: {},
     notes: {},
     persons: {},
-    portalsettings: {},
-    usergroups: {},
-    users: {},
-    usersettings: {},
+    portalsettings: { icon: "/css/icons/material/Server.svg", title: "Portaleinstellungen" },
+    usergroups: { icon: "/css/icons/material/User Group Man Man.svg", title: "Benutzergruppen" },
+    users: { icon: "/css/icons/material/User.svg", title: "Benutzer" },
+    usersettings: { icon: "/css/icons/material/Settings.svg", title: "Mein Profil" },
 
 };
 
@@ -61,7 +61,7 @@ module.exports.clientmenustructure = {
             ]
         }
     ],
-    logourl: "",
+    logourl: "css/images/logo_avorium_komplett.svg",
     isportal: false
 };
 
@@ -83,6 +83,6 @@ module.exports.portalmenustructure = {
             ]
         }
     ],
-    logourl: "",
+    logourl: "css/images/logo_avorium_komplett.svg",
     isportal: true
 };

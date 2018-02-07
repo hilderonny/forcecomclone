@@ -1,6 +1,6 @@
 
 Vue.component("avt-loginform", {
-    props: [ "isloggedin", "logourl", "title", "showwarning" ],
+    props: [ "isloggedin", "logourl", "title", "showwarning", "version" ],
     template:
         '<form class="loginform" v-if="!isloggedin" v-on:submit.prevent="login">' +
             '<div class="logo"><img v-bind:src="logourl"/></div>' +
@@ -13,8 +13,7 @@ Vue.component("avt-loginform", {
         '</form>',
     data: function() { return {
         username: "",
-        password: "",
-        version: "2.0"
+        password: ""
     }},
     methods: {
         login: function() { this.$emit('login', { username: this.username, password: this.password }); },
@@ -35,6 +34,21 @@ Vue.component("avt-passwordinput", {
     watch: { internalvalue(val) { this.$emit('input', val); } }
 });
 
+Vue.component("avt-mainmenu", {
+    props: [ "menu" ],
+    template: 
+        '<div class="mainmenu">' +
+            '<div class="logo"><img v-bind:src="menu.logourl"/></div>' +
+            '<div class="section" v-for="section in menu.sections">' +
+                '<h3>{{section.title}}</h3>' +
+                '<button v-for="item in section.items"><img v-bind:src="item.icon"/><span>{{item.title}}</span></button>' +
+            '</div>' +
+            '<div class="section"><button v-on:click="logout"><img src="/css/icons/material/Exit.svg"/><span>Abmelden</span></button></div>' +
+            '<div class="username">Angemeldet als {{menu.username}}</div>' +
+        '</div>',
+    methods: { logout: function() { this.$emit('logout'); } }
+});
+
 Vue.component("avt-textinput", {
     props: [ "autofocus", "label", "value", "tabindex" ],
     template: '<div class="inputcontainer text" v-bind:class="{hasfocus:hasfocus,hascontent:internalvalue}"><label>{{label}}</label><input type="text" v-bind:autofocus="autofocus" v-bind:tabindex="tabindex" v-bind:placeholder="label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/></div>',
@@ -43,11 +57,8 @@ Vue.component("avt-textinput", {
 });
 
 Vue.component("avt-toolbar", {
-    props: [ "isloggedin", "isportal" ],
-    template: '<div class="toolbar" v-bind:class="toolbarclass">{{dreck}} {{isloggedin}} {{isportal}}</div>',
-    data: function() { return {
-        dreck: "HUPE"
-    }},
+    props: [ "isloggedin", "isportal", "title" ],
+    template: '<div class="toolbar" v-bind:class="toolbarclass">{{isloggedin?title:""}}</div>',
     computed: {
         toolbarclass: function() { return {
             transparent: !this.isloggedin,

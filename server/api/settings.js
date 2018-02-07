@@ -9,7 +9,8 @@ module.exports = () => {
         var localConfig = LocalConfig.load();
         var settings = {
             portallogo: localConfig.portallogo,
-            portalname: localConfig.portalname
+            portalname: localConfig.portalname,
+            version: localConfig.version
         };
         res.send(settings);
     });

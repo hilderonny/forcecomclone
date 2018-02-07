@@ -9,9 +9,11 @@ window.addEventListener("load", function() {
             isportal: false,
             iswaiting: false,
             logourl: null,
+            menu: null,
             showloginwarning: false,
             title: null,
             token: null,
+            version: null
         },
         computed: {
             isblocked: function() { return this.showloginwarning; }
@@ -38,8 +40,7 @@ window.addEventListener("load", function() {
             loadmenu: function() {
                 var self = this;
                 $get("/api/menu", function(err, res) {
-                    console.log(res);
-                    self.isportal = res.isportal;
+                    self.menu = res;
                 });
             }
         }
@@ -48,6 +49,7 @@ window.addEventListener("load", function() {
     $get("/api/settings", function(err, res) {
         App.logourl = res.portallogo;
         App.title = res.portalname;
+        App.version = res.version;
     });
 
     var logincredentials = localStorage.getItem("logincredentials");
