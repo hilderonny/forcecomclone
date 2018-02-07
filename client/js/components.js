@@ -1,6 +1,6 @@
 
 Vue.component("avt-loginform", {
-    props: [ "isloggedin", "logourl", "title" ],
+    props: [ "isloggedin", "logourl", "title", "showwarning" ],
     template:
         '<form class="loginform" v-if="!isloggedin" v-on:submit.prevent="login">' +
             '<div class="logo"><img v-bind:src="logourl"/></div>' +
@@ -9,6 +9,7 @@ Vue.component("avt-loginform", {
             '<avt-passwordinput tabindex="2" v-model="password" label="Passwort"></avt-passwordinput>' +
             '<div class="buttonrow"><button type="submit" tabindex="3">Anmelden</button></div>' +
             '<div class="version">{{version}}</div>' +
+            '<avt-dialog title="Anmeldung fehlgeschlagen" message="Der Benutzername oder das Passwort ist nicht korrekt." buttontext="Wiederholen" v-on:dismisswarning="dismisswarning" v-if="showwarning"></avt-dialog>' +
         '</form>',
     data: function() { return {
         username: "",
@@ -16,10 +17,15 @@ Vue.component("avt-loginform", {
         version: "2.0"
     }},
     methods: {
-        login: function() {
-            this.$emit('login', { username: this.username, password: this.password }), "FURZ";
-        }
+        login: function() { this.$emit('login', { username: this.username, password: this.password }); },
+        dismisswarning: function() { this.$emit('dismisswarning'); }
     }
+});
+
+Vue.component("avt-dialog", {
+    props: [ "title", "message", "buttontext" ],
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
+    methods: { dismiss: function() { this.$emit('dismisswarning'); } }
 });
 
 Vue.component("avt-passwordinput", {

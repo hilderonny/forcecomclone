@@ -19,10 +19,12 @@
 
             <avt-toolbar v-bind:isloggedin="isloggedin" v-bind:isportal="isportal"></avt-toolbar>
 
-            <avt-loginform v-bind:isloggedin="isloggedin" v-bind:logourl="logourl" v-bind:title="title" v-on:login="performlogin"></avt-loginform>
+            <avt-loginform v-bind:isloggedin="isloggedin" v-bind:logourl="logourl" v-bind:title="title" v-bind:showwarning="showloginwarning" v-on:login="performlogin" v-on:dismisswarning="showloginwarning=false"></avt-loginform>
 
             <button v-if="isloggedin" v-on:click="logout">Abmelden</button>
 
+            <div class="blocked" v-if="isblocked"></div>
+            
             <div class="loading" v-bind:class="{visible:iswaiting}"></div>
 
         </div>

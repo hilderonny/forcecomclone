@@ -9,8 +9,12 @@ window.addEventListener("load", function() {
             isportal: false,
             iswaiting: false,
             logourl: null,
+            showloginwarning: false,
             title: null,
-            token: null
+            token: null,
+        },
+        computed: {
+            isblocked: function() { return this.showloginwarning; }
         },
         methods: {
             logout: function() {
@@ -20,7 +24,11 @@ window.addEventListener("load", function() {
             performlogin: function(credentials) {
                 var self = this;
                 $post("/api/login", credentials, function(err, res) {
-                    if (err) return App.logout();
+                    if (err) {
+                        self.showloginwarning = true;
+                        App.logout();
+                        return;
+                    }
                     self.token = res.token;
                     localStorage.setItem("logincredentials", JSON.stringify(credentials));
                     self.isloggedin = true;
