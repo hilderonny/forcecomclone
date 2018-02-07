@@ -22,6 +22,8 @@
 
             <avt-mainmenu v-if="isloggedin&&menu" v-bind:menu="menu" v-on:logout="logout"></avt-mainmenu>
 
+            <avt-dashboard v-if="isloggedin&&menu" v-bind:menu="menu"></avt-dashboard>
+
             <div class="blocked" v-if="isblocked"></div>
 
             <div class="loading" v-bind:class="{visible:iswaiting}"></div>

@@ -1,4 +1,28 @@
 
+Vue.component("avt-dashboard", {
+    props: [ "menu" ],
+    template: 
+        '<div class="dashboard">' +
+            '<button v-for="item in flatmenu"><img v-bind:src="\'/css/icons/office/\'+item.icon"/><span>{{item.title}}</span></button>' +
+        '</div>',
+    computed: {
+        flatmenu: function() { 
+            var items = [];
+            this.menu.sections.forEach(function(section) {
+                section.items.forEach(function(item) { items.push(item); });
+            });
+            return items;
+        }
+    },
+    methods: { logout: function() { this.$emit('logout'); } }
+});
+
+Vue.component("avt-dialog", {
+    props: [ "title", "message", "buttontext" ],
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
+    methods: { dismiss: function() { this.$emit('dismisswarning'); } }
+});
+
 Vue.component("avt-loginform", {
     props: [ "isloggedin", "logourl", "title", "showwarning", "version" ],
     template:
@@ -21,19 +45,6 @@ Vue.component("avt-loginform", {
     }
 });
 
-Vue.component("avt-dialog", {
-    props: [ "title", "message", "buttontext" ],
-    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
-    methods: { dismiss: function() { this.$emit('dismisswarning'); } }
-});
-
-Vue.component("avt-passwordinput", {
-    props: [ "label", "value", "tabindex" ],
-    template: '<div class="inputcontainer password" v-bind:class="{hasfocus:hasfocus,hascontent:internalvalue}"><label>{{label}}</label><input type="password" v-bind:tabindex="tabindex" v-bind:placeholder="label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/></div>',
-    data: function() { return { internalvalue: this.value, hasfocus: false }},
-    watch: { internalvalue(val) { this.$emit('input', val); } }
-});
-
 Vue.component("avt-mainmenu", {
     props: [ "menu" ],
     template: 
@@ -47,6 +58,13 @@ Vue.component("avt-mainmenu", {
             '<div class="username">Angemeldet als {{menu.username}}</div>' +
         '</div>',
     methods: { logout: function() { this.$emit('logout'); } }
+});
+
+Vue.component("avt-passwordinput", {
+    props: [ "label", "value", "tabindex" ],
+    template: '<div class="inputcontainer password" v-bind:class="{hasfocus:hasfocus,hascontent:internalvalue}"><label>{{label}}</label><input type="password" v-bind:tabindex="tabindex" v-bind:placeholder="label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/></div>',
+    data: function() { return { internalvalue: this.value, hasfocus: false }},
+    watch: { internalvalue(val) { this.$emit('input', val); } }
 });
 
 Vue.component("avt-textinput", {
