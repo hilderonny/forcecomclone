@@ -61,7 +61,8 @@ module.exports.clientmenustructure = {
             ]
         }
     ],
-    logourl: ""
+    logourl: "",
+    isportal: false
 };
 
 module.exports.portalmenustructure = {
@@ -82,5 +83,6 @@ module.exports.portalmenustructure = {
             ]
         }
     ],
-    logourl: ""
+    logourl: "",
+    isportal: true
 };

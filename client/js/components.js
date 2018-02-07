@@ -50,7 +50,7 @@ Vue.component("avt-toolbar", {
     }},
     computed: {
         toolbarclass: function() { return {
-            transparent: this.isloggedin,
+            transparent: !this.isloggedin,
             portal: this.isloggedin && this.isportal
         }}
     }

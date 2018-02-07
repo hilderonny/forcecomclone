@@ -32,6 +32,14 @@ window.addEventListener("load", function() {
                     self.token = res.token;
                     localStorage.setItem("logincredentials", JSON.stringify(credentials));
                     self.isloggedin = true;
+                    self.loadmenu();
+                });
+            },
+            loadmenu: function() {
+                var self = this;
+                $get("/api/menu", function(err, res) {
+                    console.log(res);
+                    self.isportal = res.isportal;
                 });
             }
         }
