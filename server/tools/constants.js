@@ -12,16 +12,16 @@ var menuitems = {
     activities: {},
     areas: {},
     businesspartners: {},
-    clients: { icon: "/css/icons/material/Briefcase.svg", title: "Mandanten" },
+    clients: { icon: "Briefcase.svg", title: "Mandanten" },
     clientsettings: {},
     documents: {},
     fmobjects: {},
     notes: {},
     persons: {},
-    portalsettings: { icon: "/css/icons/material/Server.svg", title: "Portaleinstellungen" },
-    usergroups: { icon: "/css/icons/material/User Group Man Man.svg", title: "Benutzergruppen" },
-    users: { icon: "/css/icons/material/User.svg", title: "Benutzer" },
-    usersettings: { icon: "/css/icons/material/Settings.svg", title: "Mein Profil" },
+    portalsettings: { icon: "Server.svg", title: "Portaleinstellungen" },
+    usergroups: { icon: "User Group Man Man.svg", title: "Benutzergruppen" },
+    users: { icon: "User.svg", title: "Benutzer" },
+    usersettings: { icon: "Settings.svg", title: "Mein Profil" },
 
 };
 

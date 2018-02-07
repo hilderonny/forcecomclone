@@ -41,7 +41,7 @@ Vue.component("avt-mainmenu", {
             '<div class="logo"><img v-bind:src="menu.logourl"/></div>' +
             '<div class="section" v-for="section in menu.sections">' +
                 '<h3>{{section.title}}</h3>' +
-                '<button v-for="item in section.items"><img v-bind:src="item.icon"/><span>{{item.title}}</span></button>' +
+                '<button v-for="item in section.items"><img v-bind:src="\'/css/icons/material/\'+item.icon"/><span>{{item.title}}</span></button>' +
             '</div>' +
             '<div class="section"><button v-on:click="logout"><img src="/css/icons/material/Exit.svg"/><span>Abmelden</span></button></div>' +
             '<div class="username">Angemeldet als {{menu.username}}</div>' +
