@@ -30,7 +30,7 @@ html {
     justify-content: center;
 }
 
-.buttonrow > button {
+/* .buttonrow > button {
     background-color: rgb(63,81,181);
     border: 0;
     border-radius: 3px;
@@ -45,7 +45,7 @@ html {
     padding: 0 6px;
     text-transform: uppercase;
     user-select: none;
-}
+} */
 
 .dashboard {
     align-items: center;
@@ -144,7 +144,40 @@ html {
     margin: 18px 0 8px 0;
 }
 
-.inputcontainer.password > input, .inputcontainer.text > input {
+input {
+    background-color: transparent;
+    display: block;
+    font-size: 100%;
+    line-height: 26px;
+    outline: none;
+    padding: 2px 4px;
+    width: 100%;
+    box-shadow: 1px 1px 2px 0px rgba(0,0,0,.2) inset;
+    border: none;
+    border-radius: 3px;
+}
+
+button {
+    border: none;
+    background: white;
+    box-shadow: 1px 1px 2px 0px rgba(0,0,0,.2);
+    width: 100px;
+    height: 30px;
+    outline: none;
+    background-color: rgb(63,81,181);
+    border-radius: 3px;
+    color: rgba(255,255,255,0.87);
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: .01em;
+    line-height: 22px;
+    margin: 6px 8px;
+    padding: 0 6px;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+/* .inputcontainer.password > input, .inputcontainer.text > input {
     background-color: transparent;
     border-color: rgba(0,0,0,0.12);
     border-style: solid;
@@ -161,7 +194,7 @@ html {
     border-color: rgb(63,81,181);
     border-bottom-width: 2px;
     padding-bottom: 1px;
-}
+} */
 
 .inputcontainer > label {
     color: rgba(0,0,0,0.54);
