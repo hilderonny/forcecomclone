@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <link rel="stylesheet" href="css/base.css">
+        <link rel="stylesheet" href="css/local.css">
+        <link rel="icon" href="favicon.png" sizes="32x32">
+
+        <script src="js/vue.js"></script>
+        <script src="js/tools.js"></script>
+        <script src="js/components.js"></script>
+        <script src="js/index.js"></script>
+
+    </head>
+	<body>
+
+        <div id="App">
+            Hello {{ isloggedin }} {{ isportal }}!
+
+            <avt-toolbar v-bind:isloggedin="isloggedin" v-bind:isportal="isportal"></avt-toolbar>
+
+            <avt-loginform v-bind:isloggedin="isloggedin" v-bind:logourl="logourl" v-bind:title="title" v-on:login="performlogin"></avt-loginform>
+
+            <button v-if="isloggedin" v-on:click="logout">Abmelden</button>
+
+        </div>
+        <!--
+        <md-toolbar layout="row" ng-class="{transparent:!isloggedin,portal:isloggedin&&isportal}" class="md-toolbar-tools">
+            <md-button ng-if="isloggedin" class="md-icon-button" ng-click="toggleLeftSidenav()" ng-hide="$mdMedia('gt-md')" aria-label="MENU">
+                <md-icon md-svg-src="/css/icons/material/Menu.svg"></md-icon>
+            </md-button>
+            <h1 ng-if="isloggedin && !searchInputVisible" translate="{{title}}"></h1>
+            <span flex ng-if="!searchInputVisible"></span>
+            <md-input-container flex ng-if="searchInputVisible">
+                <label>&nbsp;</label>
+                <input ng-model="searchTerm" focus-me="searchInputVisible" ng-keyup="handleSearchInput($event)" placeholder="{{ 'TRK_ENTER_SEARCH_TERM' | translate }}">
+                <md-panel class="searchresults" ng-if="searchResults.length > 0">
+                    <md-list class="context-menu" role="list">
+                        <md-list-item ng-repeat="searchResult in searchResults" ng-click="onSearchResultClick(searchResult)" aria-label="{{searchResult.name}}">
+                            <md-icon md-svg-src="/css/icons/material/{{searchResult.icon}}.svg"></md-icon>
+                            <p ng-bind-html="searchResult.name"></p>
+                        </md-list-item>
+                    </md-list>
+                </md-panel>
+            </md-input-container>
+            <md-button aria-label="SEARCH" class="md-icon-button" ng-click="searchTerm = '';searchResults=[];searchInputVisible = !searchInputVisible">
+                <md-icon ng-if="!searchInputVisible" md-svg-src="/css/icons/material/Search.svg"></md-icon>
+                <md-icon ng-if="searchInputVisible" md-svg-src="/css/icons/material/Delete.svg"></md-icon>
+            </md-button>
+            <md-button ng-repeat="language in languages" ng-class="{active:currentLanguage==language}" aria-label="{{language}}" class="md-icon-button lang largedevice" ng-click="setLang(language)" ng-bind="language"></md-button>
+            <md-button aria-label="HELP" ng-href="/#/doc/{{currentMenuItem.docCard}}" class="md-icon-button largedevice">
+                <md-tooltip md-direction="bottom"><span translate>TRK_HELP</span></md-tooltip>
+                <md-icon md-svg-src="/css/icons/material/Help.svg"></md-icon>
+            </md-button>
+            <md-button ng-if="isloggedin" class="md-icon-button smalldevice" aria-label="MORE" ng-click="openMoreMenu($event);">
+                <md-icon md-svg-src="/css/icons/material/Menu2.svg"></md-icon>
+            </md-button>
+        </md-toolbar>
+        
+        <div ng-hide="isloggedin" layout-align="center center" layout="column" flex layout="row">
+            <form class="md-whiteframe-4dp login-dialog" ng-submit="doLogin()">
+
+                <md-content layout="column" class="md-padding">
+
+                    <div class="login-logo">
+                        <img src="css/logo_avorium_komplett.svg"/>
+                    </div>
+
+                    <h1>AVT FacilityManagement</h1>
+
+                    <md-input-container>
+                        <label translate="TRK_LOGIN_USERNAME"></label>
+                        <input autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" ng-model="username" tabindex="1" autofocus />
+                    </md-input-container>
+
+                    <md-input-container>
+                        <label translate="TRK_LOGIN_PASSWORD"></label>
+                        <input type="password" ng-model="password" tabindex="2" />
+                    </md-input-container>
+
+                    <div layout="row" layout-align="center right">
+                        <md-button type="submit" class="md-raised md-primary" tabindex="3" ng-click="doLogin()" ng-disabled="isLoggingIn">
+                            <md-progress-circular ng-if="isLoggingIn" class="md-primary" md-diameter="20px"></md-progress-circular>
+                            <span ng-hide="isLoggingIn" translate>TRK_LOGIN_LOGIN</span>
+                        </md-button>
+                    </div>
+
+                </md-content>
+
+                <div class="version">###VERSION###</div>
+                
+            </form>
+
+        </div>
+
+        <div flex layout="row" ng-if="isloggedin">
+
+            <md-sidenav md-component-id="left" md-is-locked-open="$mdMedia('gt-md')" class="md-whiteframe-4dp">
+
+                <md-content flex>
+
+                    <div class="sidenav-logo">
+                        <img ng-src="{{logourl}}" ng-click="menuClick(null)" />
+                    </div>
+
+                    <md-list ng-cloak>
+
+                        <ng-repeat ng-repeat="menuItem in menu">
+
+                            <md-subheader class="md-no-sticky" ng-if="menuItem.items"><span translate="{{ menuItem.title }}"></span></md-subheader>
+                            <md-list-item ng-if="menuItem.items" ng-repeat="subMenuItem in menuItem.items" ng-click="menuClick(subMenuItem)" ng-class="{active: currentMenuItem === subMenuItem}" aria-label="{{ subMenuItem.title }}">
+                                <md-icon md-svg-src="/css/icons/material/{{subMenuItem.icon}}.svg" aria-label="{{ subMenuItem.title }} "></md-icon>
+                                <p><span translate="{{ subMenuItem.title }}"></span></p>
+                            </md-list-item>
+
+                            <md-list-item ng-if="!menuItem.items" ng-click="menuClick(menuItem)" ng-class="{active: currentMenuItem === menuItem}" aria-label="{{ menuItem.title }}">
+                                <md-icon md-svg-src="/css/icons/material/{{menuItem.icon}}.svg" aria-label="{{ menuItem.title }} "></md-icon>
+                                <p><span translate="{{ menuItem.title }}"></span></p>
+                            </md-list-item>
+
+                            <md-divider></md-divider>
+                            
+                        </ng-repeat>
+
+                    </md-list>
+
+                </md-content>
+
+                <div translate="TRK_LOGIN_LOGGED_IN_AS" translate-value-username="{{username}}"></div>
+            </md-sidenav>
+
+            <md-content flex layout="row" id="cardcanvas" ng-show="currentMenuItem || isShowingDoc">
+                <div class="progress-panel" ng-if=" $root.isLoading">
+                    <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+                </div> 
+            </md-content>
+
+            <md-content flex layout="row" id="dashboard" ng-show="!currentMenuItem && !isShowingDoc">
+                <div>
+                    <ng-repeat ng-repeat="menuItem in menu">
+
+                        <md-button class="md-raised" ng-repeat="subMenuItem in menuItem.items" ng-click="menuClick(subMenuItem)" aria-label="{{ subMenuItem.title }}">
+                            <md-icon md-svg-src="/css/icons/office/{{subMenuItem.icon}}.svg"></md-icon>
+                            <span class="md-subhead" translate="{{ subMenuItem.title }}"></span>
+                        </md-button>
+                        
+                    </ng-repeat>
+                </div>
+            </md-content>        
+        </div>
+
+        
+        -->
+
+    </body>
+</html>

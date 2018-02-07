@@ -127,8 +127,8 @@ var Db = {
             await Db.queryDirect(portalDatabaseName, `DELETE FROM users WHERE usergroup = '${adminUserGroupName}';`);
             await Db.queryDirect(portalDatabaseName, `DELETE FROM usergroups WHERE name = '${adminUserGroupName}';`);
             await Db.queryDirect(portalDatabaseName, `INSERT INTO usergroups (name) VALUES('${adminUserGroupName}');`);
-            await Db.queryDirect(portalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${adminUserName}', '${hashedPassword}', '${Db.PortalDatabaseName}');`);
             var hashedPassword = hashSync(adminUserPassword);
+            await Db.queryDirect(portalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${adminUserName}', '${hashedPassword}', '${Db.PortalDatabaseName}');`);
             await Db.queryDirect(portalDatabaseName, `INSERT INTO users (name, password, usergroup, isadmin) VALUES('${adminUserName}', '${hashedPassword}', '${adminUserGroupName}', true);`);
             LocalConfig.resetRecreateportaladmin();
         }

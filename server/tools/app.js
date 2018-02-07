@@ -3,7 +3,6 @@ var http = require("http");
 var https = require("https");
 var LocalConfig = require("./localconfig").LocalConfig;
 var readFileSync = require("fs").readFileSync;
-var readdirSync = require("fs").readdirSync;
 var postHeartBeat = require("./update").postHeartBeat;
 var Db = require("./db").Db;
 var join = require("path").join;
@@ -23,15 +22,15 @@ var App = {
         var expressApp = express();
         expressApp.use(express.json());
         expressApp.use(express.urlencoded({ extended:true }));
-        expressApp.use(express.static('./public')); // static content
-        expressApp.use('/js', express.static('./dist/client')); // Compiled client side JS
+        expressApp.use(express.static('./client')); // static content
         expressApp.use(require('./middlewares').extracttoken); // Create req.user
         // APIs
         expressApp.use('/api', App.router); // API routing
-        var files = readdirSync(join(__dirname, '../api'));
-        files.forEach((file) => {
-            require("../api/" + file.substr(0, file.indexOf('.')))();
-        });
+        // APIS fest einbinden, damit die Reihenfolge festgelegt werden kann (erst Spezialbehandlungen, dann dynamische APIs)
+        require("../api/login")();
+        require("../api/menu")();
+        require("../api/settings")();
+        require("../api/dynamic")();
         // Start the server
         // For running as normal user under linux, see https://stackoverflow.com/a/23281401
         // HTTPS
