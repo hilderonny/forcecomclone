@@ -9,16 +9,6 @@ var TestHelper = {
     app: undefined,
     token: undefined,
 
-    clone: (element) => {
-        var newElement = {};
-        Object.keys(element).forEach((k) => newElement[k] = element[k]);
-        return newElement;
-    },
-
-    compare: (actual, expected) => {
-        assert.strictEqual(JSON.stringify(actual), JSON.stringify(expected));
-    },
-
     apiTests: {
 
         get: function(datatype, clientname) {
@@ -291,6 +281,21 @@ var TestHelper = {
 
     },
 
+    clone: (element) => {
+        var newElement = {};
+        Object.keys(element).forEach((k) => newElement[k] = element[k]);
+        return newElement;
+    },
+
+    compare: (actual, expected) => {
+        assert.strictEqual(JSON.stringify(actual), JSON.stringify(expected));
+    },
+
+    // createUser: async(userName, password, userGroupName, clientName, isAdmin) => {
+    //     await Db.query(Db.PortalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${userName}', '${password}', '${clientName}');`);
+    //     await Db.query(clientName, `INSERT INTO users (name, password, usergroup, isadmin) VALUES('${userName}', '${password}', '${userGroupName}', ${isAdmin});`);
+    // },
+
     delete: (url) => {
         var test = supertest(TestHelper.app).delete(url);
         if (TestHelper.token) test = test.set("x-access-token", TestHelper.token);
@@ -369,8 +374,8 @@ var TestHelper = {
         var databases = [ 'portal', '0', '1' ];
         for (var i = 0; i < databases.length; i++) {
             var database = databases[i];
-            await Db.createUserGroup(`${database}_0`, database);
-            await Db.createUserGroup(`${database}_1`, database);
+            await Db.query(database, `INSERT INTO usergroups (name) VALUES('${database}_0');`);
+            await Db.query(database, `INSERT INTO usergroups (name) VALUES('${database}_1');`);
         }
     },
 
@@ -382,8 +387,10 @@ var TestHelper = {
             var database = databases[i];
             for (var j = 0; j < usergroups.length; j++) {
                 var usergroup = `${database}_${usergroups[j]}`;
-                await Db.createUser(`${usergroup}_0`, hashedPassword, usergroup, database, false);
-                await Db.createUser(`${usergroup}_ADMIN0`, hashedPassword, usergroup, database, true);
+                await Db.query(Db.PortalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${usergroup}_0', '${hashedPassword}', '${database}');`);
+                await Db.query(Db.PortalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${usergroup}_ADMIN0', '${hashedPassword}', '${database}');`);
+                await Db.query(database, `INSERT INTO users (name, password, usergroup, isadmin) VALUES('${usergroup}_0', '${hashedPassword}', '${usergroup}', false);`);
+                await Db.query(database, `INSERT INTO users (name, password, usergroup, isadmin) VALUES('${usergroup}_ADMIN0', '${hashedPassword}', '${usergroup}', true);`);
             }
         }
     },

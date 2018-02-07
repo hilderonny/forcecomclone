@@ -1,4 +1,5 @@
 var readFileSync = require("fs").readFileSync;
+var writeFileSync = require("fs").writeFileSync;
 
 var LocalConfig = {
 
@@ -41,6 +42,12 @@ var LocalConfig = {
             });
         }
         return LocalConfig;
+    },
+
+    resetRecreateportaladmin: () => {
+        var config = JSON.parse(readFileSync("./config/localconfig.json", "utf8"));
+        config.recreateportaladmin = false;
+        writeFileSync('./config/localconfig.json', JSON.stringify(config, null, 4));
     }
 }
 

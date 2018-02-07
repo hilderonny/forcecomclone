@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "debug": "node --nolazy --inspect-brk=9229 server/index.js",
-    "test": "cross-env TOKENSECRET=testsecret ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --async-only --slow 500 --timeout 60000 --recursive -R spec ./test/**/*.js",
-    "watch:test": "cross-env TOKENSECRET=testsecret ./node_modules/mocha/bin/_mocha --watch --async-only --slow 500 --timeout 60000 --recursive -R spec ./test/**/*.js"
+    "test": "cross-env TOKENSECRET=testsecret httpsport=60443 httpport=60080 dbprefix=arrangetest ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --async-only --slow 500 --timeout 60000 --recursive -R spec ./test/**/*.js",
+    "watch:test": "cross-env TOKENSECRET=testsecret httpsport=60443 httpport=60080 dbprefix=arrangetest ./node_modules/mocha/bin/_mocha --watch --async-only --slow 500 --timeout 60000 --recursive -R spec ./test/**/*.js"
   },
   "repository": {
     "type": "git",

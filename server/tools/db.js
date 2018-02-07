@@ -3,6 +3,7 @@ var LocalConfig = require("./localconfig").LocalConfig;
 var compareSync = require("bcryptjs").compareSync;
 var fieldtypes = require("./constants").fieldtypes;
 var types = require('pg').types;
+var hashSync = require('bcryptjs').hashSync;
 
 var Db = {
 
@@ -51,15 +52,6 @@ var Db = {
         await Db.query(clientName, `INSERT INTO permissions (usergroup, datatype, canwrite) VALUES ('${userGroupName}', '${datatype}', ${canwrite}) ON CONFLICT (usergroup, datatype) DO UPDATE SET canwrite = ${canwrite};`);
     },
 
-    createUserGroup: async(userGroupName, clientName) => {
-        await Db.query(clientName, `INSERT INTO usergroups (name) VALUES('${userGroupName}');`);
-    },
-
-    createUser: async(userName, password, userGroupName, clientName, isAdmin) => {
-        await Db.query(Db.PortalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${userName}', '${password}', '${clientName}');`);
-        await Db.query(clientName, `INSERT INTO users (name, password, usergroup, isadmin) VALUES('${userName}', '${password}', '${userGroupName}', ${isAdmin});`);
-    },
-
     createDatatype: async(databaseNameWithoutPrefix, datatypename, label, plurallabel, showinmenu) => {
         await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypes (name, label, plurallabel, showinmenu) VALUES ('" + datatypename + "', '" + label + "', '" + plurallabel + "', " + showinmenu + ");");
         await Db.query(databaseNameWithoutPrefix, `CREATE TABLE ${datatypename} (name TEXT PRIMARY KEY);`);
@@ -86,17 +78,6 @@ var Db = {
 
     deletePermission: async(userGroupName, clientName, datatype) => {
         await Db.query(clientName, `DELETE FROM permissions WHERE usergroup = '${userGroupName}' AND datatype = '${datatype}';`);
-    },
-
-    // TODO: Auf getDynamic...() umstellen
-    getClient: async(clientName) => {
-        var result = await Db.query(Db.PortalDatabaseName, `SELECT name FROM clients WHERE name = '${clientName}';`);
-        return result.rowCount > 0 ? result.rows[0] : undefined;
-    },
-
-    // TODO: Auf getDynamic...() umstellen
-    getClients: async() => {
-        return (await Db.query(Db.PortalDatabaseName, "SELECT name FROM clients ORDER BY name;")).rows;
     },
 
     getDataTypeFields: async(databaseNameWithoutPrefix, datatypename) => {
@@ -128,12 +109,6 @@ var Db = {
         return pool;
     },
 
-    // TODO: Auf getDynamic...() umstellen
-    getUser: async(username, clientname) => {
-        var result = await Db.query(clientname, `SELECT name, usergroup FROM users WHERE name = '${username}';`);
-        return result.rowCount > 0 ? result.rows[0] : undefined;
-    },
-
     initPortalDatabase: async() => {
         var localConfig = LocalConfig.load();
         var portalDatabaseName = `${localConfig.dbprefix}_${Db.PortalDatabaseName}`;
@@ -142,6 +117,20 @@ var Db = {
             await Db.createDefaultTables(Db.PortalDatabaseName);
             await Db.createDatatype(Db.PortalDatabaseName, "clients", "Mandant", "Mandanten", true);
             await Db.queryDirect(portalDatabaseName, "CREATE TABLE allusers (name TEXT NOT NULL PRIMARY KEY, password TEXT, clientname TEXT NOT NULL);");
+        }
+        if (localConfig.resetRecreateportaladmin) {
+            var adminUserGroupName = "admin";
+            var adminUserName = "admin";
+            var adminUserPassword = "admin";
+            await Db.queryDirect(portalDatabaseName, `DELETE FROM permissions WHERE usergroup = '${adminUserGroupName}';`);
+            await Db.queryDirect(portalDatabaseName, `DELETE FROM allusers WHERE name = '${adminUserName}';`);
+            await Db.queryDirect(portalDatabaseName, `DELETE FROM users WHERE usergroup = '${adminUserGroupName}';`);
+            await Db.queryDirect(portalDatabaseName, `DELETE FROM usergroups WHERE name = '${adminUserGroupName}';`);
+            await Db.queryDirect(portalDatabaseName, `INSERT INTO usergroups (name) VALUES('${adminUserGroupName}');`);
+            await Db.queryDirect(portalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${adminUserName}', '${hashedPassword}', '${Db.PortalDatabaseName}');`);
+            var hashedPassword = hashSync(adminUserPassword);
+            await Db.queryDirect(portalDatabaseName, `INSERT INTO users (name, password, usergroup, isadmin) VALUES('${adminUserName}', '${hashedPassword}', '${adminUserGroupName}', true);`);
+            LocalConfig.resetRecreateportaladmin();
         }
     },
 
