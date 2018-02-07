@@ -10,7 +10,9 @@ function $createRequest(url, method, callback) {
             if (xhr.status === 401) App.isloggedin = false;
             callback(xhr.status);
         }
+        App.iswaiting = false;
     };
+    App.iswaiting = true;
     return xhr;
 }
 

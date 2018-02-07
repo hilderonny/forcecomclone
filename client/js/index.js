@@ -18,14 +18,12 @@ window.addEventListener("load", function() {
                 this.isloggedin = false;
             },
             performlogin: function(credentials) {
-                this.iswaiting = true;
                 var self = this;
                 $post("/api/login", credentials, function(err, res) {
                     if (err) return App.logout();
                     self.token = res.token;
                     localStorage.setItem("logincredentials", JSON.stringify(credentials));
                     self.isloggedin = true;
-                    self.iswaiting = false;
                 });
             }
         }

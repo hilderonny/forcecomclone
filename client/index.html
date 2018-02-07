@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="css/local.css">
         <link rel="icon" href="favicon.png" sizes="32x32">
 
-        <script src="js/vue.js"></script>
+        <script src="js/lib/vue.js"></script>
         <script src="js/tools.js"></script>
         <script src="js/components.js"></script>
         <script src="js/index.js"></script>
@@ -22,6 +22,8 @@
             <avt-loginform v-bind:isloggedin="isloggedin" v-bind:logourl="logourl" v-bind:title="title" v-on:login="performlogin"></avt-loginform>
 
             <button v-if="isloggedin" v-on:click="logout">Abmelden</button>
+
+            <div class="loading" v-bind:class="{visible:iswaiting}"></div>
 
         </div>
         <!--

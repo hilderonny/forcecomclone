@@ -1,0 +1,149 @@
+* {
+    box-sizing: border-box;
+    font-family: Roboto,Helvetica Neue,sans-serif;
+}
+
+body {
+    background-color: rgb(250,250,250);
+    color: rgba(0,0,0,0.87);
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+html {
+    height: 100%;
+    width: 100%;
+}
+
+#App {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.buttonrow {
+    display: flex;
+    justify-content: center;
+}
+
+.buttonrow > button {
+    background-color: rgb(63,81,181);
+    border: 0;
+    border-radius: 3px;
+    box-shadow: 0 2px 5px 0 rgba(0,0,0,.26); 
+    color: rgba(255,255,255,0.87);
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: .01em;
+    line-height: 22px;
+    margin: 6px 8px;
+    outline: none;
+    padding: 0 6px;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.inputcontainer {
+    margin: 18px 0 8px 0;
+}
+
+.inputcontainer.password > input, .inputcontainer.text > input {
+    background-color: transparent;
+    border-color: rgba(0,0,0,0.12);
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    display: block;
+    font-size: 100%;
+    line-height: 26px;
+    outline: none;
+    padding: 2px 4px;
+    width: 100%;
+}
+
+.inputcontainer.hasfocus.password > input, .inputcontainer.hasfocus.text > input {
+    border-color: rgb(63,81,181);
+    border-bottom-width: 2px;
+    padding-bottom: 1px;
+}
+
+.inputcontainer > label {
+    color: rgba(0,0,0,0.54);
+    display: block;
+    font-size: 12px;
+    visibility: hidden;
+}
+
+.inputcontainer.hascontent > label {
+    visibility: visible;
+}
+
+.inputcontainer.hasfocus > label {
+    color: rgb(63,81,181);
+}
+
+.loading {
+    align-items: center;
+    background-color: rgba(0,0,0,0.8);
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    left: 0;
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    transition:opacity 0.5s linear;
+    transition-delay: 0.4s;
+    visibility: hidden;
+    width: 100%;
+}
+
+.loading.visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+.loading::after {
+    animation: loadingrotation 0.5s linear infinite;
+    content: "";
+    border: 10px solid;
+    border-color: rgb(74, 102, 255) transparent;
+    border-radius: 42px;
+    height: 64px;
+    width: 64px;
+}
+
+@keyframes loadingrotation {
+    0% { -webkit-transform:rotate(0deg); }
+    100% { -webkit-transform:rotate(360deg); }    
+}
+
+.loginform {
+    background-color: #fff;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
+    margin: auto;
+    padding: 34px 58px;
+}
+
+.loginform > .logo {
+    max-width: 360px;
+}
+
+.loginform > .logo > img {
+    height: 100%;
+    width: 100%;
+}
+
+.loginform > .version {
+    bottom: 0;
+    color: rgba(0,0,0,0.3);
+    font-size: 10px;
+    left: 0;
+    position: fixed;
+    text-align: center;
+    width: 100%;
+}
