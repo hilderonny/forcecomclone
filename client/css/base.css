@@ -160,13 +160,13 @@ input {
 button {
     border: none;
     background: white;
-    box-shadow: 1px 1px 2px 0px rgba(0,0,0,.2);
+    background-color: rgb(63,81,181);
+    color: rgba(255,255,255,0.87);
+    box-shadow: 2px 2px 3px 1px rgba(0,0,0,.2);
     width: 100px;
     height: 30px;
     outline: none;
-    background-color: rgb(63,81,181);
     border-radius: 3px;
-    color: rgba(255,255,255,0.87);
     cursor: pointer;
     font-size: 12px;
     letter-spacing: .01em;
