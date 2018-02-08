@@ -3,7 +3,7 @@ Vue.component("avt-dashboard", {
     props: [ "menu" ],
     template: 
         '<div class="dashboard">' +
-            '<button v-for="item in flatmenu"><img v-bind:src="\'/css/icons/office/\'+item.icon"/><span>{{item.title}}</span></button>' +
+            '<button class="action" v-for="item in flatmenu"><img v-bind:src="\'/css/icons/office/\'+item.icon"/><span>{{item.title}}</span></button>' +
         '</div>',
     computed: {
         flatmenu: function() { 
@@ -19,7 +19,7 @@ Vue.component("avt-dashboard", {
 
 Vue.component("avt-dialog", {
     props: [ "title", "message", "buttontext" ],
-    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
     methods: { dismiss: function() { this.$emit('dismisswarning'); } }
 });
 
@@ -31,7 +31,7 @@ Vue.component("avt-loginform", {
             '<h1>{{title}}</h1>' +
             '<avt-textinput autofocus="autofocus" tabindex="1" v-model="username" label="Benutzername"></avt-textinput>' +
             '<avt-passwordinput tabindex="2" v-model="password" label="Passwort"></avt-passwordinput>' +
-            '<div class="buttonrow"><button type="submit" tabindex="3">Anmelden</button></div>' +
+            '<div class="buttonrow"><button class="action primary" type="submit" tabindex="3">Anmelden</button></div>' +
             '<div class="version">{{version}}</div>' +
             '<avt-dialog title="Anmeldung fehlgeschlagen" message="Der Benutzername oder das Passwort ist nicht korrekt." buttontext="Wiederholen" v-on:dismisswarning="dismisswarning" v-if="showwarning"></avt-dialog>' +
         '</form>',

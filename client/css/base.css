@@ -14,9 +14,59 @@ body {
     width: 100%;
 }
 
+button.action {
+    background: white;
+    border: none;
+    border-radius: 3px;
+    box-shadow: 2px 2px 3px 1px rgba(0,0,0,.2);
+    color: rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: .01em;
+    line-height: 22px;
+    margin: 6px 8px;
+    outline: none;
+    padding: 4px 16px;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+button.action:hover {
+    background-color: rgba(200, 200, 200, 0.1);
+    box-shadow: 2px 2px 3px 1px rgba(0,0,0,.3);
+    color: black;
+}
+
+button.action:active {
+    box-shadow: 1px 1px 2px 0px rgba(0,0,0,.3);
+}
+
+button.primary {
+    background-color: rgb(63,81,181);
+    color: rgba(255,255,255,0.87);
+}
+
+button.primary:hover {
+    background-color: rgb(69, 88, 197);
+    color: white;
+}
+
 html {
     height: 100%;
     width: 100%;
+}
+
+input[type=text], input[type=password] {
+    background-color: transparent;
+    display: block;
+    font-size: 100%;
+    line-height: 26px;
+    outline: none;
+    padding: 2px 4px;
+    width: 100%;
+    box-shadow: 1px 1px 2px 0px rgba(0,0,0,.2) inset;
+    border: none;
+    border-radius: 3px;
 }
 
 #App {
@@ -30,23 +80,6 @@ html {
     justify-content: center;
 }
 
-/* .buttonrow > button {
-    background-color: rgb(63,81,181);
-    border: 0;
-    border-radius: 3px;
-    box-shadow: 0 2px 5px 0 rgba(0,0,0,.26); 
-    color: rgba(255,255,255,0.87);
-    cursor: pointer;
-    font-size: 12px;
-    letter-spacing: .01em;
-    line-height: 22px;
-    margin: 6px 8px;
-    outline: none;
-    padding: 0 6px;
-    text-transform: uppercase;
-    user-select: none;
-} */
-
 .dashboard {
     align-items: center;
     display: flex;
@@ -57,17 +90,12 @@ html {
 
 .dashboard > button {
     align-items: center;
-    background: white;
-    border: none;
-    box-shadow: 0 2px 5px 0 rgba(0,0,0,.26);
-    cursor: pointer;
     display: flex;
     flex-direction: column;
     justify-content: center;
     margin: 6px 8px;
     min-width: 200px;
     height: 200px;
-    outline: none;
     padding: 0 6px;
 }
 
@@ -77,7 +105,6 @@ html {
     font-size: 16px;
     letter-spacing: .01em;
     line-height: 24px;
-    text-transform: uppercase;
 }
 
 .dashboard > button > img {
@@ -115,20 +142,6 @@ html {
     padding: 6px 16px;
 }
 
-.dialog > .buttonrow > button {
-    background: none;
-    border: none;
-    box-shadow: none;
-    color: rgb(63,81,181);
-    margin: 8px;
-    padding: 0 6px;
-}
-
-.dialog > .buttonrow > button:hover {
-    background-color: rgba(158, 158, 158, 0.2);
-    border-radius: 3px;
-}
-
 .blocked {
     background-color: rgba(0,0,0,0.8);
     content: "";
@@ -143,58 +156,6 @@ html {
 .inputcontainer {
     margin: 18px 0 8px 0;
 }
-
-input {
-    background-color: transparent;
-    display: block;
-    font-size: 100%;
-    line-height: 26px;
-    outline: none;
-    padding: 2px 4px;
-    width: 100%;
-    box-shadow: 1px 1px 2px 0px rgba(0,0,0,.2) inset;
-    border: none;
-    border-radius: 3px;
-}
-
-button {
-    border: none;
-    background: white;
-    background-color: rgb(63,81,181);
-    color: rgba(255,255,255,0.87);
-    box-shadow: 2px 2px 3px 1px rgba(0,0,0,.2);
-    width: 100px;
-    height: 30px;
-    outline: none;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-    letter-spacing: .01em;
-    line-height: 22px;
-    margin: 6px 8px;
-    padding: 0 6px;
-    text-transform: uppercase;
-    user-select: none;
-}
-
-/* .inputcontainer.password > input, .inputcontainer.text > input {
-    background-color: transparent;
-    border-color: rgba(0,0,0,0.12);
-    border-style: solid;
-    border-width: 0 0 1px 0;
-    display: block;
-    font-size: 100%;
-    line-height: 26px;
-    outline: none;
-    padding: 2px 4px;
-    width: 100%;
-}
-
-.inputcontainer.hasfocus.password > input, .inputcontainer.hasfocus.text > input {
-    border-color: rgb(63,81,181);
-    border-bottom-width: 2px;
-    padding-bottom: 1px;
-} */
 
 .inputcontainer > label {
     color: rgba(0,0,0,0.54);
@@ -283,7 +244,7 @@ button {
     overflow: auto;
     position: absolute;
     top: 32px;
-    width: 240px;
+    width: 220px;
 }
 
 .mainmenu > .logo {
@@ -315,15 +276,19 @@ button {
     width: 100%;
 }
 
+.mainmenu > .section > button:hover {
+    background-color: rgba(158, 158, 158, 0.2);
+}
+
+.mainmenu > .section > button:active {
+    background-color: rgba(100, 100, 100, 0.2);
+}
+
 .mainmenu > .section > button > img {
     height: 24px;
     margin-right: 8px;
     opacity: 0.6;
     width: 24px;
-}
-
-.mainmenu > .section > button:hover {
-    background-color: rgba(158, 158, 158, 0.2);
 }
 
 .mainmenu > .section > h3 {
