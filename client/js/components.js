@@ -29,7 +29,7 @@ Vue.component("avt-listcard", {
     props: [ "listelements", "title" ],
     template:
         '<div class="card">' +
-            '<div class="toolbar"></div>' +
+            '<div class="toolbar"><slot name="toolbar"></slot></div>' +
             '<div class="title" v-if="title">{{title}}</div>' +
             '<div class="content"><div class="list">' +
                 '<button v-for="element in listelements" v-on:click="selectelement(element)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +

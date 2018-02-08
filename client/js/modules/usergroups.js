@@ -2,7 +2,9 @@
 Vue.component("avt-usergroup-list", {
     template: 
         '<div class="module">' +
-            '<avt-listcard v-bind:listelements="listmodel" title="Benutzergruppen" v-on:elementselected="elementselected"></avt-listcard>' +
+            '<avt-listcard v-bind:listelements="listmodel" title="Benutzergruppen" v-on:elementselected="elementselected">' +
+                '<button slot="toolbar" v-on:click="add"><img src="/css/icons/material/Plus Math.svg"/><span>Benutzergruppe</span></button>' +
+            '</avt-listcard>' +
         '</div>',
     data: function() { return {
         usergroups: []
@@ -17,6 +19,7 @@ Vue.component("avt-usergroup-list", {
         }); }
     },
     methods: {
+        add: function(element) { console.log("New usergroup"); },
         elementselected: function(element) { console.log(element); }
     },
     mounted: function () {
