@@ -5,6 +5,7 @@ window.addEventListener("load", function() {
     App = new Vue({
         el: "#App",
         data: {
+            currentModule: null,
             isloggedin: false,
             isportal: false,
             iswaiting: false,
@@ -19,6 +20,12 @@ window.addEventListener("load", function() {
             isblocked: function() { return this.showloginwarning; }
         },
         methods: {
+            loadmenu: function() {
+                var self = this;
+                $get("/api/menu", function(err, res) {
+                    self.menu = res;
+                });
+            },
             logout: function() {
                 localStorage.removeItem("logincredentials");
                 this.isloggedin = false;
@@ -37,12 +44,12 @@ window.addEventListener("load", function() {
                     self.loadmenu();
                 });
             },
-            loadmenu: function() {
-                var self = this;
-                $get("/api/menu", function(err, res) {
-                    self.menu = res;
+            selectmodule: function(mod) {
+                this.currentModule = null; // Force reload of module when the same is clicked again
+                this.$nextTick(function () {
+                    this.currentModule = mod;
                 });
-            }
+            },
         }
     });
 

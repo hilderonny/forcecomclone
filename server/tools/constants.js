@@ -19,7 +19,7 @@ var menuitems = {
     notes: {},
     persons: {},
     portalsettings: { icon: "Server.svg", title: "Portaleinstellungen" },
-    usergroups: { icon: "User Group Man Man.svg", title: "Benutzergruppen" },
+    usergroups: { icon: "User Group Man Man.svg", module: "avt-usergroup-list", title: "Benutzergruppen" },
     users: { icon: "User.svg", title: "Benutzer" },
     usersettings: { icon: "Settings.svg", title: "Mein Profil" },
 

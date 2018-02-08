@@ -3,12 +3,12 @@
     <head>
         <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="stylesheet" href="css/base.css">
-        <link rel="stylesheet" href="css/local.css">
         <link rel="icon" href="favicon.png" sizes="32x32">
 
         <script src="js/lib/vue.js"></script>
         <script src="js/tools.js"></script>
         <script src="js/components.js"></script>
+        <script src="js/modules/usergroups.js"></script>
         <script src="js/index.js"></script>
 
     </head>
@@ -20,9 +20,11 @@
 
             <avt-loginform v-bind:isloggedin="isloggedin" v-bind:logourl="logourl" v-bind:title="title" v-bind:showwarning="showloginwarning" v-bind:version="version" v-on:login="performlogin" v-on:dismisswarning="showloginwarning=false"></avt-loginform>
 
-            <avt-mainmenu v-if="isloggedin&&menu" v-bind:menu="menu" v-on:logout="logout"></avt-mainmenu>
+            <avt-mainmenu v-if="isloggedin&&menu" v-bind:menu="menu" v-on:logout="logout" v-on:selectmodule="selectmodule"></avt-mainmenu>
 
-            <avt-dashboard v-if="isloggedin&&menu" v-bind:menu="menu"></avt-dashboard>
+            <avt-dashboard v-if="isloggedin&&menu&&!currentModule" v-bind:menu="menu" v-on:selectmodule="selectmodule"></avt-dashboard>
+
+            <component v-if="isloggedin&&currentModule" v-bind:is="currentModule"></component>
 
             <div class="blocked" v-if="isblocked"></div>
 

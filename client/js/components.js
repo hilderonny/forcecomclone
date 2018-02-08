@@ -3,7 +3,7 @@ Vue.component("avt-dashboard", {
     props: [ "menu" ],
     template: 
         '<div class="dashboard">' +
-            '<button class="action" v-for="item in flatmenu"><img v-bind:src="\'/css/icons/office/\'+item.icon"/><span>{{item.title}}</span></button>' +
+            '<button class="action" v-for="item in flatmenu" v-on:click="selectmodule(item.module)"><img v-bind:src="\'/css/icons/office/\'+item.icon"/><span>{{item.title}}</span></button>' +
         '</div>',
     computed: {
         flatmenu: function() { 
@@ -14,7 +14,9 @@ Vue.component("avt-dashboard", {
             return items;
         }
     },
-    methods: { logout: function() { this.$emit('logout'); } }
+    methods: {
+        selectmodule: function(mod) { this.$emit('selectmodule', mod); }
+    }
 });
 
 Vue.component("avt-dialog", {
@@ -22,6 +24,21 @@ Vue.component("avt-dialog", {
     template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
     methods: { dismiss: function() { this.$emit('dismisswarning'); } }
 });
+
+Vue.component("avt-listcard", {
+    props: [ "listelements", "title" ],
+    template:
+        '<div class="card">' +
+            '<div class="toolbar"></div>' +
+            '<div class="title" v-if="title">{{title}}</div>' +
+            '<div class="content"><div class="list">' +
+                '<button v-for="element in listelements" v-on:click="selectelement(element)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
+            '</div></div>' +
+        '</div>',
+    methods: {
+        selectelement: function(element) { this.$emit('elementselected', element); }
+    }
+})
 
 Vue.component("avt-loginform", {
     props: [ "isloggedin", "logourl", "title", "showwarning", "version" ],
@@ -49,15 +66,18 @@ Vue.component("avt-mainmenu", {
     props: [ "menu" ],
     template: 
         '<div class="mainmenu">' +
-            '<div class="logo"><img v-bind:src="menu.logourl"/></div>' +
+            '<div class="logo"><img v-bind:src="menu.logourl" v-on:click="selectmodule(null)"/></div>' +
             '<div class="section" v-for="section in menu.sections">' +
                 '<h3>{{section.title}}</h3>' +
-                '<button v-for="item in section.items"><img v-bind:src="\'/css/icons/material/\'+item.icon"/><span>{{item.title}}</span></button>' +
+                '<button v-for="item in section.items" v-on:click="selectmodule(item.module)"><img v-bind:src="\'/css/icons/material/\'+item.icon"/><span>{{item.title}}</span></button>' +
             '</div>' +
             '<div class="section"><button v-on:click="logout"><img src="/css/icons/material/Exit.svg"/><span>Abmelden</span></button></div>' +
             '<div class="username">Angemeldet als {{menu.username}}</div>' +
         '</div>',
-    methods: { logout: function() { this.$emit('logout'); } }
+    methods: {
+        logout: function() { this.$emit('logout'); },
+        selectmodule: function(mod) { this.$emit('selectmodule', mod); }
+    }
 });
 
 Vue.component("avt-passwordinput", {
