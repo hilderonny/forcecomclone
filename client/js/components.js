@@ -16,31 +16,89 @@ Vue.component("avt-dashboard", {
     }
 });
 
+Vue.component("avt-detailscard", {
+    props: [ "elementmodel" ],
+    template:
+        '<div class="card details">' +
+        '<div class="toolbar"></div>' +
+        '<div class="title">{{title}}</div>' +
+        '<div class="content">' +
+            '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index"></avt-input>' +
+        '</div>' +
+    '</div>',
+    data: function() { return {
+        title: null,
+        fields: [],
+        element: null,
+    }},
+    computed: {
+        sortedfields: function() { return this.fields.sort(function(a,b) { return a.label<b.label ? -1 : a.label>b.label ? 1 : 0; })}
+    },
+    mounted: function () {
+        var self = this;
+        $get("/api/datatypes/" + self.elementmodel.datatype, function(err, datatype) {
+            $get("/api/datatypefields/" + self.elementmodel.datatype, function(err, fields) {
+                if (datatype.name === "users") fields.find(function(f) { return f.name==="password"; }).label = "Neues Passwort";
+                var titlefield = fields.find(function(f) { return f.istitle; });
+                var titlefieldname = titlefield ? titlefield.name : "name";
+                if (self.elementmodel && self.elementmodel.name) {
+                    $get("/api/dynamic/" + self.elementmodel.datatype + "/" + self.elementmodel.name, function(err, element) {
+                        self.element = element;
+                        self.fields = fields;
+                        self.title = element[titlefieldname];
+                    });
+                } else {
+                    self.element = {};
+                    self.fields = fields;
+                    self.title = datatype.label + " erstellen";
+                }
+            });
+        });
+    }
+});
+
 Vue.component("avt-dialog", {
     props: [ "title", "message", "buttontext" ],
     template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
     methods: { dismiss: function() { this.$emit('dismisswarning'); } }
 });
 
+Vue.component("avt-input", {
+    props: [ "field", "value", "tabindex" ],
+    template: 
+        '<div class="inputcontainer" v-bind:class="[field.fieldtype, {hasfocus:hasfocus,hascontent:internalvalue}]">' +
+            '<input v-bind:id="field.name" v-if="field.fieldtype===\'boolean\'" type="checkbox" v-bind:tabindex="tabindex" v-model="internalvalue"/>' +
+            '<label v-bind:for="field.name">{{field.label}}</label>' +
+            '<input v-bind:id="field.name" v-if="field.fieldtype===\'text\'" type="text" v-bind:tabindex="tabindex" v-bind:placeholder="field.label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/>' +
+            '<select v-if="field.fieldtype===\'reference\'"></select>' +
+        '</div>',
+    data: function() { return { internalvalue: this.value, hasfocus: false }},
+    watch: { internalvalue(val) { this.$emit('change', val); } }
+});
+
 Vue.component("avt-listcard", {
     props: [ "datatype" ],
     template:
-        '<div class="card">' +
-            '<div class="toolbar"><button v-on:click="add"><img src="/css/icons/material/Plus Math.svg"/><span>{{addlabel}}</span></button></div>' +
+        '<div class="module"><div class="card">' +
+            '<div class="toolbar"><button v-on:click="select()"><img src="/css/icons/material/Plus Math.svg"/><span>{{addlabel}}</span></button></div>' +
             '<div class="title" v-if="title">{{title}}</div>' +
             '<div class="content"><div class="list">' +
-                '<button v-for="element in elements" v-on:click="select(element)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
+                '<button v-bind:class="{selected:element.model&&currentelement&&(element.model.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.model.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
             '</div></div>' +
-        '</div>',
+        '</div>' +
+        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement"></avt-detailscard></div>',
     data: function() { return {
         addlabel: [],
         elements: [],
         fields: [],
         title: [],
+        currentelement: null,
     }},
     methods: {
-        add: function(element) { console.log("NEU " + this.addlabel); },
-        select: function(element) { console.log(element); }
+        select: function(name) {
+            this.currentelement = null;
+            this.$nextTick(function () { this.currentelement = { name: name, datatype: this.datatype }; });
+        }
     },
     mounted: function () {
         var self = this;

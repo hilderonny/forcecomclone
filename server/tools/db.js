@@ -39,12 +39,12 @@ var Db = {
 
     createDefaultTables: async(databaseName) => {
         await Db.query(databaseName, "CREATE TABLE datatypes (name TEXT NOT NULL PRIMARY KEY, label TEXT, plurallabel TEXT, icon TEXT);");
-        await Db.query(databaseName, "CREATE TABLE datatypefields (name TEXT, label TEXT, datatype TEXT REFERENCES datatypes, fieldtype TEXT, istitle BOOLEAN, isrequired BOOLEAN, PRIMARY KEY (name, datatype));");
+        await Db.query(databaseName, "CREATE TABLE datatypefields (name TEXT, label TEXT, datatype TEXT REFERENCES datatypes, fieldtype TEXT, istitle BOOLEAN, isrequired BOOLEAN, reference TEXT, PRIMARY KEY (name, datatype));");
         await Db.createDatatype(databaseName, "usergroups", "Benutzergruppe", "Benutzergruppen", true, "/css/icons/material/user-account.svg");
         await Db.createDatatype(databaseName, "users", "Benutzer", "Benutzer", true, "/css/icons/material/user-account.svg");
-        await Db.createDatatypeField(databaseName, "users", "password", "Passwort", fieldtypes.text, false, false);
-        await Db.createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", fieldtypes.text, false, true);
-        await Db.createDatatypeField(databaseName, "users", "isadmin", "Administrator", fieldtypes.boolean, false, false);
+        await Db.createDatatypeField(databaseName, "users", "password", "Passwort", fieldtypes.text, false, false, false, null);
+        await Db.createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", fieldtypes.reference, false, true, false, "usergroups");
+        await Db.createDatatypeField(databaseName, "users", "isadmin", "Administrator", fieldtypes.boolean, false, false, false, null);
         await Db.query(databaseName, "CREATE TABLE permissions (usergroup TEXT NOT NULL, datatype TEXT NOT NULL, canwrite BOOLEAN, PRIMARY KEY (usergroup, datatype));");
     },
 
@@ -55,16 +55,17 @@ var Db = {
     createDatatype: async(databaseNameWithoutPrefix, datatypename, label, plurallabel, nameistitle, icon) => {
         await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypes (name, label, plurallabel, icon) VALUES ('" + datatypename + "', '" + label + "', '" + plurallabel + "', '" + icon + "');");
         await Db.query(databaseNameWithoutPrefix, `CREATE TABLE ${datatypename} (name TEXT PRIMARY KEY);`);
-        await Db.createDatatypeField(databaseNameWithoutPrefix, datatypename, "name", "Name", fieldtypes.text, nameistitle, true, true);
+        await Db.createDatatypeField(databaseNameWithoutPrefix, datatypename, "name", "Name", fieldtypes.text, nameistitle, true, true, null);
     },
 
-    createDatatypeField: async(databaseNameWithoutPrefix, datatypename, fieldname, label, fieldtype, istitle, isrequired, doNotAddColumn) => {
-        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypefields (name, label, datatype, fieldtype, istitle, isrequired) VALUES ('" + fieldname + "', '" + label + "', '" + datatypename + "', '" + fieldtype + "', " + istitle + ", " + isrequired + ")");
+    createDatatypeField: async(databaseNameWithoutPrefix, datatypename, fieldname, label, fieldtype, istitle, isrequired, doNotAddColumn, reference) => {
+        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypefields (name, label, datatype, fieldtype, istitle, isrequired, reference) VALUES ('" + fieldname + "', '" + label + "', '" + datatypename + "', '" + fieldtype + "', " + istitle + ", " + isrequired + ", '" + reference + "')");
         var columntype;
         switch(fieldtype) {
             case fieldtypes.boolean: columntype = "BOOLEAN"; break;
             case fieldtypes.datetime: columntype = "BIGINT"; break;
             case fieldtypes.decimal: columntype = "NUMERIC"; break;
+            case fieldtypes.reference: columntype = "TEXT"; break;
             case fieldtypes.text: columntype = "TEXT"; break;
             default: throw new Error(`Unknown field type '${fieldtype}'`);
         }

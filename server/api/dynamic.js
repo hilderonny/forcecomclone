@@ -6,11 +6,13 @@ module.exports = () => {
 
     App.router.get('/dynamic/:datatype', auth, async (req, res) => {
         var dynamicObjects = await Db.getDynamicObjects(req.user.clientname, req.params.datatype);
+        if (req.params.datatype === "users") dynamicObjects.forEach((dynamicObject) => { delete dynamicObject.password; });;
         res.send(dynamicObjects);
     });
 
     App.router.get('/dynamic/:datatype/:name', auth, async (req, res) => {
         var dynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
+        if (req.params.datatype === "users") delete dynamicObject.password;
         if (!dynamicObject) return res.sendStatus(404);
         res.send(dynamicObject);
     });

@@ -94,6 +94,10 @@ input[type=text], input[type=password] {
     width: 320px;
 }
 
+.card.details {
+    flex: 1;
+}
+
 .card > .content {
     flex: 1;
     overflow: auto;
@@ -189,11 +193,28 @@ input[type=text], input[type=password] {
     margin: 18px 0 8px 0;
 }
 
+.inputcontainer.boolean {
+    align-items: center;
+    display: flex;
+}
+
 .inputcontainer > label {
     color: rgba(0,0,0,0.54);
     display: block;
     font-size: 12px;
     visibility: hidden;
+}
+
+.inputcontainer.boolean > input {
+    height: 20px;
+    width: 20px;
+}
+
+.inputcontainer.boolean > label {
+    color: inherit;
+    display: inline-block;
+    font-size: inherit;
+    visibility: visible;
 }
 
 .inputcontainer.hascontent > label {
@@ -219,6 +240,10 @@ input[type=text], input[type=password] {
     padding: 2px 2px 2px 8px;
     text-align: left;
     width: 100%;
+}
+
+.list > button.selected {
+    background-color: rgba(158, 158, 158, 0.3);
 }
 
 .list > button:last-child {
