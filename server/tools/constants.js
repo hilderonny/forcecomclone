@@ -12,15 +12,16 @@ var menuitems = {
     activities: {},
     areas: {},
     businesspartners: {},
-    clients: { icon: "Briefcase.svg", title: "Mandanten" },
+    clients: { icon: "Briefcase.svg", card: "avt-clients-list", title: "Mandanten" },
     clientsettings: {},
     documents: {},
+    dynamicobjects: { icon: "categorize.svg", card: "avt-dynamicobjects-list", title: "Dynamische Objekte" },
     fmobjects: {},
     notes: {},
     persons: {},
     portalsettings: { icon: "Server.svg", title: "Portaleinstellungen" },
-    usergroups: { icon: "User Group Man Man.svg", module: "avt-usergroup-list", title: "Benutzergruppen" },
-    users: { icon: "User.svg", title: "Benutzer" },
+    usergroups: { icon: "user-account.svg", card: "avt-usergroups-list", title: "Benutzergruppen" },
+    users: { icon: "user.svg", card: "avt-users-list", title: "Benutzer" },
     usersettings: { icon: "Settings.svg", title: "Mein Profil" },
 
 };
@@ -35,6 +36,7 @@ module.exports.clientmenustructure = {
                 menuitems.users, 
                 menuitems.usergroups, 
                 menuitems.clientsettings, 
+                menuitems.dynamicobjects,
                 menuitems.usersettings 
             ]
         },
@@ -72,6 +74,7 @@ module.exports.portalmenustructure = {
             items: [ 
                 menuitems.users, 
                 menuitems.usergroups, 
+                menuitems.dynamicobjects,
                 menuitems.usersettings 
             ]
         },

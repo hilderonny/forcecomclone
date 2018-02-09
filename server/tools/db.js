@@ -38,10 +38,10 @@ var Db = {
     },
 
     createDefaultTables: async(databaseName) => {
-        await Db.query(databaseName, "CREATE TABLE datatypes (name TEXT NOT NULL PRIMARY KEY, label TEXT, plurallabel TEXT, showinmenu BOOLEAN);");
+        await Db.query(databaseName, "CREATE TABLE datatypes (name TEXT NOT NULL PRIMARY KEY, label TEXT, plurallabel TEXT, icon TEXT);");
         await Db.query(databaseName, "CREATE TABLE datatypefields (name TEXT, label TEXT, datatype TEXT REFERENCES datatypes, fieldtype TEXT, istitle BOOLEAN, isrequired BOOLEAN, PRIMARY KEY (name, datatype));");
-        await Db.createDatatype(databaseName, "usergroups", "Benutzergruppe", "Benutzergruppen", true);
-        await Db.createDatatype(databaseName, "users", "Benutzer", "Benutzer", true);
+        await Db.createDatatype(databaseName, "usergroups", "Benutzergruppe", "Benutzergruppen", true, "/css/icons/material/user-account.svg");
+        await Db.createDatatype(databaseName, "users", "Benutzer", "Benutzer", true, "/css/icons/material/user-account.svg");
         await Db.createDatatypeField(databaseName, "users", "password", "Passwort", fieldtypes.text, false, false);
         await Db.createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", fieldtypes.text, false, true);
         await Db.createDatatypeField(databaseName, "users", "isadmin", "Administrator", fieldtypes.boolean, false, false);
@@ -52,10 +52,10 @@ var Db = {
         await Db.query(clientName, `INSERT INTO permissions (usergroup, datatype, canwrite) VALUES ('${userGroupName}', '${datatype}', ${canwrite}) ON CONFLICT (usergroup, datatype) DO UPDATE SET canwrite = ${canwrite};`);
     },
 
-    createDatatype: async(databaseNameWithoutPrefix, datatypename, label, plurallabel, showinmenu) => {
-        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypes (name, label, plurallabel, showinmenu) VALUES ('" + datatypename + "', '" + label + "', '" + plurallabel + "', " + showinmenu + ");");
+    createDatatype: async(databaseNameWithoutPrefix, datatypename, label, plurallabel, nameistitle, icon) => {
+        await Db.query(databaseNameWithoutPrefix, "INSERT INTO datatypes (name, label, plurallabel, icon) VALUES ('" + datatypename + "', '" + label + "', '" + plurallabel + "', '" + icon + "');");
         await Db.query(databaseNameWithoutPrefix, `CREATE TABLE ${datatypename} (name TEXT PRIMARY KEY);`);
-        await Db.createDatatypeField(databaseNameWithoutPrefix, datatypename, "name", "Name", fieldtypes.text, false, true, true);
+        await Db.createDatatypeField(databaseNameWithoutPrefix, datatypename, "name", "Name", fieldtypes.text, nameistitle, true, true);
     },
 
     createDatatypeField: async(databaseNameWithoutPrefix, datatypename, fieldname, label, fieldtype, istitle, isrequired, doNotAddColumn) => {
@@ -78,6 +78,11 @@ var Db = {
 
     deletePermission: async(userGroupName, clientName, datatype) => {
         await Db.query(clientName, `DELETE FROM permissions WHERE usergroup = '${userGroupName}' AND datatype = '${datatype}';`);
+    },
+
+    getDataType: async(databaseNameWithoutPrefix, datatypename) => {
+        var result = await Db.query(databaseNameWithoutPrefix, `SELECT * FROM datatypes WHERE name = '${datatypename}';`);
+        return result.rowCount > 0 ? result.rows[0] : undefined;
     },
 
     getDataTypeFields: async(databaseNameWithoutPrefix, datatypename) => {

@@ -6,8 +6,15 @@ module.exports.auth = async(req, res, next) => {
     var user = req.user;
     // Check whether credentials are given
     if (!user || !user.name) return res.sendStatus(403);
-    var datatype = req.params.datatype;
-    if ((await Db.query(user.clientname, `SELECT 1 FROM datatypes WHERE name = '${datatype}';`)).rowCount < 1) return res.sendStatus(404);
+    var datatype;
+    // Handle request for datatypes and their fields
+    if (req.path.startsWith("/datatypes/") || req.path.startsWith("/datatypefields/")) {
+        datatype = "datatypes"; // Fields are handled together with datatypes. There is no permission separation
+    } else {
+        // Handle dynamic objects
+        datatype = req.params.datatype;
+        if ((await Db.query(user.clientname, `SELECT 1 FROM datatypes WHERE name = '${datatype}';`)).rowCount < 1) return res.sendStatus(404);
+    }
     var needwrite = [ 'POST', 'PUT', 'DELETE' ].indexOf(req.method) >= 0;
     var result = await Db.query(user.clientname, `SELECT users.isadmin, permissions.canwrite FROM users LEFT JOIN permissions ON permissions.usergroup = users.usergroup WHERE users.name = '${user.name}' AND (users.isadmin = true OR permissions.datatype = '${datatype}');`);
     if (result.rowCount < 1) return res.sendStatus(403); // At least read permission is given, when result is returned

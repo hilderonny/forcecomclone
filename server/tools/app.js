@@ -30,6 +30,7 @@ var App = {
         require("../api/login")();
         require("../api/menu")();
         require("../api/settings")();
+        require("../api/datatypes")();
         require("../api/dynamic")();
         // Start the server
         // For running as normal user under linux, see https://stackoverflow.com/a/23281401
