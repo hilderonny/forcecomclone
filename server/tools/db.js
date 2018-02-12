@@ -27,6 +27,11 @@ var Db = {
         await Db.initPortalDatabase();
         Db.isInitialized = true;
     },
+
+    canWrite: async(clientname, username, datatypename) => {
+        var result = await Db.query(clientname, `SELECT 1 FROM users LEFT JOIN permissions ON permissions.usergroup = users.usergroup WHERE users.name = '${username}' AND (users.isadmin = true OR (permissions.datatype = '${datatypename}' AND permissions.canwrite = true));`);
+        return result.rowCount > 0;
+    },
     
     createClient: async(clientName) => {
         var localConfig = LocalConfig.load();
@@ -90,15 +95,17 @@ var Db = {
         return (await Db.query(databaseNameWithoutPrefix, `SELECT * FROM datatypefields WHERE datatype='${datatypename}' ORDER BY name;`)).rows;
     },
 
-    getDynamicObjectForEdit: async(clientname, datatypename, name) => {
+    getDynamicObjectForEdit: async(clientname, username, datatypename, name) => {
         var obj = await Db.query(clientname, `SELECT * FROM ${datatypename} WHERE name = '${name}';`);
         if (obj.rowCount < 1) return undefined;
         var datatype = (await Db.query(clientname, `SELECT label FROM datatypes WHERE name = '${datatypename}';`)).rows[0];
+        // Permission
+        var canwrite = await Db.canWrite(clientname, username, datatypename);
         // Name field will not be returned because it is not changeable
         var fields = (await Db.query(clientname, `SELECT name, label, fieldtype, isrequired, reference FROM datatypefields WHERE datatype = '${datatypename}' AND NOT name = 'name' ORDER BY label;`)).rows;
         var titlefield = fields.find((f) => f.istitle);
         if (!titlefield) titlefield = "name";
-        var result = { datatype: datatype, fields: fields, label:obj.rows[0][titlefield], obj: obj.rows[0] };
+        var result = { datatype: datatype, fields: fields, canwrite: canwrite, label:obj.rows[0][titlefield], obj: obj.rows[0] };
         // Check references
         var referencefields = fields.filter((f) => f.fieldtype === fieldtypes.reference && f.reference);
         for (var i = 0; i < referencefields.length; i++) {
@@ -111,7 +118,7 @@ var Db = {
         return result;
     },
 
-    getDynamicObjectsForList: async(clientname, datatypename) => {
+    getDynamicObjectsForList: async(clientname, username, datatypename) => {
         // Get icon
         var datatype = (await Db.query(clientname, `SELECT label, plurallabel, icon FROM datatypes WHERE name = '${datatypename}';`)).rows[0];
         // Get title field
@@ -119,9 +126,12 @@ var Db = {
         var titlefield = titleresult.rowCount > 0 ? titleresult.rows[0].name : 'name';
         // Get object list
         var objects = (await Db.query(clientname, `SELECT name, ${titlefield} as firstline FROM ${datatypename} ORDER BY ${titlefield};`)).rows;
+        // Permission
+        var canwrite = await Db.canWrite(clientname, username, datatypename);
         return {
             datatype: datatype,
-            objects: objects
+            objects: objects,
+            canwrite: canwrite
         };
     },
 
@@ -138,10 +148,12 @@ var Db = {
         return list;
     },
 
-    getEmptyDynamicObject: async(clientname, datatypename) => {
+    getEmptyDynamicObject: async(clientname, username, datatypename) => {
         var datatype = (await Db.query(clientname, `SELECT label FROM datatypes WHERE name = '${datatypename}';`)).rows[0];
         var fields = (await Db.query(clientname, `SELECT name, label, fieldtype, isrequired, reference FROM datatypefields WHERE datatype = '${datatypename}' ORDER BY label;`)).rows;
-        var result = { datatype: datatype, fields: fields, obj: {} };
+        // Permission
+        var canwrite = await Db.canWrite(clientname, username, datatypename);
+        var result = { datatype: datatype, canwrite: canwrite, fields: fields, obj: {} };
         // Check references
         var referencefields = fields.filter((f) => f.fieldtype === fieldtypes.reference && f.reference);
         for (var i = 0; i < referencefields.length; i++) {

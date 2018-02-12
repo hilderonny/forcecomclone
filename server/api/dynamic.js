@@ -11,7 +11,7 @@ module.exports = () => {
     // });
 
     App.router.get('/dynamic/:datatype/forList', auth, async (req, res) => {
-        var dynamicObjects = await Db.getDynamicObjectsForList(req.user.clientname, req.params.datatype);
+        var dynamicObjects = await Db.getDynamicObjectsForList(req.user.clientname, req.user.name, req.params.datatype);
         res.send(dynamicObjects);
     });
 
@@ -21,14 +21,14 @@ module.exports = () => {
     });
 
     App.router.get('/dynamic/:datatype/byName/:name', auth, async (req, res) => {
-        var dynamicObject = await Db.getDynamicObjectForEdit(req.user.clientname, req.params.datatype, req.params.name);
+        var dynamicObject = await Db.getDynamicObjectForEdit(req.user.clientname, req.user.name, req.params.datatype, req.params.name);
         if (req.params.datatype === "users") delete dynamicObject.obj.password;
         if (!dynamicObject) return res.sendStatus(404);
         res.send(dynamicObject);
     });
 
     App.router.get('/dynamic/:datatype/empty', auth, async (req, res) => {
-        var dynamicObject = await Db.getEmptyDynamicObject(req.user.clientname, req.params.datatype);
+        var dynamicObject = await Db.getEmptyDynamicObject(req.user.clientname, req.user.name, req.params.datatype);
         res.send(dynamicObject);
     });
 

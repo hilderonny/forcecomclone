@@ -24,24 +24,28 @@ Vue.component("avt-detailscard", {
         '<div class="title">{{title}}</div>' +
         '<div class="content">' +
             '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index"></avt-input>' +
+            '<div class="buttonrow"><button class="action warn" v-if="!isnew&&canwrite">Löschen</button><button class="action primary" v-if="!isnew&&canwrite">Speichern</button><button class="action primary" v-if="isnew&&canwrite">Erstellen</button></div>' +
         '</div>' +
     '</div>',
     data: function() { return {
-        title: null,
-        fields: [],
+        canwrite: false,
         element: null,
+        fields: [],
+        isnew: false,
+        title: null,
     }},
     computed: {
         sortedfields: function() { return this.fields.sort(function(a,b) { return a.label<b.label ? -1 : a.label>b.label ? 1 : 0; })}
     },
     mounted: function () {
         var self = this;
-        var isnew = self.elementmodel && self.elementmodel.name;
-        var apiurl = "/api/dynamic/" + self.elementmodel.datatype + (isnew ? "/byName/" + self.elementmodel.name : "/empty");
+        self.isnew = !(self.elementmodel && self.elementmodel.name);
+        var apiurl = "/api/dynamic/" + self.elementmodel.datatype + (self.isnew ? "/empty" : "/byName/" + self.elementmodel.name);
         $get(apiurl, function(err, element) {
+            self.canwrite = element.canwrite;
             self.element = element.obj;
             self.fields = element.fields;
-            self.title = element.datatype.label + " " + (!isnew ? "erstellen" : element.label);
+            self.title = element.datatype.label + " " + (self.isnew ? "erstellen" : element.label);
         });
     }
 });
@@ -69,7 +73,7 @@ Vue.component("avt-listcard", {
     props: [ "datatype" ],
     template:
         '<div class="module"><div class="card">' +
-            '<div class="toolbar"><button v-on:click="select()"><img src="/css/icons/material/Plus Math.svg"/><span>{{addlabel}}</span></button></div>' +
+            '<div class="toolbar"><button v-if="canwrite" v-on:click="select()"><img src="/css/icons/material/Plus Math.svg"/><span>{{addlabel}}</span></button></div>' +
             '<div class="title" v-if="title">{{title}}</div>' +
             '<div class="content"><div class="list">' +
                 '<button v-bind:class="{selected:currentelement&&(element.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
@@ -78,10 +82,11 @@ Vue.component("avt-listcard", {
         '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement"></avt-detailscard></div>',
     data: function() { return {
         addlabel: [],
+        canwrite: false,
+        currentelement: null,        
         elements: [],
         fields: [],
         title: [],
-        currentelement: null,
     }},
     methods: {
         select: function(name) {
@@ -92,6 +97,7 @@ Vue.component("avt-listcard", {
     mounted: function () {
         var self = this;
         $get("/api/dynamic/" + self.datatype + "/forList", function(err, result) {
+            self.canwrite = result.canwrite;
             self.title = result.datatype.plurallabel;
             self.addlabel = result.datatype.label;
             self.elements = result.objects.map(function(o) { return {

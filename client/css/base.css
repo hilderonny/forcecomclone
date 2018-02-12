@@ -51,6 +51,11 @@ button.primary:hover {
     color: white;
 }
 
+button.warn:hover {
+    background-color: rgb(255, 0, 0);
+    color: white;
+}
+
 html {
     height: 100%;
     width: 100%;
@@ -96,6 +101,10 @@ input[type=text], input[type=password] {
 
 .card.details {
     flex: 1;
+}
+
+.card.details > .content > .buttonrow {
+    justify-content: flex-end;
 }
 
 .card > .content {
