@@ -36,23 +36,12 @@ Vue.component("avt-detailscard", {
     },
     mounted: function () {
         var self = this;
-        $get("/api/datatypes/" + self.elementmodel.datatype, function(err, datatype) {
-            $get("/api/datatypefields/" + self.elementmodel.datatype, function(err, fields) {
-                if (datatype.name === "users") fields.find(function(f) { return f.name==="password"; }).label = "Neues Passwort";
-                var titlefield = fields.find(function(f) { return f.istitle; });
-                var titlefieldname = titlefield ? titlefield.name : "name";
-                if (self.elementmodel && self.elementmodel.name) {
-                    $get("/api/dynamic/" + self.elementmodel.datatype + "/" + self.elementmodel.name, function(err, element) {
-                        self.element = element;
-                        self.fields = fields;
-                        self.title = element[titlefieldname];
-                    });
-                } else {
-                    self.element = {};
-                    self.fields = fields;
-                    self.title = datatype.label + " erstellen";
-                }
-            });
+        var isnew = self.elementmodel && self.elementmodel.name;
+        var apiurl = "/api/dynamic/" + self.elementmodel.datatype + (isnew ? "/byName/" + self.elementmodel.name : "/empty");
+        $get(apiurl, function(err, element) {
+            self.element = element.obj;
+            self.fields = element.fields;
+            self.title = element.datatype.label + " " + (!isnew ? "erstellen" : element.label);
         });
     }
 });
@@ -70,7 +59,7 @@ Vue.component("avt-input", {
             '<input v-bind:id="field.name" v-if="field.fieldtype===\'boolean\'" type="checkbox" v-bind:tabindex="tabindex" v-model="internalvalue"/>' +
             '<label v-bind:for="field.name">{{field.label}}</label>' +
             '<input v-bind:id="field.name" v-if="field.fieldtype===\'text\'" type="text" v-bind:tabindex="tabindex" v-bind:placeholder="field.label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/>' +
-            '<select v-if="field.fieldtype===\'reference\'"></select>' +
+            '<select v-if="field.fieldtype===\'reference\'"><option v-for="option in internalvalue.options" v-bind:value="option.name" v-bind:selected="internalvalue.value===option.name">{{option.label}}</option></select>' +
         '</div>',
     data: function() { return { internalvalue: this.value, hasfocus: false }},
     watch: { internalvalue(val) { this.$emit('change', val); } }
@@ -83,7 +72,7 @@ Vue.component("avt-listcard", {
             '<div class="toolbar"><button v-on:click="select()"><img src="/css/icons/material/Plus Math.svg"/><span>{{addlabel}}</span></button></div>' +
             '<div class="title" v-if="title">{{title}}</div>' +
             '<div class="content"><div class="list">' +
-                '<button v-bind:class="{selected:element.model&&currentelement&&(element.model.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.model.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
+                '<button v-bind:class="{selected:currentelement&&(element.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
             '</div></div>' +
         '</div>' +
         '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement"></avt-detailscard></div>',
@@ -102,22 +91,14 @@ Vue.component("avt-listcard", {
     },
     mounted: function () {
         var self = this;
-        $get("/api/datatypes/" + self.datatype, function(err, datatype) {
-            self.title = datatype.plurallabel;
-            self.addlabel = datatype.label;
-            $get("/api/datatypefields/" + self.datatype, function(err, fields) {
-                var titlefield = fields.find(function(f) { return f.istitle; });
-                var titlefieldname = titlefield ? titlefield.name : "name";
-                $get("/api/dynamic/" + self.datatype, function(err, elements) {
-                    self.elements = elements.map(function(element) {
-                        return {
-                            firstline: element[titlefieldname],
-                            icon: datatype.icon,
-                            model: element
-                        }
-                    });
-                });
-            });
+        $get("/api/dynamic/" + self.datatype + "/forList", function(err, result) {
+            self.title = result.datatype.plurallabel;
+            self.addlabel = result.datatype.label;
+            self.elements = result.objects.map(function(o) { return {
+                name: o.name,
+                firstline: o.firstline,
+                icon: result.datatype.icon
+            }});
         });
     }
 });

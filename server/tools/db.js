@@ -90,13 +90,68 @@ var Db = {
         return (await Db.query(databaseNameWithoutPrefix, `SELECT * FROM datatypefields WHERE datatype='${datatypename}' ORDER BY name;`)).rows;
     },
 
-    getDynamicObject: async(clientname, datatype, name) => {
-        var result = await Db.query(clientname, `SELECT * FROM ${datatype} WHERE name = '${name}';`);
-        return result.rowCount > 0 ? result.rows[0] : undefined;
+    getDynamicObjectForEdit: async(clientname, datatypename, name) => {
+        var obj = await Db.query(clientname, `SELECT * FROM ${datatypename} WHERE name = '${name}';`);
+        if (obj.rowCount < 1) return undefined;
+        var datatype = (await Db.query(clientname, `SELECT label FROM datatypes WHERE name = '${datatypename}';`)).rows[0];
+        // Name field will not be returned because it is not changeable
+        var fields = (await Db.query(clientname, `SELECT name, label, fieldtype, isrequired, reference FROM datatypefields WHERE datatype = '${datatypename}' AND NOT name = 'name' ORDER BY label;`)).rows;
+        var titlefield = fields.find((f) => f.istitle);
+        if (!titlefield) titlefield = "name";
+        var result = { datatype: datatype, fields: fields, label:obj.rows[0][titlefield], obj: obj.rows[0] };
+        // Check references
+        var referencefields = fields.filter((f) => f.fieldtype === fieldtypes.reference && f.reference);
+        for (var i = 0; i < referencefields.length; i++) {
+            var rf = referencefields[i];
+            result.obj[rf.name] = {
+                value: result.obj[rf.name],
+                options: await Db.getDynamicObjectsForSelect(clientname, rf.reference)
+            };
+        }
+        return result;
     },
 
-    getDynamicObjects: async(clientname, datatype) => {
-        return (await Db.query(clientname, `SELECT * FROM ${datatype} ORDER BY name;`)).rows;
+    getDynamicObjectsForList: async(clientname, datatypename) => {
+        // Get icon
+        var datatype = (await Db.query(clientname, `SELECT label, plurallabel, icon FROM datatypes WHERE name = '${datatypename}';`)).rows[0];
+        // Get title field
+        var titleresult = await Db.query(clientname, `SELECT name FROM datatypefields WHERE datatype = '${datatypename}' AND istitle = true ORDER BY name;`);
+        var titlefield = titleresult.rowCount > 0 ? titleresult.rows[0].name : 'name';
+        // Get object list
+        var objects = (await Db.query(clientname, `SELECT name, ${titlefield} as firstline FROM ${datatypename} ORDER BY ${titlefield};`)).rows;
+        return {
+            datatype: datatype,
+            objects: objects
+        };
+    },
+
+    getDynamicObjectsForSelect: async(clientname, datatype) => {
+        // Get title field
+        var titleresult = await Db.query(clientname, `SELECT name FROM datatypefields WHERE datatype = '${datatype}' AND istitle = true ORDER BY name;`);
+        var titlefield = titleresult.rowCount > 0 ? titleresult.rows[0].name : 'name';
+        // Get object list
+        var objects = (await Db.query(clientname, `SELECT name, ${titlefield} as label FROM ${datatype} ORDER BY ${titlefield};`)).rows;
+        var list = objects.map((o) => { return {
+            name: o.name,
+            label: o.label
+        }});
+        return list;
+    },
+
+    getEmptyDynamicObject: async(clientname, datatypename) => {
+        var datatype = (await Db.query(clientname, `SELECT label FROM datatypes WHERE name = '${datatypename}';`)).rows[0];
+        var fields = (await Db.query(clientname, `SELECT name, label, fieldtype, isrequired, reference FROM datatypefields WHERE datatype = '${datatypename}' ORDER BY label;`)).rows;
+        var result = { datatype: datatype, fields: fields, obj: {} };
+        // Check references
+        var referencefields = fields.filter((f) => f.fieldtype === fieldtypes.reference && f.reference);
+        for (var i = 0; i < referencefields.length; i++) {
+            var rf = referencefields[i];
+            result.obj[rf.name] = {
+                value: result.obj[rf.name],
+                options: await Db.getDynamicObjectsForSelect(clientname, rf.reference)
+            };
+        }
+        return result;
     },
 
     getPool: (databasename) => {

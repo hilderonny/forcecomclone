@@ -4,16 +4,31 @@ var auth = require("../tools/middlewares").auth;
 
 module.exports = () => {
 
-    App.router.get('/dynamic/:datatype', auth, async (req, res) => {
-        var dynamicObjects = await Db.getDynamicObjects(req.user.clientname, req.params.datatype);
-        if (req.params.datatype === "users") dynamicObjects.forEach((dynamicObject) => { delete dynamicObject.password; });;
+    // App.router.get('/dynamic/:datatype', auth, async (req, res) => {
+    //     var dynamicObjects = await Db.getDynamicObjects(req.user.clientname, req.params.datatype);
+    //     if (req.params.datatype === "users") dynamicObjects.forEach((dynamicObject) => { delete dynamicObject.password; });;
+    //     res.send(dynamicObjects);
+    // });
+
+    App.router.get('/dynamic/:datatype/forList', auth, async (req, res) => {
+        var dynamicObjects = await Db.getDynamicObjectsForList(req.user.clientname, req.params.datatype);
         res.send(dynamicObjects);
     });
 
-    App.router.get('/dynamic/:datatype/:name', auth, async (req, res) => {
-        var dynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
-        if (req.params.datatype === "users") delete dynamicObject.password;
+    App.router.get('/dynamic/:datatype/forSelect', auth, async (req, res) => {
+        var dynamicObjects = await Db.getDynamicObjectsForSelect(req.user.clientname, req.params.datatype);
+        res.send(dynamicObjects);
+    });
+
+    App.router.get('/dynamic/:datatype/byName/:name', auth, async (req, res) => {
+        var dynamicObject = await Db.getDynamicObjectForEdit(req.user.clientname, req.params.datatype, req.params.name);
+        if (req.params.datatype === "users") delete dynamicObject.obj.password;
         if (!dynamicObject) return res.sendStatus(404);
+        res.send(dynamicObject);
+    });
+
+    App.router.get('/dynamic/:datatype/empty', auth, async (req, res) => {
+        var dynamicObject = await Db.getEmptyDynamicObject(req.user.clientname, req.params.datatype);
         res.send(dynamicObject);
     });
 
