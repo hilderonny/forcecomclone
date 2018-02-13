@@ -11,13 +11,14 @@ window.addEventListener("load", function() {
             iswaiting: false,
             logourl: null,
             menu: null,
+            showblock: false,
             showloginwarning: false,
             title: null,
             token: null,
             version: null
         },
         computed: {
-            isblocked: function() { return this.showloginwarning; }
+            isblocked: function() { return this.showblock || this.showloginwarning; }
         },
         methods: {
             loadmenu: function() {

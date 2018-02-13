@@ -20,22 +20,37 @@ Vue.component("avt-detailscard", {
     props: [ "elementmodel" ],
     template:
         '<div class="card details">' +
-        '<div class="toolbar"></div>' +
-        '<div class="title">{{title}}</div>' +
-        '<div class="content">' +
-            '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index"></avt-input>' +
-            '<div class="buttonrow"><button class="action warn" v-if="!isnew&&canwrite">Löschen</button><button class="action primary" v-if="!isnew&&canwrite">Speichern</button><button class="action primary" v-if="isnew&&canwrite">Erstellen</button></div>' +
-        '</div>' +
-    '</div>',
+            '<div class="toolbar"></div>' +
+            '<div class="title">{{title}}</div>' +
+            '<div class="content">' +
+                '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index"></avt-input>' +
+                '<div class="buttonrow"><button class="action warn" v-if="!isnew&&canwrite" v-on:click="$emit(\'block\');showdeletequestion=true">Löschen</button><button class="action primary" v-if="!isnew&&canwrite" v-on:click="saveelement">Speichern</button><button class="action primary" v-if="isnew&&canwrite" v-on:click="createelement">Erstellen</button></div>' +
+            '</div>' +
+            '<avt-yesnodialog title="Objekt löschen" question="Soll das Objekt wirklich gelöscht werden?" v-on:yes="deleteelement" v-on:no="$emit(\'unblock\');showdeletequestion=false" v-if="showdeletequestion"></avt-yesnodialog>' +
+        '</div>',
     data: function() { return {
         canwrite: false,
         element: null,
         fields: [],
         isnew: false,
+        showdeletequestion: false,
         title: null,
     }},
     computed: {
         sortedfields: function() { return this.fields.sort(function(a,b) { return a.label<b.label ? -1 : a.label>b.label ? 1 : 0; })}
+    },
+    methods: {
+        createelement: function() {
+            console.log("CREATE");
+        },
+        deleteelement: function() {
+            console.log("DELETE");
+            this.$emit('unblock');
+            showdeletequestion = false;
+        },
+        saveelement: function() {
+            console.log("SAVE");
+        }
     },
     mounted: function () {
         var self = this;
@@ -48,12 +63,6 @@ Vue.component("avt-detailscard", {
             self.title = element.datatype.label + " " + (self.isnew ? "erstellen" : element.label);
         });
     }
-});
-
-Vue.component("avt-dialog", {
-    props: [ "title", "message", "buttontext" ],
-    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
-    methods: { dismiss: function() { this.$emit('dismisswarning'); } }
 });
 
 Vue.component("avt-input", {
@@ -79,7 +88,7 @@ Vue.component("avt-listcard", {
                 '<button v-bind:class="{selected:currentelement&&(element.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
             '</div></div>' +
         '</div>' +
-        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement"></avt-detailscard></div>',
+        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement" v-on:block="$emit(\'block\')" v-on:unblock="$emit(\'unblock\')"></avt-detailscard></div>',
     data: function() { return {
         addlabel: [],
         canwrite: false,
@@ -119,7 +128,7 @@ Vue.component("avt-loginform", {
             '<avt-passwordinput tabindex="2" v-model="password" label="Passwort"></avt-passwordinput>' +
             '<div class="buttonrow"><button class="action primary" type="submit" tabindex="3">Anmelden</button></div>' +
             '<div class="version">{{version}}</div>' +
-            '<avt-dialog title="Anmeldung fehlgeschlagen" message="Der Benutzername oder das Passwort ist nicht korrekt." buttontext="Wiederholen" v-on:dismisswarning="dismisswarning" v-if="showwarning"></avt-dialog>' +
+            '<avt-messagedialog title="Anmeldung fehlgeschlagen" message="Der Benutzername oder das Passwort ist nicht korrekt." buttontext="Wiederholen" v-on:dismisswarning="dismisswarning" v-if="showwarning"></avt-messagedialog>' +
         '</form>',
     data: function() { return {
         username: "",
@@ -145,6 +154,12 @@ Vue.component("avt-mainmenu", {
         '</div>'
 });
 
+Vue.component("avt-messagedialog", {
+    props: [ "title", "message", "buttontext" ],
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
+    methods: { dismiss: function() { this.$emit('dismisswarning'); } }
+});
+
 Vue.component("avt-passwordinput", {
     props: [ "label", "value", "tabindex" ],
     template: '<div class="inputcontainer password" v-bind:class="{hasfocus:hasfocus,hascontent:internalvalue}"><label>{{label}}</label><input type="password" v-bind:tabindex="tabindex" v-bind:placeholder="label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/></div>',
@@ -168,4 +183,9 @@ Vue.component("avt-toolbar", {
             portal: this.isloggedin && this.isportal
         }}
     }
+});
+
+Vue.component("avt-yesnodialog", {
+    props: [ "title", "question" ],
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{question}}</p><div class="buttonrow"><button class="action" v-on:click.prevent="$emit(\'yes\');">Ja</button><button class="action" v-on:click.prevent="$emit(\'no\');">Nein</button></div></div>'
 });

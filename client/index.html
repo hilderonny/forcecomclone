@@ -24,7 +24,7 @@
 
             <avt-dashboard v-if="isloggedin&&menu&&!currentModule" v-bind:menu="menu" v-on:select="selectmodule"></avt-dashboard>
 
-            <component v-if="isloggedin&&currentModule" v-bind:is="currentModule"></component>
+            <component v-if="isloggedin&&currentModule" v-bind:is="currentModule" v-on:block="showblock=true" v-on:unblock="showblock=false"></component>
 
             <div class="blocked" v-if="isblocked"></div>
 
