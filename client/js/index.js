@@ -1,63 +1,85 @@
-var App;
+var App, Store;
 
 window.addEventListener("load", function() {
 
+    Store = new Vuex.Store({
+        state: {
+            activemodule: undefined,
+            isblocked: false,
+            isloggedin: false,
+            isshowingloginfaileddialog: false,
+            iswaiting: false,
+            menu: undefined,
+            portalinfo: undefined,
+            token: undefined,
+        },
+        getters: {
+            isportal: function(state) { return state.menu && state.menu.isportal; },
+            portallogo: function(state) { return state.portalinfo && state.portalinfo.portallogo; },
+            portalname: function(state) { return state.portalinfo && state.portalinfo.portalname; },
+            title: function(state) { return state.menu && state.menu.title; },
+            version: function(state) { return state.portalinfo && state.portalinfo.version; },
+        },
+        mutations: {
+            block: function(state) { state.isblocked = true; },
+            hideloginfaileddialog: function(state) { state.isshowingloginfaileddialog = false; },
+            setactivemodule: function(state, activemodule) { state.activemodule = activemodule; },
+            setloggedin: function(state) { state.isloggedin = true; },
+            setloggedout: function(state) { state.isloggedin = false; },
+            setmenu: function(state, menu) { state.menu = menu; },
+            setportalinfo: function(state, portalinfo) { state.portalinfo = portalinfo; },
+            settoken: function(state, token) { state.token = token; },
+            showloginfaileddialog: function(state) { state.isshowingloginfaileddialog = true; },
+            startwaiting: function(state) { state.iswaiting = true; },
+            stopwaiting: function(state) { state.iswaiting = false; },
+            unblock: function(state) { state.isblocked = false; },
+        }
+    })
+
     App = new Vue({
         el: "#App",
-        data: {
-            currentModule: null,
-            isloggedin: false,
-            isportal: false,
-            iswaiting: false,
-            logourl: null,
-            menu: null,
-            showblock: false,
-            showloginwarning: false,
-            title: null,
-            token: null,
-            version: null
-        },
         computed: {
-            isblocked: function() { return this.showblock || this.showloginwarning; }
+            activemodule: function() { return Store.state.activemodule; },
+            isblocked: function() { return Store.state.isblocked; },
+            isloggedin: function() { return Store.state.isloggedin; },
+            iswaiting: function() { return Store.state.iswaiting; },
         },
         methods: {
             loadmenu: function() {
                 var self = this;
                 $get("/api/menu", function(err, res) {
-                    self.menu = res;
+                    Store.commit("setmenu", res);
                 });
             },
             logout: function() {
                 localStorage.removeItem("logincredentials");
-                this.isloggedin = false;
+                Store.commit("setloggedout");
             },
             performlogin: function(credentials) {
                 var self = this;
                 $post("/api/login", credentials, function(err, res) {
                     if (err) {
-                        self.showloginwarning = true;
+                        Store.commit("showloginfaileddialog");
                         App.logout();
                         return;
                     }
-                    self.token = res.token;
+                    Store.commit("settoken", res.token);
                     localStorage.setItem("logincredentials", JSON.stringify(credentials));
-                    self.isloggedin = true;
+                    Store.commit("setloggedin");
                     self.loadmenu();
                 });
             },
             selectmodule: function(mod) {
-                this.currentModule = null; // Force reload of module when the same is clicked again
+                Store.commit("setactivemodule", undefined); // Force reload of module when the same is clicked again
                 this.$nextTick(function () {
-                    this.currentModule = mod;
+                    Store.commit("setactivemodule", mod);
                 });
             },
         }
     });
 
     $get("/api/settings", function(err, res) {
-        App.logourl = res.portallogo;
-        App.title = res.portalname;
-        App.version = res.version;
+        Store.commit("setportalinfo", res);
     });
 
     var logincredentials = localStorage.getItem("logincredentials");

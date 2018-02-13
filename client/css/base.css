@@ -177,7 +177,7 @@ select {
     border-radius: 4px;
     color: rgba(0,0,0,0.87);
     left: 50%;
-    position: absolute;
+    position: fixed;
     top: 50%;
     transform: translate(-50%, -50%);
     z-index: 110;
@@ -390,6 +390,10 @@ select {
     padding: 2px 2px 2px 8px;
     text-align: left;
     width: 100%;
+}
+
+.mainmenu > .section > button.selected {
+    background-color: rgba(158, 158, 158, 0.3);
 }
 
 .mainmenu > .section > button:hover {

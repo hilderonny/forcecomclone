@@ -1,18 +1,19 @@
 
 Vue.component("avt-dashboard", {
-    props: [ "menu" ],
     template: 
-        '<div class="dashboard">' +
+        '<div v-if="isloggedin&&!activemodule" class="dashboard">' +
             '<button class="action" v-for="item in flatmenu" v-on:click="$emit(\'select\', item.card)"><img v-bind:src="\'/css/icons/office/\'+item.icon"/><span>{{item.title}}</span></button>' +
         '</div>',
     computed: {
+        activemodule: function() { return Store.state.activemodule; },
+        isloggedin: function() { return Store.state.isloggedin; },
         flatmenu: function() { 
             var items = [];
-            this.menu.sections.forEach(function(section) {
+            if (Store.state.menu) Store.state.menu.sections.forEach(function(section) {
                 section.items.forEach(function(item) { items.push(item); });
             });
             return items;
-        }
+        },
     }
 });
 
@@ -26,7 +27,7 @@ Vue.component("avt-detailscard", {
                 '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index"></avt-input>' +
                 '<div class="buttonrow"><button class="action warn" v-if="!isnew&&canwrite" v-on:click="$emit(\'block\');showdeletequestion=true">Löschen</button><button class="action primary" v-if="!isnew&&canwrite" v-on:click="saveelement">Speichern</button><button class="action primary" v-if="isnew&&canwrite" v-on:click="createelement">Erstellen</button></div>' +
             '</div>' +
-            '<avt-yesnodialog title="Objekt löschen" question="Soll das Objekt wirklich gelöscht werden?" v-on:yes="deleteelement" v-on:no="$emit(\'unblock\');showdeletequestion=false" v-if="showdeletequestion"></avt-yesnodialog>' +
+            '<avt-yesnodialog title="Objekt löschen" question="Soll das Objekt wirklich gelöscht werden?" v-on:yes="deleteelement" v-on:no="showdeletequestion=false" v-if="showdeletequestion"></avt-yesnodialog>' +
         '</div>',
     data: function() { return {
         canwrite: false,
@@ -46,7 +47,7 @@ Vue.component("avt-detailscard", {
         deleteelement: function() {
             console.log("DELETE");
             this.$emit('unblock');
-            showdeletequestion = false;
+            this.showdeletequestion = false;
         },
         saveelement: function() {
             console.log("SAVE");
@@ -119,7 +120,6 @@ Vue.component("avt-listcard", {
 });
 
 Vue.component("avt-loginform", {
-    props: [ "isloggedin", "logourl", "title", "showwarning", "version" ],
     template:
         '<form class="loginform" v-if="!isloggedin" v-on:submit.prevent="login">' +
             '<div class="logo"><img v-bind:src="logourl"/></div>' +
@@ -128,36 +128,50 @@ Vue.component("avt-loginform", {
             '<avt-passwordinput tabindex="2" v-model="password" label="Passwort"></avt-passwordinput>' +
             '<div class="buttonrow"><button class="action primary" type="submit" tabindex="3">Anmelden</button></div>' +
             '<div class="version">{{version}}</div>' +
-            '<avt-messagedialog title="Anmeldung fehlgeschlagen" message="Der Benutzername oder das Passwort ist nicht korrekt." buttontext="Wiederholen" v-on:dismisswarning="dismisswarning" v-if="showwarning"></avt-messagedialog>' +
+            '<avt-messagedialog title="Anmeldung fehlgeschlagen" message="Der Benutzername oder das Passwort ist nicht korrekt." buttontext="Wiederholen" v-on:close="dismisswarning" v-if="showwarning"></avt-messagedialog>' +
         '</form>',
     data: function() { return {
         username: "",
         password: ""
     }},
+    computed: { 
+        isloggedin: function() { return Store.state.isloggedin; },
+        logourl: function() { return Store.getters.portallogo; },
+        showwarning: function() { return Store.state.isshowingloginfaileddialog; },
+        title: function() { return Store.getters.portalname; },
+        version: function() { return Store.getters.version; },
+    },
     methods: {
         login: function() { this.$emit('login', { username: this.username, password: this.password }); },
-        dismisswarning: function() { this.$emit('dismisswarning'); }
+        dismisswarning: function() { Store.commit("hideloginfaileddialog"); }
     }
 });
 
 Vue.component("avt-mainmenu", {
-    props: [ "menu" ],
     template: 
-        '<div class="mainmenu">' +
+        '<div v-if="isloggedin&&menu" class="mainmenu">' +
             '<div class="logo"><img v-bind:src="menu.logourl" v-on:click="$emit(\'select\')"/></div>' +
             '<div class="section" v-for="section in menu.sections">' +
                 '<h3>{{section.title}}</h3>' +
-                '<button v-for="item in section.items" v-on:click="$emit(\'select\', item.card)"><img v-bind:src="\'/css/icons/material/\'+item.icon"/><span>{{item.title}}</span></button>' +
+                '<button v-for="item in section.items" v-on:click="$emit(\'select\', item.card)" v-bind:class="{selected:activemodule&&(activemodule===item.card)}"><img v-bind:src="\'/css/icons/material/\'+item.icon"/><span>{{item.title}}</span></button>' +
             '</div>' +
             '<div class="section"><button v-on:click="$emit(\'logout\')"><img src="/css/icons/material/Exit.svg"/><span>Abmelden</span></button></div>' +
             '<div class="username">Angemeldet als {{menu.username}}</div>' +
-        '</div>'
+        '</div>',
+    computed: {
+        activemodule: function() { return Store.state.activemodule; },
+        isloggedin: function() { return Store.state.isloggedin; },
+        menu: function() { return Store.state.menu; },
+    }
 });
 
 Vue.component("avt-messagedialog", {
     props: [ "title", "message", "buttontext" ],
-    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="dismiss">{{buttontext}}</button></div></div>',
-    methods: { dismiss: function() { this.$emit('dismisswarning'); } }
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{message}}</p><div class="buttonrow"><button class="action primary" v-on:click.prevent="close">{{buttontext}}</button></div></div>',
+    methods: {
+        close: function() { Store.commit("unblock"); this.$emit("close"); }
+    },
+    mounted: function() { Store.commit("block"); }
 });
 
 Vue.component("avt-passwordinput", {
@@ -175,9 +189,11 @@ Vue.component("avt-textinput", {
 });
 
 Vue.component("avt-toolbar", {
-    props: [ "isloggedin", "isportal", "title" ],
     template: '<div class="toolbar" v-bind:class="toolbarclass">{{isloggedin?title:""}}</div>',
     computed: {
+        isloggedin: function() { return Store.state.isloggedin; },
+        isportal: function() { return Store.getters.isportal; },
+        title: function() { return Store.getters.title; },
         toolbarclass: function() { return {
             transparent: !this.isloggedin,
             portal: this.isloggedin && this.isportal
@@ -187,5 +203,10 @@ Vue.component("avt-toolbar", {
 
 Vue.component("avt-yesnodialog", {
     props: [ "title", "question" ],
-    template: '<div class="dialog"><h2>{{title}}</h2><p>{{question}}</p><div class="buttonrow"><button class="action" v-on:click.prevent="$emit(\'yes\');">Ja</button><button class="action" v-on:click.prevent="$emit(\'no\');">Nein</button></div></div>'
+    template: '<div class="dialog"><h2>{{title}}</h2><p>{{question}}</p><div class="buttonrow"><button class="action" v-on:click.prevent="yes">Ja</button><button class="action" v-on:click.prevent="no">Nein</button></div></div>',
+    methods: {
+        no: function() { Store.commit("unblock"); this.$emit("no"); },
+        yes: function() { Store.commit("unblock"); this.$emit("yes"); }
+    },
+    mounted: function() { Store.commit("block"); }
 });

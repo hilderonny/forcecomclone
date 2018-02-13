@@ -2,17 +2,17 @@ function $createRequest(url, method, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open(method, url);
     xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-    if (App.token) xhr.setRequestHeader("x-access-token", App.token);
+    if (Store.state.token) xhr.setRequestHeader("x-access-token", Store.state.token);
     xhr.onload = function() {
         if (xhr.status === 200) {
             callback(null, JSON.parse(xhr.responseText));
         } else {
-            if (xhr.status === 401) App.isloggedin = false;
+            if (xhr.status === 401) Store.commit("setloggedout");
             callback(xhr.status);
         }
-        App.iswaiting = false;
+        Store.commit("stopwaiting");
     };
-    App.iswaiting = true;
+    Store.commit("startwaiting");
     return xhr;
 }
 

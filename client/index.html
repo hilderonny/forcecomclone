@@ -6,6 +6,7 @@
         <link rel="icon" href="favicon.png" sizes="32x32">
 
         <script src="js/lib/vue.js"></script>
+        <script src="js/lib/vuex.js"></script>
         <script src="js/tools.js"></script>
         <script src="js/components.js"></script>
         <script src="js/modules.js"></script>
@@ -16,15 +17,15 @@
 
         <div id="App">
 
-            <avt-toolbar v-bind:isloggedin="isloggedin" v-bind:isportal="menu&&menu.isportal" v-bind:title="menu&&menu.title"></avt-toolbar>
+            <avt-toolbar></avt-toolbar>
 
-            <avt-loginform v-bind:isloggedin="isloggedin" v-bind:logourl="logourl" v-bind:title="title" v-bind:showwarning="showloginwarning" v-bind:version="version" v-on:login="performlogin" v-on:dismisswarning="showloginwarning=false"></avt-loginform>
+            <avt-loginform v-on:login="performlogin"></avt-loginform>
 
-            <avt-mainmenu v-if="isloggedin&&menu" v-bind:menu="menu" v-on:logout="logout" v-on:select="selectmodule"></avt-mainmenu>
+            <avt-mainmenu v-on:logout="logout" v-on:select="selectmodule"></avt-mainmenu>
 
-            <avt-dashboard v-if="isloggedin&&menu&&!currentModule" v-bind:menu="menu" v-on:select="selectmodule"></avt-dashboard>
+            <avt-dashboard v-on:select="selectmodule"></avt-dashboard>
 
-            <component v-if="isloggedin&&currentModule" v-bind:is="currentModule" v-on:block="showblock=true" v-on:unblock="showblock=false"></component>
+            <component v-if="isloggedin&&activemodule" v-bind:is="activemodule"></component>
 
             <div class="blocked" v-if="isblocked"></div>
 
