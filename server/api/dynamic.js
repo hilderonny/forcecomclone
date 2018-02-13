@@ -4,19 +4,8 @@ var auth = require("../tools/middlewares").auth;
 
 module.exports = () => {
 
-    // App.router.get('/dynamic/:datatype', auth, async (req, res) => {
-    //     var dynamicObjects = await Db.getDynamicObjects(req.user.clientname, req.params.datatype);
-    //     if (req.params.datatype === "users") dynamicObjects.forEach((dynamicObject) => { delete dynamicObject.password; });;
-    //     res.send(dynamicObjects);
-    // });
-
     App.router.get('/dynamic/:datatype/forList', auth, async (req, res) => {
         var dynamicObjects = await Db.getDynamicObjectsForList(req.user.clientname, req.user.name, req.params.datatype);
-        res.send(dynamicObjects);
-    });
-
-    App.router.get('/dynamic/:datatype/forSelect', auth, async (req, res) => {
-        var dynamicObjects = await Db.getDynamicObjectsForSelect(req.user.clientname, req.params.datatype);
         res.send(dynamicObjects);
     });
 
@@ -35,10 +24,10 @@ module.exports = () => {
     App.router.post('/dynamic/:datatype', auth, async (req, res) => {
         var element = req.body;
         if (!element || !element.name) return res.sendStatus(400);
-        if (await Db.getDynamicObject(req.user.clientname, req.params.datatype, element.name)) return res.sendStatus(409);
+        if (await Db.doesDynamicObjectExist(req.user.clientname, req.params.datatype, element.name)) return res.sendStatus(409);
         try {
             await Db.insertDynamicObject(req.user.clientname, req.params.datatype, element);
-            res.sendStatus(200);
+            res.send({});
         } catch(error) {
             res.sendStatus(400);
         }
@@ -51,7 +40,7 @@ module.exports = () => {
         if (!existingDynamicObject) return res.sendStatus(404);
         try {
             await Db.updateDynamicObject(req.user.clientname, req.params.datatype, req.params.name, element);
-            res.sendStatus(200);
+            res.send({});
         } catch(error) {
             res.sendStatus(400);
         }

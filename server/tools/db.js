@@ -86,6 +86,11 @@ var Db = {
         await Db.query(clientName, `DELETE FROM permissions WHERE usergroup = '${userGroupName}' AND datatype = '${datatype}';`);
     },
 
+    doesDynamicObjectExist: async(clientname, datatypename, name) => {
+        var obj = await Db.query(clientname, `SELECT 1 FROM ${datatypename} WHERE name = '${name}';`);
+        return obj.rowCount > 0;
+    },
+
     getDataType: async(databaseNameWithoutPrefix, datatypename) => {
         var result = await Db.query(databaseNameWithoutPrefix, `SELECT * FROM datatypes WHERE name = '${datatypename}';`);
         return result.rowCount > 0 ? result.rows[0] : undefined;
@@ -158,9 +163,10 @@ var Db = {
         var referencefields = fields.filter((f) => f.fieldtype === fieldtypes.reference && f.reference);
         for (var i = 0; i < referencefields.length; i++) {
             var rf = referencefields[i];
+            var options = await Db.getDynamicObjectsForSelect(clientname, rf.reference);
             result.obj[rf.name] = {
-                value: result.obj[rf.name],
-                options: await Db.getDynamicObjectsForSelect(clientname, rf.reference)
+                value: options.length > 0 ? options[0].name : undefined,
+                options: options
             };
         }
         return result;
@@ -224,6 +230,7 @@ var Db = {
                 case fieldtypes.boolean: result = value; break;
                 case fieldtypes.datetime: result = value; break;
                 case fieldtypes.decimal: result = value; break;
+                case fieldtypes.reference:  result = `'${value}'`; break;
                 case fieldtypes.text:  result = `'${value}'`; break;
                 default: throw new Error(`Unknown field type '${field.fieldtype}'`);
             }

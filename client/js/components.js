@@ -24,7 +24,7 @@ Vue.component("avt-detailscard", {
             '<div class="toolbar"></div>' +
             '<div class="title">{{title}}</div>' +
             '<div class="content">' +
-                '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index"></avt-input>' +
+                '<avt-input v-for="(field, index) in sortedfields" v-bind:key="field.name" v-bind:field="field" v-bind:value="element[field.name]" v-bind:tabindex="index" v-on:change="change"></avt-input>' +
                 '<div class="buttonrow"><button class="action warn" v-if="!isnew&&canwrite" v-on:click="$emit(\'block\');showdeletequestion=true">Löschen</button><button class="action primary" v-if="!isnew&&canwrite" v-on:click="saveelement">Speichern</button><button class="action primary" v-if="isnew&&canwrite" v-on:click="createelement">Erstellen</button></div>' +
             '</div>' +
             '<avt-yesnodialog title="Objekt löschen" question="Soll das Objekt wirklich gelöscht werden?" v-on:yes="deleteelement" v-on:no="showdeletequestion=false" v-if="showdeletequestion"></avt-yesnodialog>' +
@@ -41,16 +41,43 @@ Vue.component("avt-detailscard", {
         sortedfields: function() { return this.fields.sort(function(a,b) { return a.label<b.label ? -1 : a.label>b.label ? 1 : 0; })}
     },
     methods: {
+        change: function(changeevent) {
+            switch (changeevent.field.fieldtype) {
+                case 'reference': this.element[changeevent.field.name].value = changeevent.value; break;
+                default: this.element[changeevent.field.name] = changeevent.value; break;
+            }
+        },
         createelement: function() {
-            console.log("CREATE");
+            var self = this;
+            $post("/api/dynamic/" + self.elementmodel.datatype, self.prepareforsending(), function(err, res) {
+                if (err) {
+                    // TODO: Handle 409 and other errors
+                    console.log(err);
+                    return;
+                }
+                // TODO: Erfolgsmeldungen ausgeben
+                self.$emit('create', self.element);
+            });
         },
         deleteelement: function() {
             console.log("DELETE");
             this.$emit('unblock');
             this.showdeletequestion = false;
         },
+        prepareforsending: function() {
+            var sendableobject = {};
+            var self = this;
+            self.fields.forEach(function(f) {
+                switch (f.fieldtype) {
+                    case 'reference': sendableobject[f.name] = self.element[f.name].value; break;
+                    default: sendableobject[f.name] = self.element[f.name]; break;
+                }
+            });
+            return sendableobject;
+        },
         saveelement: function() {
             console.log("SAVE");
+            console.log(this.prepareforsending());
         }
     },
     mounted: function () {
@@ -59,8 +86,10 @@ Vue.component("avt-detailscard", {
         var apiurl = "/api/dynamic/" + self.elementmodel.datatype + (self.isnew ? "/empty" : "/byName/" + self.elementmodel.name);
         $get(apiurl, function(err, element) {
             self.canwrite = element.canwrite;
-            self.element = element.obj;
             self.fields = element.fields;
+            var localelement = {};
+            element.fields.forEach(function(f) { localelement[f.name] = element.obj[f.name]; });
+            self.element = localelement;
             self.title = element.datatype.label + " " + (self.isnew ? "erstellen" : element.label);
         });
     }
@@ -73,10 +102,10 @@ Vue.component("avt-input", {
             '<input v-bind:id="field.name" v-if="field.fieldtype===\'boolean\'" type="checkbox" v-bind:tabindex="tabindex" v-model="internalvalue"/>' +
             '<label v-bind:for="field.name">{{field.label}}</label>' +
             '<input v-bind:id="field.name" v-if="field.fieldtype===\'text\'" type="text" v-bind:tabindex="tabindex" v-bind:placeholder="field.label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/>' +
-            '<select v-if="field.fieldtype===\'reference\'"><option v-for="option in internalvalue.options" v-bind:value="option.name" v-bind:selected="internalvalue.value===option.name">{{option.label}}</option></select>' +
+            '<select v-if="field.fieldtype===\'reference\'" v-model="internalvalue.value"><option v-for="option in internalvalue.options" v-bind:value="option.name">{{option.label}}</option></select>' +
         '</div>',
     data: function() { return { internalvalue: this.value, hasfocus: false }},
-    watch: { internalvalue(val) { this.$emit('change', val); } }
+    watch: { internalvalue(val) { this.$emit('change', { field: this.field, value: val }); } }
 });
 
 Vue.component("avt-listcard", {
@@ -89,7 +118,7 @@ Vue.component("avt-listcard", {
                 '<button v-bind:class="{selected:currentelement&&(element.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
             '</div></div>' +
         '</div>' +
-        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement" v-on:block="$emit(\'block\')" v-on:unblock="$emit(\'unblock\')"></avt-detailscard></div>',
+        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement" v-on:create="create"></avt-detailscard></div>',
     data: function() { return {
         addlabel: [],
         canwrite: false,
@@ -99,23 +128,31 @@ Vue.component("avt-listcard", {
         title: [],
     }},
     methods: {
+        create: function(newelement) {
+            this.load();
+            this.select(newelement.name);
+            console.log(newelement);
+        },
+        load: function() {
+            var self = this;
+            $get("/api/dynamic/" + self.datatype + "/forList", function(err, result) {
+                self.canwrite = result.canwrite;
+                self.title = result.datatype.plurallabel;
+                self.addlabel = result.datatype.label;
+                self.elements = result.objects.map(function(o) { return {
+                    name: o.name,
+                    firstline: o.firstline,
+                    icon: result.datatype.icon
+                }});
+            });
+        },
         select: function(name) {
             this.currentelement = null;
             this.$nextTick(function () { this.currentelement = { name: name, datatype: this.datatype }; });
         }
     },
     mounted: function () {
-        var self = this;
-        $get("/api/dynamic/" + self.datatype + "/forList", function(err, result) {
-            self.canwrite = result.canwrite;
-            self.title = result.datatype.plurallabel;
-            self.addlabel = result.datatype.label;
-            self.elements = result.objects.map(function(o) { return {
-                name: o.name,
-                firstline: o.firstline,
-                icon: result.datatype.icon
-            }});
-        });
+        this.load();
     }
 });
 
