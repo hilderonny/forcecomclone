@@ -31,6 +31,7 @@ Vue.component("avt-detailscard", {
         '</div>',
     data: function() { return {
         canwrite: false,
+        datatype: null,
         element: null,
         fields: [],
         isnew: false,
@@ -57,12 +58,13 @@ Vue.component("avt-detailscard", {
                 }
                 // TODO: Erfolgsmeldungen ausgeben
                 self.$emit('create', self.element);
+                Store.commit("sethint", self.datatype.label + " erstellt."); 
             });
         },
         deleteelement: function() {
             console.log("DELETE");
-            this.$emit('unblock');
             this.showdeletequestion = false;
+            Store.commit("sethint", this.datatype.label + " gelöscht."); 
         },
         prepareforsending: function() {
             var sendableobject = {};
@@ -78,6 +80,7 @@ Vue.component("avt-detailscard", {
         saveelement: function() {
             console.log("SAVE");
             console.log(this.prepareforsending());
+            Store.commit("sethint", "Änderungen gespeichert."); 
         }
     },
     mounted: function () {
@@ -87,11 +90,19 @@ Vue.component("avt-detailscard", {
         $get(apiurl, function(err, element) {
             self.canwrite = element.canwrite;
             self.fields = element.fields;
+            self.datatype = element.datatype;
             var localelement = {};
             element.fields.forEach(function(f) { localelement[f.name] = element.obj[f.name]; });
             self.element = localelement;
             self.title = element.datatype.label + " " + (self.isnew ? "erstellen" : element.label);
         });
+    }
+});
+
+Vue.component("avt-hint", {
+    template: '<div class="hint" v-if="hint">{{hint}}</div>',
+    computed: {
+        hint: function() { return Store.state.hint; },
     }
 });
 
@@ -131,7 +142,6 @@ Vue.component("avt-listcard", {
         create: function(newelement) {
             this.load();
             this.select(newelement.name);
-            console.log(newelement);
         },
         load: function() {
             var self = this;

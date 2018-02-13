@@ -5,6 +5,7 @@ window.addEventListener("load", function() {
     Store = new Vuex.Store({
         state: {
             activemodule: undefined,
+            hint: undefined,
             isblocked: false,
             isloggedin: false,
             isshowingloginfaileddialog: false,
@@ -24,6 +25,10 @@ window.addEventListener("load", function() {
             block: function(state) { state.isblocked = true; },
             hideloginfaileddialog: function(state) { state.isshowingloginfaileddialog = false; },
             setactivemodule: function(state, activemodule) { state.activemodule = activemodule; },
+            sethint: function(state, hint) {
+                state.hint = hint;
+                setTimeout(function() { state.hint = undefined; }, 3000);
+            },
             setloggedin: function(state) { state.isloggedin = true; },
             setloggedout: function(state) { state.isloggedin = false; },
             setmenu: function(state, menu) { state.menu = menu; },
