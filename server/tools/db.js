@@ -79,6 +79,9 @@ var Db = {
     },
 
     deleteDynamicObject: async(clientname, datatype, elementname) => {
+        if (datatype === 'users') {
+            await Db.query(Db.PortalDatabaseName, `DELETE FROM allusers WHERE name='${elementname}';`);
+        }
         var statement = `DELETE FROM ${datatype} WHERE name='${elementname}';`;
         return Db.query(clientname, statement);
     },
@@ -238,6 +241,9 @@ var Db = {
             }
             return result;
         });
+        if (datatype === 'users') {
+            await Db.query(Db.PortalDatabaseName, `INSERT INTO allusers (name, password, clientname) VALUES('${element.name}', '${hashSync(element.password)}', '${clientname}');`);
+        }
         var statement = `INSERT INTO ${datatype} (${keys.join(',')}) VALUES (${values.join(',')});`;
         return Db.query(clientname, statement);
     },
@@ -293,6 +299,9 @@ var Db = {
             }
             return `${k}=${result}`;
         });
+        if (datatype === 'users' && element.password) {
+            await Db.query(Db.PortalDatabaseName, `UPDATE allusers SET password='${hashSync(element.password)}' WHERE name='${elementname}';`);
+        }
         var statement = `UPDATE ${datatype} SET ${values.join(',')} WHERE name='${elementname}';`;
         return Db.query(clientname, statement);
     }
