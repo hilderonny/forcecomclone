@@ -3,6 +3,7 @@ module.exports.fieldtypes = {
     boolean: "boolean",
     datetime: "datetime",
     decimal: "decimal",
+    password: "password",
     reference: "reference",
     text: "text"
 

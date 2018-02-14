@@ -47,7 +47,7 @@ var Db = {
         await Db.query(databaseName, "CREATE TABLE datatypefields (name TEXT, label TEXT, datatype TEXT REFERENCES datatypes, fieldtype TEXT, istitle BOOLEAN, isrequired BOOLEAN, reference TEXT, PRIMARY KEY (name, datatype));");
         await Db.createDatatype(databaseName, "usergroups", "Benutzergruppe", "Benutzergruppen", true, "/css/icons/material/user-account.svg");
         await Db.createDatatype(databaseName, "users", "Benutzer", "Benutzer", true, "/css/icons/material/user-account.svg");
-        await Db.createDatatypeField(databaseName, "users", "password", "Passwort", fieldtypes.text, false, false, false, null);
+        await Db.createDatatypeField(databaseName, "users", "password", "Passwort", fieldtypes.password, false, false, false, null);
         await Db.createDatatypeField(databaseName, "users", "usergroup", "Benutzergruppe", fieldtypes.reference, false, true, false, "usergroups");
         await Db.createDatatypeField(databaseName, "users", "isadmin", "Administrator", fieldtypes.boolean, false, false, false, null);
         await Db.query(databaseName, "CREATE TABLE permissions (usergroup TEXT NOT NULL, datatype TEXT NOT NULL, canwrite BOOLEAN, PRIMARY KEY (usergroup, datatype));");
@@ -70,6 +70,7 @@ var Db = {
             case fieldtypes.boolean: columntype = "BOOLEAN"; break;
             case fieldtypes.datetime: columntype = "BIGINT"; break;
             case fieldtypes.decimal: columntype = "NUMERIC"; break;
+            case fieldtypes.password: columntype = "TEXT"; break;
             case fieldtypes.reference: columntype = "TEXT"; break;
             case fieldtypes.text: columntype = "TEXT"; break;
             default: throw new Error(`Unknown field type '${fieldtype}'`);
@@ -194,7 +195,7 @@ var Db = {
         if ((await Db.queryDirect("postgres", `SELECT 1 FROM pg_database WHERE datname = '${portalDatabaseName}';`)).rowCount === 0) {
             await Db.queryDirect("postgres", `CREATE DATABASE ${portalDatabaseName};`);
             await Db.createDefaultTables(Db.PortalDatabaseName);
-            await Db.createDatatype(Db.PortalDatabaseName, "clients", "Mandant", "Mandanten", true);
+            await Db.createDatatype(Db.PortalDatabaseName, "clients", "Mandant", "Mandanten", true, "/css/icons/material/Briefcase.svg");
             await Db.queryDirect(portalDatabaseName, "CREATE TABLE allusers (name TEXT NOT NULL PRIMARY KEY, password TEXT, clientname TEXT NOT NULL);");
         }
         if (localConfig.resetRecreateportaladmin) {
@@ -230,6 +231,7 @@ var Db = {
                 case fieldtypes.boolean: result = value; break;
                 case fieldtypes.datetime: result = value; break;
                 case fieldtypes.decimal: result = value; break;
+                case fieldtypes.password:  result = `'${hashSync(value)}'`; break;
                 case fieldtypes.reference:  result = `'${value}'`; break;
                 case fieldtypes.text:  result = `'${value}'`; break;
                 default: throw new Error(`Unknown field type '${field.fieldtype}'`);
@@ -284,6 +286,8 @@ var Db = {
                 case fieldtypes.boolean: result = value; break;
                 case fieldtypes.datetime: result = value; break;
                 case fieldtypes.decimal: result = value; break;
+                case fieldtypes.password:  result = `'${hashSync(value)}'`; break;
+                case fieldtypes.reference:  result = `'${value}'`; break;
                 case fieldtypes.text:  result = `'${value}'`; break;
                 default: throw new Error(`Unknown field type '${field.fieldtype}'`);
             }

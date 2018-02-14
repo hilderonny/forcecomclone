@@ -16,10 +16,18 @@ function $createRequest(url, method, callback) {
     return xhr;
 }
 
+function $delete(url, callback) {
+    $createRequest(url, "DELETE", callback).send();
+}
+
 function $get(url, callback) {
     $createRequest(url, "GET", callback).send();
 }
 
 function $post(url, data, callback) {
     $createRequest(url, "POST", callback).send(JSON.stringify(data));
+}
+
+function $put(url, data, callback) {
+    $createRequest(url, "PUT", callback).send(JSON.stringify(data));
 }

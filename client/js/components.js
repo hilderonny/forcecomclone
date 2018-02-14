@@ -52,19 +52,22 @@ Vue.component("avt-detailscard", {
             var self = this;
             $post("/api/dynamic/" + self.elementmodel.datatype, self.prepareforsending(), function(err, res) {
                 if (err) {
-                    // TODO: Handle 409 and other errors
+                    // TODO: Handle 409 (Name vergeben)
                     console.log(err);
                     return;
                 }
-                // TODO: Erfolgsmeldungen ausgeben
-                self.$emit('create', self.element);
+                self.$emit('create', self.element.name);
                 Store.commit("sethint", self.datatype.label + " erstellt."); 
             });
         },
         deleteelement: function() {
-            console.log("DELETE");
-            this.showdeletequestion = false;
-            Store.commit("sethint", this.datatype.label + " gelöscht."); 
+            // TODO: Abhängigkeitsfehler beim Löschen behandeln
+            var self = this;
+            self.showdeletequestion = false;
+            $delete("/api/dynamic/" + self.elementmodel.datatype + "/" + self.elementmodel.name, function(status) {
+                self.$emit('del');
+                Store.commit("sethint", self.datatype.label + " gelöscht."); 
+            });
         },
         prepareforsending: function() {
             var sendableobject = {};
@@ -78,9 +81,18 @@ Vue.component("avt-detailscard", {
             return sendableobject;
         },
         saveelement: function() {
-            console.log("SAVE");
-            console.log(this.prepareforsending());
-            Store.commit("sethint", "Änderungen gespeichert."); 
+            // TODO: Required-Fields beachten
+            var self = this;
+            var objecttosend = self.prepareforsending();
+            delete objecttosend.name;
+            $put("/api/dynamic/" + self.elementmodel.datatype + "/" + self.elementmodel.name, objecttosend, function(err, res) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                self.$emit('save', self.elementmodel.name);
+                Store.commit("sethint", self.datatype.label + " gespeichert."); 
+            });
         }
     },
     mounted: function () {
@@ -112,6 +124,7 @@ Vue.component("avt-input", {
         '<div class="inputcontainer" v-bind:class="[field.fieldtype, {hasfocus:hasfocus,hascontent:internalvalue}]">' +
             '<input v-bind:id="field.name" v-if="field.fieldtype===\'boolean\'" type="checkbox" v-bind:tabindex="tabindex" v-model="internalvalue"/>' +
             '<label v-bind:for="field.name">{{field.label}}</label>' +
+            '<input v-bind:id="field.name" v-if="field.fieldtype===\'password\'" type="password" v-bind:tabindex="tabindex" v-bind:placeholder="field.label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/>' +
             '<input v-bind:id="field.name" v-if="field.fieldtype===\'text\'" type="text" v-bind:tabindex="tabindex" v-bind:placeholder="field.label" v-model="internalvalue" v-on:focus="hasfocus=true" v-on:blur="hasfocus=false"/>' +
             '<select v-if="field.fieldtype===\'reference\'" v-model="internalvalue.value"><option v-for="option in internalvalue.options" v-bind:value="option.name">{{option.label}}</option></select>' +
         '</div>',
@@ -129,7 +142,7 @@ Vue.component("avt-listcard", {
                 '<button v-bind:class="{selected:currentelement&&(element.name===currentelement.name)}" v-for="element in elements" v-on:click="select(element.name)"><img v-bind:src="element.icon"/><span>{{element.firstline}}</span></button>' +
             '</div></div>' +
         '</div>' +
-        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement" v-on:create="create"></avt-detailscard></div>',
+        '<avt-detailscard v-if="currentelement" v-bind:elementmodel="currentelement" v-on:create="create" v-on:save="save" v-on:del="del"></avt-detailscard></div>',
     data: function() { return {
         addlabel: [],
         canwrite: false,
@@ -139,9 +152,13 @@ Vue.component("avt-listcard", {
         title: [],
     }},
     methods: {
-        create: function(newelement) {
+        create: function(newelementname) {
             this.load();
-            this.select(newelement.name);
+            this.select(newelementname);
+        },
+        del: function() {
+            this.currentelement = null;
+            this.load();
         },
         load: function() {
             var self = this;
@@ -155,6 +172,10 @@ Vue.component("avt-listcard", {
                     icon: result.datatype.icon
                 }});
             });
+        },
+        save: function(elementname) {
+            this.load();
+            this.select(elementname);
         },
         select: function(name) {
             this.currentelement = null;

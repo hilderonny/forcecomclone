@@ -36,8 +36,7 @@ module.exports = () => {
     App.router.put('/dynamic/:datatype/:name', auth, async (req, res) => {
         var element = req.body;
         if (!element || element.name || Object.keys(element) < 1) return res.sendStatus(400);
-        var existingDynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
-        if (!existingDynamicObject) return res.sendStatus(404);
+        if (!(await Db.doesDynamicObjectExist(req.user.clientname, req.params.datatype, req.params.name))) return res.sendStatus(404);
         try {
             await Db.updateDynamicObject(req.user.clientname, req.params.datatype, req.params.name, element);
             res.send({});
@@ -47,8 +46,7 @@ module.exports = () => {
     });
 
     App.router.delete('/dynamic/:datatype/:name', auth, async (req, res) => {
-        var existingDynamicObject = await Db.getDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
-        if (!existingDynamicObject) return res.sendStatus(404);
+        if (!(await Db.doesDynamicObjectExist(req.user.clientname, req.params.datatype, req.params.name))) return res.sendStatus(404);
         try {
             await Db.deleteDynamicObject(req.user.clientname, req.params.datatype, req.params.name);
             res.sendStatus(204);
